@@ -21,6 +21,17 @@ façons de s'en sortir, sur les MÊMES jours du service cible :
                      un an d'historique (médecine femme : août 2025 → octobre 2026) ; A, B et C
                      servent alors à vérifier, par le test de Diebold-Mariano, que le transfert
                      n'apporte plus rien.
+  G · modèle unique  UN SEUL modèle pour tous les services (source et cibles), appris en taux sur les
+                     jours de tous les services réunis, avec une variable indicatrice du service (une
+                     colonne 0/1 par service, dans le bloc « flux et saison » du noyau composite) pour
+                     que chaque service garde son niveau. Les registres se chevauchent dans le temps :
+                     tous les services sont évalués sur les MÊMES origines (une seule validation). Deux
+                     options :
+                       G1 · période commune : seulement les jours où tous les services ont des données
+                            (pour la médecine femme, août 2025 → août 2026) ; la pédiatrie perd ses
+                            premiers mois ;
+                       G2 · toute la période : tous les jours de chaque service ; aucune donnée perdue,
+                            mais le service le plus ancien (pédiatrie) pèse davantage.
   + la persistance de la cible (référence sans apprentissage).
 
 Modèle propre : des réglages choisis sur la cible, sans rien du futur
@@ -185,6 +196,28 @@ def regler_sur_la_cible(niveau: int, hp: Hyperparametres, tab, entrainement: tor
     return meilleur, etiquette
 
 
+def avec_service(tab, services: list[str], code: str):
+    """
+    Ajoute au tableau d'un service ses variables indicatrices (une colonne 0/1 par service, 1 pour `code`),
+    pour le modèle unique G. Elles ne sont pas standardisées et entrent dans le bloc « flux et saison » du
+    noyau composite : deux jours de services différents se ressemblent moins que deux jours du même service.
+    """
+    ind = torch.zeros(len(tab.y), len(services), dtype=tab.X.dtype)
+    ind[:, services.index(code)] = 1.0
+    d = tab.X.shape[1]
+    blocs = {**tab.blocs, "flux_saison": [*tab.blocs.get("flux_saison", []), *range(d, d + len(services))]}
+    return dataclasses.replace(tab, X=torch.cat([tab.X, ind], dim=1), noms=[*tab.noms, *(f"service_{c}" for c in services)],
+                               blocs=blocs)
+
+
+def lignes_connues(tab, origine: pd.Timestamp, final: bool, debut: pd.Timestamp | None = None) -> torch.Tensor:
+    """Lignes d'un tableau connues au soir de `origine` (cible ≤ origine ; < verrou au test final), à partir de `debut`."""
+    connus = (tab.dates_cible < origine) if final else (tab.dates_cible <= origine)
+    if debut is not None:
+        connus = connus & (tab.dates_origine >= debut)
+    return torch.nonzero(torch.tensor(connus)).flatten()
+
+
 def concatener(morceaux):
     """Recolle les prévisions des origines successives (tenseurs ou dict {τ: tenseur})."""
     if isinstance(morceaux[0], dict):
@@ -244,6 +277,10 @@ def main() -> None:
             hp = Hyperparametres(tau=a.tau)
         hp_taux = hp_en_taux(hp, N_s)
         tab_s = construire(en_taux(occs[a.source], N_s), h)
+        # Modèle unique G : tableaux en taux de TOUS les services, avec l'indicatrice du service.
+        services = [a.source, *a.cibles]
+        tabs_g = {c: avec_service(construire(en_taux(occs[c], lits[c]), h), services, c) for c in services}
+        debut_commun = max(occs[c].index.min() for c in services)          # premier jour où tous les services ont des données
         totaux = {}                                              # stratégie → {service → Series par date}
         # Mêmes origines pour tous les services (indispensable pour additionner les prévisions au total) :
         # la première origine laisse `minimum_entrainement` jours à la cible qui démarre le plus tard.
@@ -263,10 +300,12 @@ def main() -> None:
             dates = pd.DatetimeIndex([dt for d in decs for dt in tab_c.dates_cible[d.evaluation.numpy()]])
             previsions = {"Persistance de la cible": R.persistance(tab_c.serie, orig, h)}
             nom_p = "P · modèle propre (cible seule, réglages choisis sur la cible)"
+            nom_g1 = f"G1 · modèle unique, période commune (dès le {debut_commun:%d/%m/%Y})"
+            nom_g2 = "G2 · modèle unique, toute la période de chaque service"
             morceaux = {nom_p: [], "A · local (cible seule, réglages de la source gelés)": [],
                         "B · transfert direct (source seule, en taux)": [],
-                        f"C · groupé (source + cible ×{a.poids_cible}, en taux)": []}
-            noms = list(morceaux)[1:]
+                        f"C · groupé (source + cible ×{a.poids_cible}, en taux)": [], nom_g1: [], nom_g2: []}
+            noms = list(morceaux)[1:4]
             choix_propre = []
             for d in decs:
                 # Jours de la source connus au soir de l'origine (cible ≤ O ; < verrou au test final).
@@ -286,6 +325,15 @@ def main() -> None:
                 morceaux[noms[2]].append(multiplier(entrainer_predire(fabrique(a.niveau, hp_taux, tab_s.blocs),
                                                                       torch.cat([Xs, Xc]), torch.cat([ys, yc]),
                                                                       tab_ct.X[d.evaluation], tab_s.continues), N_c))
+                # Modèle unique : tous les services, jours connus au soir de l'origine (G1 : période commune seulement).
+                tg = tabs_g[cible]
+                for nom_g, debut in ((nom_g1, debut_commun), (nom_g2, None)):
+                    idx = {c: lignes_connues(tabs_g[c], d.origine, final, debut) for c in services}
+                    idx[cible] = d.entrainement if debut is None else d.entrainement[torch.tensor(tg.dates_origine[d.entrainement.numpy()] >= debut)]
+                    Xg = torch.cat([tabs_g[c].X[idx[c]] for c in services])
+                    yg = torch.cat([tabs_g[c].y[idx[c]] for c in services])
+                    morceaux[nom_g].append(multiplier(entrainer_predire(fabrique(a.niveau, hp_taux, tg.blocs), Xg, yg,
+                                                                        tg.X[d.evaluation], tg.continues), N_c))
             for nom, m in morceaux.items():
                 previsions[nom] = concatener(m)
 

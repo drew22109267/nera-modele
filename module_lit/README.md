@@ -420,7 +420,7 @@ moitié).
 
 ### 5.3 Modèle propre ou transfert, pour les autres services (`transfert.py`)
 
-Quatre stratégies sur les mêmes jours du service cible, plus la persistance :
+Six stratégies sur les mêmes jours du service cible, plus la persistance :
 
 | Stratégie | Apprend sur | Réglages (hyperparamètres) |
 |---|---|---|
@@ -428,11 +428,29 @@ Quatre stratégies sur les mêmes jours du service cible, plus la persistance :
 | A · local | la cible seule | ceux de la pédiatrie, gelés |
 | B · transfert direct | la pédiatrie seule, en taux | ceux de la pédiatrie |
 | C · groupé | pédiatrie et cible réunies, en taux | ceux de la pédiatrie |
+| G1 · modèle unique, période commune | tous les services, en taux, jours où tous ont des données | ceux de la pédiatrie |
+| G2 · modèle unique, toute la période | tous les services, en taux, tous leurs jours | ceux de la pédiatrie |
 
 **Pourquoi un modèle propre.** Avec environ un an d'historique (médecine femme : août 2025 → octobre 2026),
 un service a assez de jours pour apprendre seul et pour régler ses propres hyperparamètres ; une population
 adulte ne ressemble pas à la pédiatrie (durées, causes, saisons). A, B et C restent dans le banc : le test de
 Diebold-Mariano contre P dit si le transfert apporte encore quelque chose.
+
+**Modèle unique (G1, G2).** Les registres des services se chevauchent dans le temps : un seul modèle peut
+apprendre sur tous les services à la fois, en taux d'occupation (présents ÷ lits, pour comparer des services de
+tailles différentes), avec une variable indicatrice par service x_s ∈ {0, 1} pour que chaque service garde son
+niveau. Dans le noyau composite, les indicatrices entrent dans le bloc « flux et saison » :
+
+```
+K(x, z) = β K₁(occupation) + (1 − β) K₂(flux, saison, service)
+```
+
+deux jours de services différents se ressemblent donc moins que deux jours du même service. Tous les services
+sont évalués aux mêmes origines (une seule validation, un seul verrou). G1 n'apprend que sur la période où
+tous les services ont des données ; G2 garde toute la période de chaque service (plus de données, mais la
+pédiatrie pèse davantage). Le modèle unique apprend les rythmes communs à tout l'hôpital (semaine, fériés,
+épidémies) ; il impose en revanche des réponses proches à des populations différentes. Le test de
+Diebold-Mariano contre P tranche, service par service et pour le total de l'hôpital.
 
 **Validation imbriquée (rien du futur).** À chaque origine O de la validation glissante, avec les seules
 lignes connues au soir de O : apprentissage interne sur les cibles ≤ O − v, évaluation interne sur les

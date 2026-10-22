@@ -11,7 +11,7 @@ from svr.modeles import Entrainement, Perte, SVRLineaire
 from svr.niveaux import Hyperparametres
 from svr.caracteristiques import construire
 from svr.modeles import Entrainement as _E
-from transfert import GRILLE_PROPRE, hp_en_taux, regler_sur_la_cible
+from transfert import GRILLE_PROPRE, avec_service, hp_en_taux, lignes_connues, regler_sur_la_cible
 
 T = torch.float64
 
@@ -116,3 +116,19 @@ def test_modele_propre_regle_sans_futur_et_dans_la_grille():
     # Fenêtre interne trop courte : réglages de la source, sans recherche.
     hp_s, etiquette_s = regler_sur_la_cible(2, hp, tab, entr[:40], origine, validation_interne=28, minimum=28)
     assert hp_s is hp and etiquette_s.startswith("source")
+
+
+def test_modele_unique_indicatrices_et_lignes_connues():
+    # Série construite pour le test, pas des données de l'étude.
+    idx = pd.date_range("2025-01-01", periods=60, freq="D")
+    occ = pd.DataFrame({"presents": 10, "admissions": 3, "sorties_sortie": 3}, index=idx)
+    tab = construire(occ, 1)
+    g = avec_service(tab, ["PED", "MEDF"], "MEDF")
+    d = tab.X.shape[1]
+    assert g.X.shape[1] == d + 2 and g.X[:, d].sum() == 0 and bool((g.X[:, d + 1] == 1).all())
+    assert [d, d + 1] == g.blocs["flux_saison"][-2:] and g.continues == tab.continues      # indicatrices non standardisées
+    o = pd.Timestamp("2025-02-01")
+    i = lignes_connues(g, o, final=False)
+    assert bool((g.dates_cible[i.numpy()] <= o).all()) and len(i) > 0                       # rien du futur
+    j = lignes_connues(g, o, final=False, debut=pd.Timestamp("2025-01-20"))
+    assert bool((g.dates_origine[j.numpy()] >= pd.Timestamp("2025-01-20")).all()) and len(j) < len(i)
