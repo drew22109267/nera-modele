@@ -1,7 +1,7 @@
 r"""
-TRANSFERT de la méthode du service source (pédiatrie, 27 mois de données) vers des services
-cibles qui n'ont qu'une fenêtre courte (par exemple mai → octobre 2026), et prévision du total
-de l'hôpital comme somme des services.
+TRANSFERT de la méthode du service source (pédiatrie, 27 mois de données) vers d'autres services,
+comparé à un MODÈLE PROPRE de chaque service, et prévision du total de l'hôpital comme somme des
+services.
 
 Le problème
 -----------
@@ -16,7 +16,28 @@ façons de s'en sortir, sur les MÊMES jours du service cible :
                      service cible ;
   C · groupé         le modèle apprend sur la source ET sur la fenêtre de la cible réunies
                      (les jours de la cible peuvent compter plusieurs fois : --poids-cible).
+  P · modèle propre  le modèle n'apprend que sur la cible ET choisit ses propres réglages sur la
+                     cible (voir plus bas). C'est la stratégie RETENUE dès qu'un service a environ
+                     un an d'historique (médecine femme : août 2025 → octobre 2026) ; A, B et C
+                     servent alors à vérifier, par le test de Diebold-Mariano, que le transfert
+                     n'apporte plus rien.
   + la persistance de la cible (référence sans apprentissage).
+
+Modèle propre : des réglages choisis sur la cible, sans rien du futur
+---------------------------------------------------------------------
+À chaque origine O, les réglages sont cherchés sur les seuls jours connus au soir de O, par une
+validation IMBRIQUÉE : apprentissage sur les jours dont la cible est ≤ O − v, évaluation sur les
+origines de ]O − v, O] (v = --validation-interne, 56 jours par défaut), puis réentraînement sur
+tout ce qui est connu avec les réglages gagnants. La grille part des réglages de la source :
+C × {0,3 ; 1 ; 3} et portées du noyau (γ, γ₁, γ₂) × {0,5 ; 1 ; 2}, soit 9 modèles ; le critère
+est la perte pinball au quantile τ (MAE pour un modèle ponctuel). À égalité, les réglages de la
+source sont gardés. Si la fenêtre interne est trop courte (moins de --minimum-entrainement jours
+d'apprentissage), ce sont aussi les réglages de la source. Les réglages retenus à chaque origine
+sont comptés dans le rapport : s'ils changent beaucoup d'une origine à l'autre, le choix est
+instable (trop peu de jours pour régler) et la stratégie A est plus sûre.
+
+Limite à écrire : un an d'historique ne montre chaque saison qu'une fois ; le modèle propre ne
+peut pas séparer un effet de saison d'un hasard de cette année-là.
 
 Rendre les services comparables : les taux
 ------------------------------------------
@@ -85,12 +106,17 @@ TYPE = torch.float64
 GRANDEURS = ("presents", "admissions")       # + toutes les colonnes sorties_*, divisées par les lits
 
 
-def occupation_du_service(df: pd.DataFrame, code: str, extraction, fenetre_courte: bool) -> pd.DataFrame:
-    """Occupation attendue d'un service, sur sa période exploitable (rodage au début si fenêtre courte)."""
-    sejours, _ = preparer_sejours(df, code, extraction)
+def occupation_du_service(df: pd.DataFrame, code: str, extraction) -> pd.DataFrame:
+    """
+    Occupation attendue d'un service, sur sa période exploitable, avec les réglages RETENUS pour toute la
+    chaîne (lancer_tout.sh) : durées inconnues estimées (prix, issue), censure au p95 des durées, rodage
+    compté depuis le premier jour d'enregistrement. Avec les réglages d'origine (durées inconnues exclues),
+    un seul mois à moins de 90 % de durées connues repousserait le début de toute la série.
+    """
+    sejours, _ = preparer_sejours(df, code, extraction, "p95", "estimee")
     if sejours.empty:
         raise ValueError(f"Aucun séjour pour le service {code}.")
-    periode = periode_exploitable(sejours, rodage_au_debut=fenetre_courte)
+    periode = periode_exploitable(sejours, rodage_au_debut=True)
     return reconstituer_occupation(sejours, extraction, debut=periode["debut"], scenario="attendue")
 
 
@@ -120,6 +146,45 @@ def entrainer_predire(fab, X_entr, y_entr, X_pred, continues):
     return fab().entrainer(std.transformer(X_entr), y_entr).predire(std.transformer(X_pred))
 
 
+GRILLE_PROPRE = {"C": (0.3, 1.0, 3.0), "portee": (0.5, 1.0, 2.0)}   # multiplicateurs des réglages de la source
+
+
+def score(y, prevision, tau: float) -> float:
+    """Critère de choix des réglages : pinball au quantile τ (prévision quantile), sinon MAE."""
+    if isinstance(prevision, dict):
+        return M.pinball_moyenne(y, prevision[tau], tau)
+    return M.mae(y, prevision)
+
+
+def regler_sur_la_cible(niveau: int, hp: Hyperparametres, tab, entrainement: torch.Tensor, origine: pd.Timestamp,
+                        validation_interne: int, minimum: int) -> tuple[Hyperparametres, str]:
+    """
+    Recherche par grille des réglages du modèle propre, avec les seules lignes d'`entrainement`
+    (connues au soir de `origine`) : apprentissage interne sur les cibles ≤ origine − v, évaluation
+    sur les origines de ]origine − v, origine]. Renvoie les réglages gagnants et leur étiquette
+    (« ×1 / ×1 » = réglages de la source).
+    """
+    o_int = origine - pd.Timedelta(days=validation_interne)
+    idx = entrainement.numpy()
+    cibles, origines = tab.dates_cible[idx], tab.dates_origine[idx]
+    i_app = entrainement[torch.tensor(cibles <= o_int)]
+    i_val = entrainement[torch.tensor(origines > o_int)]
+    if len(i_app) < minimum or len(i_val) == 0:
+        return hp, "source (fenêtre interne trop courte)"
+    meilleur, etiquette, s_min = hp, "×1 / ×1", None
+    for mc in GRILLE_PROPRE["C"]:
+        for mg in GRILLE_PROPRE["portee"]:
+            essai = dataclasses.replace(hp, C=hp.C * mc, gamma=hp.gamma * mg, gamma1=hp.gamma1 * mg, gamma2=hp.gamma2 * mg)
+            prev = entrainer_predire(fabrique(niveau, essai, tab.blocs), tab.X[i_app], tab.y[i_app], tab.X[i_val], tab.continues)
+            sc = score(tab.y[i_val], prev, hp.tau)
+            source = mc == 1.0 and mg == 1.0
+            # strictement meilleur, ou réglages de la source à égalité
+            if s_min is None or sc < s_min - 1e-12 or (source and abs(sc - s_min) <= 1e-12):
+                meilleur, s_min = essai, sc
+                etiquette = f"C ×{mc:g} / portée ×{mg:g}".replace(".", ",")
+    return meilleur, etiquette
+
+
 def concatener(morceaux):
     """Recolle les prévisions des origines successives (tenseurs ou dict {τ: tenseur})."""
     if isinstance(morceaux[0], dict):
@@ -140,6 +205,8 @@ def main() -> None:
     p.add_argument("--minimum-entrainement", type=int, default=28,
                    help="jours d'entraînement de la cible au minimum avant la première origine (28)")
     p.add_argument("--poids-cible", type=int, default=1, help="stratégie C : nombre de fois où chaque jour de la cible compte (1)")
+    p.add_argument("--validation-interne", type=int, default=56,
+                   help="modèle propre : jours de la validation interne qui choisit ses réglages (56)")
     p.add_argument("--extraction", help="test final : date du relevé du registre (aaaa-mm-jj)")
     p.add_argument("--confirmation", help="test final : phrase d'ouverture du coffre")
     a = p.parse_args()
@@ -156,15 +223,16 @@ def main() -> None:
 
     df = lire_export(a.export, confirmation_coffre=a.confirmation) if final else lire_export(a.export)
     extraction = pd.Timestamp(a.extraction) if final else DATE_VERROU
-    occs = {a.source: occupation_du_service(df, a.source, extraction, fenetre_courte=False)}
+    occs = {a.source: occupation_du_service(df, a.source, extraction)}
     for c in a.cibles:
-        occs[c] = occupation_du_service(df, c, extraction, fenetre_courte=True)
+        occs[c] = occupation_du_service(df, c, extraction)
         print(f"{c} : occupation exploitable du {occs[c].index.min():%d/%m/%Y} au {occs[c].index.max():%d/%m/%Y}")
     N_s = lits[a.source]
     rapport = [f"# Transfert de la méthode — source {a.source} vers {', '.join(a.cibles)}\n",
                ("**Test final sur le coffre** (septembre–octobre 2026)." if final else
                 "Validation glissante sur la fenêtre de chaque service cible (données verrouillées).")
-               + f" Niveau transféré : {a.niveau}. « (retenu) » = stratégie A (locale), référence du test de Diebold-Mariano.\n"]
+               + f" Niveau du modèle : {a.niveau}. « (retenu) » = stratégie P (modèle propre, réglages choisis sur le service),"
+               " référence du test de Diebold-Mariano.\n"]
 
     for h in a.horizons:
         print(f"\n══════ Horizon J+{h}")
@@ -194,16 +262,23 @@ def main() -> None:
             orig = torch.cat([tab_c.origines[d.evaluation] for d in decs])
             dates = pd.DatetimeIndex([dt for d in decs for dt in tab_c.dates_cible[d.evaluation.numpy()]])
             previsions = {"Persistance de la cible": R.persistance(tab_c.serie, orig, h)}
-            morceaux = {"A · local (cible seule, réglages de la source gelés)": [],
+            nom_p = "P · modèle propre (cible seule, réglages choisis sur la cible)"
+            morceaux = {nom_p: [], "A · local (cible seule, réglages de la source gelés)": [],
                         "B · transfert direct (source seule, en taux)": [],
                         f"C · groupé (source + cible ×{a.poids_cible}, en taux)": []}
-            noms = list(morceaux)
+            noms = list(morceaux)[1:]
+            choix_propre = []
             for d in decs:
                 # Jours de la source connus au soir de l'origine (cible ≤ O ; < verrou au test final).
                 connus = tab_s.dates_cible < d.origine if final else tab_s.dates_cible <= d.origine
                 i_s = torch.nonzero(torch.tensor(connus)).flatten()
                 Xs, ys = tab_s.X[i_s], tab_s.y[i_s]
                 Xc, yc = tab_ct.X[d.entrainement].repeat(a.poids_cible, 1), tab_ct.y[d.entrainement].repeat(a.poids_cible)
+                hp_p, etiq = regler_sur_la_cible(a.niveau, hp, tab_c, d.entrainement, d.origine, a.validation_interne,
+                                                 a.minimum_entrainement)
+                choix_propre.append(etiq)
+                morceaux[nom_p].append(entrainer_predire(fabrique(a.niveau, hp_p, tab_c.blocs), tab_c.X[d.entrainement],
+                                                         tab_c.y[d.entrainement], tab_c.X[d.evaluation], tab_c.continues))
                 morceaux[noms[0]].append(entrainer_predire(fabrique(a.niveau, hp, tab_c.blocs), tab_c.X[d.entrainement],
                                                            tab_c.y[d.entrainement], tab_c.X[d.evaluation], tab_c.continues))
                 morceaux[noms[1]].append(multiplier(entrainer_predire(fabrique(a.niveau, hp_taux, tab_s.blocs), Xs, ys,
@@ -216,14 +291,20 @@ def main() -> None:
 
             dim = Dimension(cible, f"Service {cible} ({N_c} lits)", "Quelle stratégie prévoit le mieux un service à historique court ?", h, a.tau)
             for nom, prev in previsions.items():
-                dim.ajouter(nom, y, prev, 0.0, retenu=nom.startswith("A ·"))
+                dim.ajouter(nom, y, prev, 0.0, retenu=nom.startswith("P ·"))
                 totaux.setdefault(nom, {})[cible] = pd.Series(point_de(prev).numpy(), index=dates)
             totaux.setdefault("_vrai", {})[cible] = pd.Series(y.numpy(), index=dates)
             t = dim.tableau().drop(columns=["temps (s)"])
             print(f"\n── {cible} · {len(y)} jours évalués, {len(decs)} origine(s)\n{t.to_string()}")
             t.to_csv(resultats / f"transfert_{cible}_h{h}.csv", sep=";", encoding="utf-8-sig")
+            frequences = pd.Series(choix_propre).value_counts()
+            stab = ", ".join(f"{k} : {v}" for k, v in frequences.items())
+            print(f"   réglages du modèle propre (nombre d'origines) : {stab}")
             rapport.extend([f"\n## Horizon J+{h} · service {cible} ({N_c} lits, {len(y)} jours évalués)\n",
-                            en_markdown(t), "\n", dim.conclusion(t), "\n"])
+                            en_markdown(t), "\n", dim.conclusion(t), "\n",
+                            f"\nRéglages choisis par le modèle propre, sur {len(decs)} origine(s) : {stab}. "
+                            "Un même choix à presque toutes les origines = réglage stable ; des choix qui changent sans cesse = "
+                            "trop peu de jours pour régler, préférer la stratégie A.\n"])
 
         # ── Total de l'hôpital : somme des prévisions centrales des services, sur les jours communs ─
         if a.source not in totaux.get("_vrai", {}):

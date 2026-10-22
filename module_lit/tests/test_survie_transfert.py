@@ -9,7 +9,9 @@ from svr import survie as S
 from svr.classification import CalibrationPlatt, SVMLineaireClassifieur, auc, brier
 from svr.modeles import Entrainement, Perte, SVRLineaire
 from svr.niveaux import Hyperparametres
-from transfert import hp_en_taux
+from svr.caracteristiques import construire
+from svr.modeles import Entrainement as _E
+from transfert import GRILLE_PROPRE, hp_en_taux, regler_sur_la_cible
 
 T = torch.float64
 
@@ -96,3 +98,21 @@ def test_probabilites_j012_hasard_constant():
 def test_conversion_des_hyperparametres_en_taux():
     hp = hp_en_taux(Hyperparametres(C=2.0, epsilon=1.0, epsilon_quantile=0.0), 20)
     assert hp.C == pytest.approx(0.1) and hp.epsilon == pytest.approx(0.05) and hp.gamma == Hyperparametres().gamma
+
+
+def test_modele_propre_regle_sans_futur_et_dans_la_grille():
+    # Série construite pour le test (semaine + saison), pas des données de l'étude.
+    idx = pd.date_range("2025-01-01", periods=200, freq="D")
+    t = torch.arange(200, dtype=torch.float64)
+    occ = pd.DataFrame({"presents": (20 + 3 * torch.sin(2 * math.pi * t / 7)).round().int().numpy(),
+                        "admissions": 4, "sorties_sortie": 4}, index=idx)
+    tab = construire(occ, 1)
+    hp = Hyperparametres(C=1.0, gamma=0.05, entrainement=_E(iterations=60))
+    origine = pd.Timestamp("2025-05-01")
+    entr = torch.nonzero(torch.tensor(tab.dates_cible <= origine)).flatten()
+    hp_p, etiquette = regler_sur_la_cible(2, hp, tab, entr, origine, validation_interne=28, minimum=28)
+    assert hp_p.C / hp.C in GRILLE_PROPRE["C"] and hp_p.gamma / hp.gamma == pytest.approx(min(GRILLE_PROPRE["portee"], key=lambda m: abs(m - hp_p.gamma / hp.gamma)))
+    assert etiquette.startswith("C ×")
+    # Fenêtre interne trop courte : réglages de la source, sans recherche.
+    hp_s, etiquette_s = regler_sur_la_cible(2, hp, tab, entr[:40], origine, validation_interne=28, minimum=28)
+    assert hp_s is hp and etiquette_s.startswith("source")

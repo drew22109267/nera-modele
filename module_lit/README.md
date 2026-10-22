@@ -418,11 +418,32 @@ L = −Σ w_i [t_i ln p_i + (1 − t_i) ln(1 − p_i)]
 élevé qu'un négatif (statistique de Mann-Whitney, calcul en O(n log n), ex æquo comptés pour
 moitié).
 
-### 5.3 Transfert vers des services à historique court (`transfert.py`)
+### 5.3 Modèle propre ou transfert, pour les autres services (`transfert.py`)
 
-Trois stratégies sur les mêmes jours du service cible : A local (cible seule, hyperparamètres de
-la source gelés), B transfert direct (source seule, en taux), C groupé (source et cible réunies,
-en taux), plus la persistance.
+Quatre stratégies sur les mêmes jours du service cible, plus la persistance :
+
+| Stratégie | Apprend sur | Réglages (hyperparamètres) |
+|---|---|---|
+| **P · modèle propre** (retenue) | la cible seule | choisis sur la cible, par validation imbriquée |
+| A · local | la cible seule | ceux de la pédiatrie, gelés |
+| B · transfert direct | la pédiatrie seule, en taux | ceux de la pédiatrie |
+| C · groupé | pédiatrie et cible réunies, en taux | ceux de la pédiatrie |
+
+**Pourquoi un modèle propre.** Avec environ un an d'historique (médecine femme : août 2025 → octobre 2026),
+un service a assez de jours pour apprendre seul et pour régler ses propres hyperparamètres ; une population
+adulte ne ressemble pas à la pédiatrie (durées, causes, saisons). A, B et C restent dans le banc : le test de
+Diebold-Mariano contre P dit si le transfert apporte encore quelque chose.
+
+**Validation imbriquée (rien du futur).** À chaque origine O de la validation glissante, avec les seules
+lignes connues au soir de O : apprentissage interne sur les cibles ≤ O − v, évaluation interne sur les
+origines de ]O − v, O] (v = 56 jours, `--validation-interne`) ; la grille part des réglages de la pédiatrie,
+C × {0,3 ; 1 ; 3} et portées γ, γ₁, γ₂ × {0,5 ; 1 ; 2} (9 modèles), critère pinball au quantile τ ; à égalité,
+les réglages de la pédiatrie sont gardés. Le modèle est ensuite réentraîné sur tout ce qui est connu avec les
+réglages gagnants. Le rapport compte les réglages choisis à chaque origine : s'ils changent sans cesse, le
+réglage est instable (trop peu de jours) et A est plus sûre.
+
+**Limite.** Un an ne montre chaque saison qu'une fois : le modèle propre ne sépare pas un effet de saison d'un
+hasard de cette année-là (la variable « mois » est à tester dans le banc, pas à supposer utile).
 
 **Passage aux taux.** Avec N lits, Y = N y. Les pertes ε-insensible et pinball sont positivement
 homogènes : L_ε(N r) = N L_{ε/N}(r). En posant f = N f_r et α = N α_r :
