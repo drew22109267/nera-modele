@@ -556,7 +556,7 @@ Options : `--dimensions D1 D5`, `--pas` (28 par défaut), `--rapide`. Écrit
 ### Étape 3 ter : `benchmark_pretraitement.py`, chaque choix de prétraitement
 
 ```bash
-~/memoire-env/bin/python benchmark_pretraitement.py donnees/<export>.csv --service PED --lits 20 --horizons 1 7
+~/memoire-env/bin/python benchmark_pretraitement.py donnees/<export>.csv --service PED --lits 18 --horizons 1 7
 ```
 
 Sept dimensions, une décision changée à la fois : durées inconnues (P1), fenêtre de censure (P2),
@@ -610,9 +610,11 @@ sans aucune donnée de patient).
 ### Étape 7 : `transfert.py`, services à historique court et total de l'hôpital
 
 ```bash
-~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MED CHI \
-    --lits PED=20 MED=24 CHI=18 --horizons 1 7
+~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MEDF --horizons 1 7
 ```
+
+Lits connus par défaut : pédiatrie `PED=18` (20 installés, souvent 2 ou 3 non opérationnels), médecine femme `MEDF=17`. Un autre service s'ajoute avec
+`--lits MEDH=<N>`.
 
 Écrit `transfert_<SERVICE>_h<h>.csv`, `transfert_total_h<h>.csv` et `transfert.md`.
 

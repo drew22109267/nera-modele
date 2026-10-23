@@ -28,7 +28,7 @@ et, jour par jour, l'écart entre sorties attendues (Σ P) et sorties réelles d
 matin, pour J0, J1 et J2 (MAE en nombre de sorties par jour).
 
 Exemple :
-    ~/memoire-env/bin/python modele_survie.py donnees/<export>.csv --service PED --lits 20 --causes
+    ~/memoire-env/bin/python modele_survie.py donnees/<export>.csv --service PED --lits 18 --causes
 Sorties dans resultats/ : survie_<S>.csv / .md (tableau comparatif), survie_<S>_causes.csv,
 survie_<S>_calibration.png, survie_<S>_hasard.png, survie_<S>_sorties.png,
 survie_<S>_modele.json (le modèle retenu, pour l'API), survie_<S>_environnement.json.

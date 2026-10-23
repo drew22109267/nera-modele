@@ -25,7 +25,7 @@ Réentraînement (option --reentrainement) :
 Lancer les deux montre ce que rapporte le réentraînement mensuel.
 
 Exemple :
-    ~/memoire-env/bin/python validation_finale.py donnees/<export>.csv --service PED --lits 20 \
+    ~/memoire-env/bin/python validation_finale.py donnees/<export>.csv --service PED --lits 18 \
         --extraction 2026-10-31 --confirmation "J'ouvre le coffre pour la validation finale"
 """
 import argparse

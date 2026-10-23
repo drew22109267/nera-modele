@@ -26,7 +26,7 @@ Mêmes jours évalués pour toutes les variantes (intersection des dates cibles)
 composite, niveau 4, hyperparamètres retenus), même validation glissante, même horizon.
 
 Exemple :
-    ~/memoire-env/bin/python benchmark_pretraitement.py donnees/<export>.csv --service PED --lits 20 --horizons 1 7
+    ~/memoire-env/bin/python benchmark_pretraitement.py donnees/<export>.csv --service PED --lits 18 --horizons 1 7
 Sorties : resultats/pretraitement_<SERVICE>_<P>_h<h>.csv, resultats/pretraitement_<SERVICE>.md
 """
 from __future__ import annotations

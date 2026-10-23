@@ -84,11 +84,10 @@ sa prévision centrale (MAE, biais), pas sur un quantile.
 Exemples
 --------
 Développement (données verrouillées) :
-    ~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MED CHI \
-        --lits PED=20 MED=24 CHI=18 --horizons 1 7
+    ~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MEDF --horizons 1 7
+(lits connus par défaut : PED=18, MEDF=17 ; un autre service s'ajoute avec --lits MEDH=<N>)
 Test final, UNE fois à la fin :
-    ~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MED CHI \
-        --lits PED=20 MED=24 CHI=18 --extraction 2026-10-31 \
+    ~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MEDF --extraction 2026-10-31 \
         --confirmation "J'ouvre le coffre pour la validation finale"
 
 Sorties dans resultats/ : transfert_<CIBLE>_h<h>.csv, transfert_total_h<h>.csv, transfert.md
@@ -114,6 +113,8 @@ from svr.validation import Decoupage, decoupage_final, origines_glissantes
 from validation_finale import hyperparametres
 
 TYPE = torch.float64
+# Lits connus de chaque service (codes de l'outil de saisie, registres.js) ; --lits les remplace ou complète.
+LITS_CONNUS = {"PED": 18, "MEDF": 17}   # PED : 20 installés, 18 opérationnels en pratique
 GRANDEURS = ("presents", "admissions")       # + toutes les colonnes sorties_*, divisées par les lits
 
 
@@ -230,7 +231,8 @@ def main() -> None:
     p.add_argument("export")
     p.add_argument("--source", default="PED", help="service source, à long historique (PED)")
     p.add_argument("--cibles", nargs="+", required=True, help="services cibles, à fenêtre courte")
-    p.add_argument("--lits", nargs="+", required=True, help="lits de chaque service : PED=20 MED=24 …")
+    p.add_argument("--lits", nargs="+", default=[], help="lits de chaque service : PED=20 MEDH=… (connus par défaut : "
+                   + ", ".join(f"{k}={v}" for k, v in LITS_CONNUS.items()) + ")")
     p.add_argument("--horizons", type=int, nargs="+", default=[1, 7])
     p.add_argument("--tau", type=float, default=0.8)
     p.add_argument("--niveau", type=int, default=4, choices=[1, 2, 3, 4], help="niveau de modèle transféré (4)")
@@ -244,7 +246,7 @@ def main() -> None:
     p.add_argument("--confirmation", help="test final : phrase d'ouverture du coffre")
     a = p.parse_args()
 
-    lits = {k: int(v) for k, v in (x.split("=") for x in a.lits)}
+    lits = LITS_CONNUS | {k: int(v) for k, v in (x.split("=") for x in a.lits)}
     manquants = [s for s in [a.source, *a.cibles] if s not in lits]
     if manquants:
         raise SystemExit(f"Nombre de lits manquant pour : {', '.join(manquants)} (option --lits).")
