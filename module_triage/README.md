@@ -43,7 +43,32 @@ d'un modèle enfant vers les adultes (physiologie et seuils des constantes diff�
 - **Bancs d'essai** : chaque choix (variables, noyau, coûts, seuils) comparé à ses alternatives, comme pour le
   module lit.
 
-## 4. Étapes pour le rendre opérationnel
+## 4. Cible, décision et évaluation
+
+- **Cible principale (binaire)** : « grave » = hospitalisé, référé ou décédé ; « non grave » = externe ; la mise en
+  observation, cas intermédiaire, est placée par le banc T1. Cible secondaire : l'orientation elle-même (un SVM par
+  orientation, « un contre tous »), pour prévoir la charge d'hospitalisations.
+- **Probabilité** : score du SVM calibré par Platt, P(grave | f) = 1 / (1 + exp(A f + B)), sur des passages non
+  utilisés pour l'entraînement.
+- **Décision** : alerte si P(grave) ≥ s, avec s* = c₋ / (c₊ + c₋) (c₊ coût d'un grave manqué, c₋ coût d'une fausse
+  alerte) : le même raisonnement que le quantile τ du module lit.
+- **Mesures** : sensibilité sur les graves (prioritaire), sous-triage, sur-triage, spécificité, AUC, Brier, coût
+  moyen ; comparaison de deux modèles sur les mêmes passages par le test de McNemar,
+  χ² = (|b − c| − 1)² / (b + c).
+
+| Banc prévu | Question |
+|---|---|
+| T1 | place de la mise en observation (grave, non grave, exclue) |
+| T2 | modèle : règle de seuils sur les constantes, régression logistique, arbre, forêt, SVM linéaire, RBF, composite |
+| T3 | coût : C₊/C₋ = 1, = n₋/n₊, = rapport fixé avec le service, et le seuil s* correspondant |
+| T4 | variables : constantes seules, + plaintes, + contexte, + indicatrices de valeurs manquantes |
+| T5 | constantes brutes, rapportées à l'âge (écart à la norme), ou seuils d'alerte |
+| T6 | enfants et adultes ensemble ou séparés (protocole : séparés) |
+
+L'outil de saisie donne déjà, pour le registre des urgences, les premières conclusions : constantes assez souvent
+écrites pour être utilisées, nombre de passages graves, part d'enfants et d'adultes.
+
+## 5. Étapes pour le rendre opérationnel
 
 1. Photographier et saisir le registre des urgences avec l'outil de saisie (registre `URG`), contrôler la
    qualité de la saisie.
