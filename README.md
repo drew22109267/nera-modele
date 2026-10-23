@@ -8,7 +8,7 @@ modules**, qui répondent à deux questions différentes et n'utilisent pas les 
 | Module | Question | Méthode | Données | État |
 |---|---|---|---|---|
 | [**Module lit**](module_lit/) | Combien de lits seront occupés demain, dans 3 jours, dans 7 jours ? | **régression** : SVR quantile à coûts asymétriques, noyau composite, empilement | registre d'hospitalisation (entrées, sorties) → occupation jour par jour | **presque complètement opérationnel** |
-| [**Module triage**](module_triage/) | Quel niveau de priorité pour un patient qui arrive aux urgences ? | **classification** : SVM à coûts asymétriques | registre des urgences (constantes, symptômes, décision) | en préparation |
+| [**Module triage**](module_triage/) | Ce patient qui arrive aux urgences est-il grave ? | **classification** : SVM à coûts asymétriques, probabilité de Platt, seuil de coût | registre des urgences (constantes, plaintes, décision) | code écrit et testé, en attente des données |
 
 Les trois dépôts du projet :
 
