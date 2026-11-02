@@ -191,6 +191,7 @@ Exemple : b = 20, c = 10 donne χ² = 81/30 = 2,7 et p ≈ 0,10 : pas de différ
 |---|---|---|---|---|
 | Unité | le passage | le jour | la décision se prend patient par patient | — |
 | Groupes | enfants et adultes séparés | un modèle commun | physiologie et normes différentes (protocole) | T6 |
+| Représentation | variables d'origine | ACP, AFDM, groupe k-means, origine + groupe | l'ACP garde les directions où les patients varient le plus, pas forcément celles qui séparent graves et non graves ; premier essai sur le registre réel : AUC 0,71 (origine) contre 0,61 (ACP) chez les enfants | T7 |
 | Cible MEO | grave | non grave, exclue | l'observation traduit une inquiétude du médecin | T1 |
 | Modèle | SVM RBF | règle, logistique, arbre, forêt, SVM linéaire, composite | relations non linéaires, coûts dans la perte | T2 |
 | Coûts de classe | équilibrés | égaux, rapport du service | classes souvent déséquilibrées | T3 |

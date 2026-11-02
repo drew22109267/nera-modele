@@ -167,3 +167,24 @@ def test_lecture_du_csv_de_l_outil(tmp_path):
     assert list(df["classe"]) == ["grave", "non_grave"] and list(df["groupe"]) == ["enfant", "adulte"]
     assert df.loc[0, "plainte_convulsions"] == 1 and df.loc[0, "glycemie"] == pytest.approx(5.5 / 5.551)
     assert df.loc[1, "ta_sys"] == 120
+
+
+def test_representations_apprises_sur_l_apprentissage_seulement():
+    from triage.representations import Representation, kmeans
+    gen = torch.Generator().manual_seed(1)
+    X = torch.cat([torch.randn(60, 3, generator=gen, dtype=T), (torch.rand(60, 2, generator=gen) < 0.2).to(T)], 1)
+    for nom in ("acp", "afdm"):
+        r = Representation(nom, continues=[0, 1, 2]).ajuster(X)
+        Z = r.transformer(X)
+        assert Z.shape[1] == r.k and 0.8 <= r.variance_expliquee <= 1.0 + 1e-9
+        # axes orthogonaux : covariance des coordonnées diagonale
+        cov = (Z - Z.mean(0)).T @ (Z - Z.mean(0))
+        assert torch.allclose(cov - torch.diag(torch.diag(cov)), torch.zeros_like(cov), atol=1e-8)
+        # appliquée telle quelle à de nouveaux passages (pas réapprise)
+        assert torch.equal(r.transformer(X[:5]), Z[:5])
+    # k-means retrouve deux nuages bien séparés
+    A = torch.cat([torch.randn(30, 2, generator=gen, dtype=T), torch.randn(30, 2, generator=gen, dtype=T) + 10])
+    centres = kmeans(A, 2)
+    assert sorted(round(float(c.mean())) for c in centres) == [0, 10]
+    r = Representation("origine+kmeans", continues=[0, 1, 2], groupes=3).ajuster(X)
+    assert r.transformer(X).shape == (60, 5 + 3)

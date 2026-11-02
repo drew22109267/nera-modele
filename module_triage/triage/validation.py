@@ -19,6 +19,19 @@ Dans chaque entraînement, trois rôles, dans l'ordre du temps
 Platt doit être appris sur des passages NON utilisés pour apprendre le modèle : sur l'apprentissage lui-même,
 les scores sont trop confiants (le modèle les a appris par cœur), et les probabilités le seraient aussi.
 
+Représentation des variables (banc T7)
+---------------------------------------
+Après l'imputation et la standardisation, les variables peuvent être résumées (ACP, AFDM) ou remplacées
+par le groupe du passage (k-means) : voir triage/representations.py. Comme Preparateur, la représentation
+est apprise sur l'apprentissage seulement.
+
+Valeurs manquantes (banc T8)
+-----------------------------
+Le traitement des cases vides est appris avec Preparateur sur l'apprentissage seulement (triage/imputation.py).
+« suppression_lignes » (cas complets) retire les passages incomplets de l'apprentissage, de la calibration ET
+de l'évaluation : ils ne peuvent pas être prévus. Chaque résultat porte donc « complet » (aucune case vide) pour
+que le banc compare aussi la référence sur ces seuls passages.
+
 Coûts de classe C₊/C₋ (banc T3)
 --------------------------------
     egaux       C₊ = C₋ = 1
@@ -36,6 +49,7 @@ from svr.classification import CalibrationPlatt, auc
 from svr.modeles import TYPE, Entrainement
 
 from .modeles import fabrique
+from .representations import Representation
 from .variables import Preparateur, TableauTriage
 
 COUTS = ("egaux", "equilibre", "service")
@@ -56,6 +70,8 @@ class ConfigTriage:
     grille_C: tuple = (0.1, 1.0, 10.0)
     grille_portee: tuple = (0.25, 0.5, 1.0, 2.0)
     part_calibration: float = 0.25
+    representation: str = "originales"              # banc T7 (triage/representations.py)
+    imputation: str = "mediane"                     # banc T8 (triage/imputation.py)
     entrainement: Entrainement = field(default_factory=lambda: Entrainement(iterations=2000))
 
 
@@ -74,6 +90,29 @@ def decoupages_mensuels(dates: pd.DatetimeIndex, fin: pd.Timestamp, mois_min: in
         M = suivant
     if not decoupages:
         raise ValueError("Aucun mois évaluable : registre trop court (il faut au moins mois_min + 1 mois).")
+    return decoupages
+
+
+def decoupages_croises(dates: pd.DatetimeIndex, fin: pd.Timestamp) -> list[Decoupage]:
+    """
+    Validation croisée par mois : chaque mois est prédit par un modèle appris sur TOUS les autres mois (avant
+    `fin`), jamais sur lui-même. Sert seulement à donner une probabilité hors échantillon à CHAQUE passage, pour
+    le lien avec le module lit (lien_triage_lits.py) : la validation mensuelle laisse sans prévision les premiers
+    mois. Les mesures du triage, elles, restent celles de la validation mensuelle (rien du futur).
+    """
+    d = pd.Series(dates)
+    d = d[d < fin]
+    mois = sorted(d.dt.to_period("M").unique())
+    if len(mois) < 2:
+        raise ValueError("Validation croisée par mois : il faut au moins deux mois de passages.")
+    periode = pd.Series(dates).dt.to_period("M")
+    avant = pd.Series(dates) < fin
+    decoupages = []
+    for m in mois:
+        entr = torch.nonzero(torch.tensor((avant & (periode != m)).to_numpy())).flatten()
+        ev = torch.nonzero(torch.tensor((avant & (periode == m)).to_numpy())).flatten()
+        if len(entr) and len(ev):
+            decoupages.append(Decoupage(entr, ev, m.to_timestamp()))
     return decoupages
 
 
@@ -109,7 +148,13 @@ def _scores(nom: str, fab, Xa, ya, autres: list[torch.Tensor], alertes: list[tor
 def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriage) -> dict:
     """Probabilités calibrées, hors échantillon, pour tous les passages évalués (voir l'en-tête)."""
     ys, ps, scores, idx_eval, choix = [], [], [], [], []
+    complet = ~torch.isnan(tab.X).any(dim=1)                 # passage sans aucune case vide
     for dec in decoupages:
+        if config.imputation == "suppression_lignes":         # cas complets seulement, partout
+            dec = Decoupage(dec.entrainement[complet[dec.entrainement]], dec.evaluation[complet[dec.evaluation]], dec.mois)
+            if not len(dec.entrainement) or not len(dec.evaluation):
+                choix.append({"mois": f"{dec.mois:%Y-%m}", "ignore": "aucun passage complet"})
+                continue
         ordre = dec.entrainement[torch.argsort(torch.tensor(tab.dates[dec.entrainement.numpy()].asi8))]
         n_cal = max(1, int(round(config.part_calibration * len(ordre))))
         app, cal = ordre[:-n_cal], ordre[-n_cal:]
@@ -117,15 +162,19 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
         if len(torch.unique(y_app)) < 2 or len(torch.unique(y_cal)) < 2:
             choix.append({"mois": f"{dec.mois:%Y-%m}", "ignore": "une seule classe à l'apprentissage ou à la calibration"})
             continue
-        prep = Preparateur(tab.continues).ajuster(tab.X[app])
+        prep = Preparateur(tab.continues, config.imputation).ajuster(tab.X[app])
         Xa, Xc, Xe = (prep.transformer(tab.X[i]) for i in (app, cal, dec.evaluation))
+        # Banc T7 : ACP, AFDM ou k-means apprises sur l'apprentissage seulement, puis appliquées aux autres.
+        rep = Representation(config.representation, tab.continues).ajuster(Xa)
+        Xa, Xc, Xe = rep.transformer(Xa), rep.transformer(Xc), rep.transformer(Xe)
+        blocs = tab.blocs if config.representation == "originales" else {"constantes": list(range(Xa.shape[1])), "autres": []}
         cp, cn = rapport_classes(y_app, config.couts, config.rapport_couts)
         grille = [(None, None)] if config.modele in ("regle", "arbre", "foret") else \
             [(C, g) for C in config.grille_C for g in (config.grille_portee if config.modele.startswith("svm_") and
                                                          config.modele != "svm_lineaire" else (1.0,))]
         meilleur = None
         for C, g in grille:
-            fab = fabrique(config.modele, C or 1.0, g or 1.0, cp, cn, tab.blocs, config.entrainement)
+            fab = fabrique(config.modele, C or 1.0, g or 1.0, cp, cn, blocs, config.entrainement)
             s_cal, s_ev = _scores(config.modele, fab, Xa, y_app, [Xc, Xe], [tab.alertes[cal], tab.alertes[dec.evaluation]])
             a = auc(s_cal, y_cal)
             if meilleur is None or a > meilleur[0] + 1e-12:
@@ -138,9 +187,11 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
         idx_eval.append(dec.evaluation)
         choix.append({"mois": f"{dec.mois:%Y-%m}", "apprentissage": len(app), "calibration": len(cal),
                       "evaluation": len(dec.evaluation), "C": C, "portee": g, "C_plus_sur_C_moins": round(cp / cn, 3),
-                      "auc_calibration": round(a, 4), "platt_A": round(platt.A, 4), "platt_B": round(platt.B, 4)})
+                      "auc_calibration": round(a, 4), "platt_A": round(platt.A, 4), "platt_B": round(platt.B, 4),
+                      "representation": config.representation, "imputation": config.imputation, **rep.description()})
     if not ys:
         raise ValueError("Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).")
     idx = torch.cat(idx_eval)
     return {"y": torch.cat(ys), "p": torch.cat(ps), "score": torch.cat(scores), "indices": idx,
-            "dates": tab.dates[idx.numpy()], "meo": tab.meo[idx], "choix": choix}
+            "dates": tab.dates[idx.numpy()], "meo": tab.meo[idx], "complet": complet[idx],
+            "ids": [tab.ids[i] for i in idx.tolist()] if tab.ids else None, "choix": choix}

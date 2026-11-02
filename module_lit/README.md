@@ -99,10 +99,39 @@ bash lancer_tout.sh                              # toute la chaîne (journaux da
 ~/memoire-env/bin/jupyter lab pipeline.ipynb     # ou pas à pas, avec les explications
 ```
 
-`lancer_tout.sh` enchaîne : 0 vérification des calculs (dans outil-saisi), 1 conversion et occupation
-(paquet `traitement`), 2 entraînement des niveaux, 3 à 5 bancs d'essai, 6 sensibilité, 7 figures, 8 modèle de
-survie. Réglages par variables d'environnement (`SOURCE`, `LITS`, `LITS_FICHIER`, `COMPTAGES`, `HORIZONS`,
-`ETAPES`, `RAPIDE`, `OUTIL`) : voir l'en-tête du script.
+`lancer_tout.sh` traite **chaque service** (pédiatrie PED, 18 lits ; médecine femme MEDF, 17 lits) et enchaîne :
+0 vérification des calculs (dans outil-saisi), 1 conversion et occupation (paquet `traitement`), 2 entraînement
+des niveaux, 3 à 5 bancs d'essai, 6 sensibilité, 7 figures, 8 modèle de survie, 9 export pour l'outil, puis
+**10 transfert entre les services dans les deux sens** (PED → MEDF et MEDF → PED, chaque comptage). Réglages par
+variables d'environnement (`SERVICES`, `SOURCE_PED`, `SOURCE_MEDF`, `LITS_PED`, `LITS_MEDF`, `COMPTAGES`,
+`HORIZONS`, `ETAPES`, `RAPIDE`, `OUTIL`) : voir l'en-tête du script.
+
+**Pourquoi le transfert entre services.** La validation dans un second hôpital a été abandonnée (temps et moyens) ;
+la médecine femme (12 mois, 17 lits) sert à la place de terrain de transférabilité : la méthode réglée sur la
+pédiatrie tient-elle sur un autre service, et deux services ensemble font-ils mieux que chacun seul ?
+
+**Lien avec le triage (étape 11, `lien_triage_lits.py`).** La somme des probabilités de gravité des enfants passés
+aux urgences dans la journée (« charge grave attendue ») entre dans le bloc « flux » du noyau composite. Le banc
+D12 compare le modèle sans les urgences, avec le nombre de passages, avec les graves orientés, avec la charge du
+triage local, et avec la charge de chaque triage pré-entraîné sur NHAMCS (Diebold-Mariano contre le modèle sans
+urgences et contre la charge locale). Faute d'identifiant patient commun, le lien est fait jour par jour.
+
+**Durées de séjour inconnues (banc P1, outil-saisi `traitement/imputation.py`).** Neuf méthodes : exclure, médiane,
+moyenne, médiane par tranche d'âge, estimée par le prix puis l'issue (retenue), k plus proches voisins,
+régressions enchaînées, loi normale multivariée par EM, ACP itérative. Chacune est jugée deux fois : par
+l'erreur d'estimation en validation croisée (`estimation_durees_<SERVICE>.csv`) et par son effet sur la
+prévision des lits (P1). Les deux tableaux sont exportés vers l'outil de saisie (« Résultats du modèle »).
+
+Toutes les combinaisons de données comparées :
+
+| Données d'apprentissage | Où | Stratégie |
+|---|---|---|
+| pédiatrie seule | bancs D, P, sensibilité (étapes 2 à 6, service PED) ; transfert MEDF → PED | P, A |
+| médecine femme seule | bancs D, P, sensibilité (service MEDF) ; transfert PED → MEDF | P, A |
+| pédiatrie appliquée à la médecine femme | transfert PED → MEDF | B |
+| médecine femme appliquée à la pédiatrie | transfert MEDF → PED | B |
+| pédiatrie + médecine femme réunies | les deux sens | C (source + cible), G1 (période commune), G2 (tout) |
+| aucune (référence) | les deux sens | persistance |
 
 Tous les calculs sont faits en double précision (`torch.float64`) sur processeur.
 
@@ -610,13 +639,19 @@ sans aucune donnée de patient).
 ### Étape 7 : `transfert.py`, services à historique court et total de l'hôpital
 
 ```bash
-~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MEDF --horizons 1 7
+~/memoire-env/bin/python transfert.py donnees/export_outil_PED_MEDF.csv --source PED --cibles MEDF --horizons 1 7
+~/memoire-env/bin/python transfert.py donnees/export_outil_PED_MEDF.csv --source MEDF --cibles PED --comptage pic
 ```
+
+L'export doit contenir les séjours des deux services (`lancer_tout.sh`, étape 1, réunit les exports). Dans les
+deux sens, l'évaluation commence quand le service le plus récent (médecine femme) a assez de jours : les deux sens
+sont donc jugés sur les mêmes jours.
 
 Lits connus par défaut : pédiatrie `PED=18` (20 installés, souvent 2 ou 3 non opérationnels), médecine femme `MEDF=17`. Un autre service s'ajoute avec
 `--lits MEDH=<N>`.
 
-Écrit `transfert_<SERVICE>_h<h>.csv`, `transfert_total_h<h>.csv` et `transfert.md`.
+Écrit, pour `<nom>` = `<SOURCE>_vers_<CIBLE>` (suivi de `_<comptage>` hors minuit) : `transfert_<nom>_<CIBLE>_h<h>.csv`,
+`transfert_<nom>_total_h<h>.csv` et `transfert_<nom>.md`.
 
 ### À part
 

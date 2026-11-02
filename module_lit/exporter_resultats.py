@@ -45,6 +45,7 @@ FICHIERS = [
     (r"parametres_{s}_synthese\.csv", "parametres", "Sensibilité des hyperparamètres"),
     (r"sensibilite_{s}_synthese\.csv", "sensibilite", "Sensibilité à la convention des jours"),
     (r"survie_{s}\.csv", "survie", "Modèle de survie (J0, J1, J2)"),
+    (r"estimation_durees_{s}\.csv", "durees_inconnues", "Durées inconnues : erreur de chaque méthode (validation croisée)"),
 ]
 RAPPORTS = {"pretraitement": "pretraitement_{s}.md", "choix": "benchmark_{s}.md"}
 
@@ -103,7 +104,7 @@ def tables_du_comptage(dossier: Path, service: str, comptage: str) -> list[dict]
     phrases = {g: conclusions_markdown(dossier / m.format(s=lab)) for g, m in RAPPORTS.items()}
     tables = []
     for motif, groupe, titre_groupe in FICHIERS:
-        unique = groupe in ("pretraitement", "survie")
+        unique = groupe in ("pretraitement", "survie", "durees_inconnues")
         if unique and comptage != "minuit":
             continue
         rx = re.compile(motif.format(s=re.escape(lab)) + "$")

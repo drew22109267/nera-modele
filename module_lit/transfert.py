@@ -83,15 +83,25 @@ sa prévision centrale (MAE, biais), pas sur un quantile.
 
 Exemples
 --------
-Développement (données verrouillées) :
-    ~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MEDF --horizons 1 7
+Développement (données verrouillées), dans les deux sens et pour chaque méthode de comptage
+(lancer_tout.sh, étape 10, le fait pour toutes les combinaisons) :
+    ~/memoire-env/bin/python transfert.py donnees/export_outil_PED_MEDF.csv --source PED --cibles MEDF --horizons 1 7
+    ~/memoire-env/bin/python transfert.py donnees/export_outil_PED_MEDF.csv --source MEDF --cibles PED --comptage pic
+L'export doit contenir les séjours de tous les services (lancer_tout.sh réunit les exports de chaque service).
 (lits connus par défaut : PED=18, MEDF=17 ; un autre service s'ajoute avec --lits MEDH=<N>)
 Test final, UNE fois à la fin :
     ~/memoire-env/bin/python transfert.py donnees/<export>.csv --source PED --cibles MEDF --extraction 2026-10-31 \
         --confirmation "J'ouvre le coffre pour la validation finale"
 
-Sorties dans resultats/ : transfert_<CIBLE>_h<h>.csv, transfert_total_h<h>.csv, transfert.md
-(tableaux et conclusions pour le mémoire), transfert_environnement.json.
+Sorties dans resultats/, nommées <SOURCE>_vers_<CIBLES> (+ _<comptage> hors minuit) :
+transfert_<nom>_<CIBLE>_h<h>.csv, transfert_<nom>_total_h<h>.csv, transfert_<nom>.md (tableaux et conclusions
+pour le mémoire), transfert_<nom>_environnement.json.
+
+Mêmes jours évalués dans les deux sens
+--------------------------------------
+La première origine laisse --minimum-entrainement jours au service qui démarre le plus tard, SOURCE COMPRISE :
+dans le sens MEDF → PED, la source n'a rien avant août 2025, et la pédiatrie est donc évaluée sur la même
+période que la médecine femme. Les deux sens se comparent alors jour pour jour.
 """
 import argparse
 import dataclasses
@@ -101,6 +111,7 @@ import pandas as pd
 import torch
 
 from benchmark_choix import Dimension, en_markdown
+from traitement.comptage import etiquette, option_comptage
 from traitement.chargement import lire_export, periode_exploitable, preparer_sejours
 from traitement.occupation import reconstituer_occupation
 from traitement.verrou import DATE_VERROU
@@ -118,7 +129,7 @@ LITS_CONNUS = {"PED": 18, "MEDF": 17}   # PED : 20 installés, 18 opérationnels
 GRANDEURS = ("presents", "admissions")       # + toutes les colonnes sorties_*, divisées par les lits
 
 
-def occupation_du_service(df: pd.DataFrame, code: str, extraction) -> pd.DataFrame:
+def occupation_du_service(df: pd.DataFrame, code: str, extraction, comptage: str = "minuit") -> pd.DataFrame:
     """
     Occupation attendue d'un service, sur sa période exploitable, avec les réglages RETENUS pour toute la
     chaîne (lancer_tout.sh) : durées inconnues estimées (prix, issue), censure au p95 des durées, rodage
@@ -129,7 +140,7 @@ def occupation_du_service(df: pd.DataFrame, code: str, extraction) -> pd.DataFra
     if sejours.empty:
         raise ValueError(f"Aucun séjour pour le service {code}.")
     periode = periode_exploitable(sejours, rodage_au_debut=True)
-    return reconstituer_occupation(sejours, extraction, debut=periode["debut"], scenario="attendue")
+    return reconstituer_occupation(sejours, extraction, debut=periode["debut"], scenario="attendue", comptage=comptage)
 
 
 def en_taux(occ: pd.DataFrame, lits: int) -> pd.DataFrame:
@@ -244,7 +255,9 @@ def main() -> None:
                    help="modèle propre : jours de la validation interne qui choisit ses réglages (56)")
     p.add_argument("--extraction", help="test final : date du relevé du registre (aaaa-mm-jj)")
     p.add_argument("--confirmation", help="test final : phrase d'ouverture du coffre")
+    option_comptage(p)
     a = p.parse_args()
+    nom = etiquette(f"{a.source}_vers_{'_'.join(a.cibles)}", a.comptage)   # préfixe des fichiers de résultats
 
     lits = LITS_CONNUS | {k: int(v) for k, v in (x.split("=") for x in a.lits)}
     manquants = [s for s in [a.source, *a.cibles] if s not in lits]
@@ -254,13 +267,13 @@ def main() -> None:
     if final and not a.extraction:
         raise SystemExit("Le test final demande --extraction (date du relevé).")
     resultats = Path("resultats"); resultats.mkdir(exist_ok=True)
-    ecrire_environnement(resultats / "transfert_environnement.json", **{k: v for k, v in vars(a).items() if k != "confirmation"})
+    ecrire_environnement(resultats / f"transfert_{nom}_environnement.json", **{k: v for k, v in vars(a).items() if k != "confirmation"})
 
     df = lire_export(a.export, confirmation_coffre=a.confirmation) if final else lire_export(a.export)
     extraction = pd.Timestamp(a.extraction) if final else DATE_VERROU
-    occs = {a.source: occupation_du_service(df, a.source, extraction)}
+    occs = {a.source: occupation_du_service(df, a.source, extraction, a.comptage)}
     for c in a.cibles:
-        occs[c] = occupation_du_service(df, c, extraction)
+        occs[c] = occupation_du_service(df, c, extraction, a.comptage)
         print(f"{c} : occupation exploitable du {occs[c].index.min():%d/%m/%Y} au {occs[c].index.max():%d/%m/%Y}")
     N_s = lits[a.source]
     rapport = [f"# Transfert de la méthode — source {a.source} vers {', '.join(a.cibles)}\n",
@@ -271,7 +284,7 @@ def main() -> None:
 
     for h in a.horizons:
         print(f"\n══════ Horizon J+{h}")
-        chemin = resultats / f"hyperparametres_{a.source}_h{h}.json"
+        chemin = resultats / f"hyperparametres_{etiquette(a.source, a.comptage)}_h{h}.json"
         if chemin.exists():
             hp = hyperparametres(chemin)[a.niveau]
         else:
@@ -285,8 +298,8 @@ def main() -> None:
         debut_commun = max(occs[c].index.min() for c in services)          # premier jour où tous les services ont des données
         totaux = {}                                              # stratégie → {service → Series par date}
         # Mêmes origines pour tous les services (indispensable pour additionner les prévisions au total) :
-        # la première origine laisse `minimum_entrainement` jours à la cible qui démarre le plus tard.
-        debut_val = max(occs[c].index.min() for c in a.cibles) + pd.Timedelta(days=a.minimum_entrainement + h + 7)
+        # la première origine laisse `minimum_entrainement` jours au service (source comprise) qui démarre le plus tard.
+        debut_val = max(occs[c].index.min() for c in services) + pd.Timedelta(days=a.minimum_entrainement + h + 7)
 
         for cible in a.cibles:
             N_c = lits[cible]
@@ -346,7 +359,7 @@ def main() -> None:
             totaux.setdefault("_vrai", {})[cible] = pd.Series(y.numpy(), index=dates)
             t = dim.tableau().drop(columns=["temps (s)"])
             print(f"\n── {cible} · {len(y)} jours évalués, {len(decs)} origine(s)\n{t.to_string()}")
-            t.to_csv(resultats / f"transfert_{cible}_h{h}.csv", sep=";", encoding="utf-8-sig")
+            t.to_csv(resultats / f"transfert_{nom}_{cible}_h{h}.csv", sep=";", encoding="utf-8-sig")
             frequences = pd.Series(choix_propre).value_counts()
             stab = ", ".join(f"{k} : {v}" for k, v in frequences.items())
             print(f"   réglages du modèle propre (nombre d'origines) : {stab}")
@@ -380,12 +393,12 @@ def main() -> None:
                                    "MAE total (lits)": round(M.mae(yv, pv), 3), "biais total": round(M.biais(yv, pv), 3)})
                 tt = pd.DataFrame(lignes).set_index("stratégie (services cibles)")
                 print(f"\n── Total de l'hôpital ({a.source} + {' + '.join(a.cibles)}) : {sum(lits[s] for s in [a.source, *a.cibles])} lits\n{tt.to_string()}")
-                tt.to_csv(resultats / f"transfert_total_h{h}.csv", sep=";", encoding="utf-8-sig")
+                tt.to_csv(resultats / f"transfert_{nom}_total_h{h}.csv", sep=";", encoding="utf-8-sig")
                 rapport.extend([f"\n## Horizon J+{h} · total de l'hôpital ({a.source} + {' + '.join(a.cibles)})\n", en_markdown(tt),
                                 "\nSomme des prévisions centrales (médianes) ; la source est prévue par son modèle local.\n"])
 
-    (resultats / "transfert.md").write_text("\n".join(rapport), encoding="utf-8")
-    print(f"\nTableaux écrits dans {resultats.resolve()} (transfert.md pour le mémoire)")
+    (resultats / f"transfert_{nom}.md").write_text("\n".join(rapport), encoding="utf-8")
+    print(f"\nTableaux écrits dans {resultats.resolve()} (transfert_{nom}.md pour le mémoire)")
 
 
 def point_de(prevision):

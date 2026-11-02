@@ -3,7 +3,9 @@ Banc de comparaison des choix de PRÉTRAITEMENT (des registres à la série d'oc
 
 Chaque dimension change UNE décision de prétraitement et garde toutes les autres au choix retenu (marqué « retenu ») :
 
-  P1  Durées inconnues        exclure · médiane du service · estimée (prix, puis issue, puis médiane)  (retenu)
+  P1  Durées inconnues        exclure · médiane · moyenne · médiane par âge · estimée (prix, puis issue, puis
+                              médiane) (retenu) · k plus proches voisins · régressions enchaînées · EM (loi
+                              normale) · ACP itérative (outil-saisi, traitement/imputation.py)
   P2  Fenêtre de censure      14 j · 30 j · p95 des durées connues (retenu) · 60 j
   P3  Convention des jours    attendue (nuit incertaine comptée 1 − p) (retenu) · tout inclusif · tout en nuits
   P4  Patients reportés       garder (retenu) · fusionner les reports confirmés
@@ -75,7 +77,13 @@ RETENU = Pretraitement()
 DIMENSIONS = {
     "P1": ("Durées inconnues", [("Exclure les séjours sans durée", dict(inconnues="exclure")),
                                 ("Médiane du service", dict(inconnues="mediane")),
-                                ("Estimée : prix, puis issue, puis médiane", dict(inconnues="estimee"))]),
+                                ("Moyenne du service", dict(inconnues="moyenne")),
+                                ("Médiane de la tranche d'âge", dict(inconnues="mediane_age")),
+                                ("Estimée : prix, puis issue, puis médiane", dict(inconnues="estimee")),
+                                ("k plus proches voisins (prix, âge, sexe, issue, mois)", dict(inconnues="knn")),
+                                ("Régressions enchaînées (ridge, principe de MICE)", dict(inconnues="regression")),
+                                ("Loi normale multivariée par EM", dict(inconnues="em")),
+                                ("ACP itérative (rang faible)", dict(inconnues="acp_iterative"))]),
     "P2": ("Fenêtre de censure (encore hospitalisé)", [("14 jours", dict(censure=14)), ("30 jours", dict(censure=30)),
                                                        ("p95 des durées connues", dict(censure="p95")), ("60 jours", dict(censure=60))]),
     "P3": ("Convention du nombre de jours", [("Attendue (nuit incertaine = 1 − p)", dict(scenario="attendue")),

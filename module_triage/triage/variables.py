@@ -19,7 +19,8 @@ Le diagnostic n'est JAMAIS une variable : il est écrit après l'examen (fuite d
 
 Valeurs manquantes et standardisation : `Preparateur`, appris sur l'entraînement SEULEMENT
 -----------------------------------------------------------------------------------------
-    1. chaque valeur manquante est remplacée par la MÉDIANE de sa colonne sur l'entraînement ;
+    1. chaque valeur manquante est complétée selon le traitement choisi (médiane par défaut ; les neuf
+       traitements comparés par le banc T8 sont dans triage/imputation.py) ;
     2. les colonnes continues sont standardisées : z = (x − μ)/σ, μ et σ de l'entraînement.
 Les deux étapes sont apprises sur les passages d'entraînement et appliquées telles quelles aux passages à
 prévoir : aucune information des passages à prévoir n'entre dans la préparation.
@@ -34,6 +35,7 @@ import torch
 
 from svr.modeles import TYPE
 
+from .imputation import Imputeur
 from .normes import CONSTANTES_NORMEES, AGE_NOURRISSON, alertes, ecarts, plage
 
 CONSTANTES = ["pouls", "fr", "ta_sys", "ta_dia", "temperature", "spo2", "glycemie", "poids"]
@@ -61,6 +63,7 @@ class TableauTriage:
     alertes: torch.Tensor            # nombre de signes d'alerte de chaque passage (règle de référence)
     meo: torch.Tensor                # 1 si la décision était une mise en observation
     groupe: list[str]
+    ids: list = None                 # identifiant du passage (colonne id_passage), pour raccorder enfants et adultes
 
 
 def cible(classe: str | None, meo: str) -> float | None:
@@ -99,7 +102,7 @@ def construire(passages: pd.DataFrame, options: OptionsVariables | None = None) 
         noms += ["garde_nuit", "permanence", "week_end", "mois_sin", "mois_cos"]
         continues += [len(noms) - 2, len(noms) - 1]
 
-    lignes, ys, dates, nb_alertes, meo, groupes = [], [], [], [], [], []
+    lignes, ys, dates, nb_alertes, meo, groupes, ids = [], [], [], [], [], [], []
     for _, p in passages.iterrows():
         yc = cible(p.get("classe"), o.meo)
         if yc is None:
@@ -138,6 +141,7 @@ def construire(passages: pd.DataFrame, options: OptionsVariables | None = None) 
         nb_alertes.append(total_alertes)
         meo.append(float(p.get("classe") == "intermediaire"))
         groupes.append(p.get("groupe"))
+        ids.append(p.get("id_passage"))
     if not lignes:
         raise ValueError("Aucun passage avec une décision lisible.")
     return TableauTriage(X=torch.tensor(lignes, dtype=TYPE), y=torch.tensor(ys, dtype=TYPE),
@@ -145,7 +149,7 @@ def construire(passages: pd.DataFrame, options: OptionsVariables | None = None) 
                          blocs={"constantes": list(range(fin_constantes)),
                                 "autres": list(range(fin_constantes, len(noms)))},
                          alertes=torch.tensor(nb_alertes, dtype=TYPE), meo=torch.tensor(meo, dtype=TYPE),
-                         groupe=groupes)
+                         groupe=groupes, ids=ids)
 
 
 def _val(v) -> float:
@@ -157,14 +161,14 @@ def _val(v) -> float:
 
 
 class Preparateur:
-    """Imputation par la médiane puis standardisation, apprises sur l'entraînement seulement."""
+    """Imputation (banc T8, médiane par défaut) puis standardisation, apprises sur l'entraînement seulement."""
 
-    def __init__(self, continues: list[int]):
+    def __init__(self, continues: list[int], imputation: str = "mediane"):
         self.continues = continues
+        self.imputeur = Imputeur(imputation, continues)
 
     def ajuster(self, X: torch.Tensor) -> "Preparateur":
-        self.mediane = torch.nanmedian(X, dim=0).values
-        self.mediane = torch.where(torch.isnan(self.mediane), torch.zeros_like(self.mediane), self.mediane)
+        self.imputeur.ajuster(X)
         Z = self._imputer(X)[:, self.continues]
         self.moyenne = Z.mean(dim=0)
         self.ecart = Z.std(dim=0, unbiased=False)
@@ -172,9 +176,10 @@ class Preparateur:
         return self
 
     def _imputer(self, X: torch.Tensor) -> torch.Tensor:
-        return torch.where(torch.isnan(X), self.mediane.expand_as(X), X)
+        return self.imputeur.transformer(X)
 
     def transformer(self, X: torch.Tensor) -> torch.Tensor:
         Z = self._imputer(X)
         Z[:, self.continues] = (Z[:, self.continues] - self.moyenne) / self.ecart
+        Z[:, self.imputeur.retirees] = 0.0          # suppression_colonnes : colonne constante = colonne retirée
         return Z

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
-# Modèle NERA, module lit : toute la chaîne, dans l'ordre, sur la dernière version de la saisie.
+# Modèle NERA, module lit : toute la chaîne, dans l'ordre, sur la dernière version de la saisie,
+# pour CHAQUE service (pédiatrie, médecine femme), puis le transfert entre services dans les deux sens.
 #
-# À relancer à chaque nouvelle version du fichier exporté par l'outil de saisie (« Aperçu » →
+# À relancer à chaque nouvelle version des fichiers exportés par l'outil de saisie (« Aperçu » →
 # exporter tous les mois). Les données ne quittent pas l'ordinateur : donnees/ et resultats/
 # ne sont jamais envoyés sur GitHub.
 #
@@ -10,21 +11,24 @@
 #     ~/memoire-env/bin/pip install -e ../../outil-saisi
 #
 # Usage (dans un terminal Ubuntu / WSL, depuis le dossier nera-modele/module_lit) :
-#     bash lancer_tout.sh                       # tout, sauf la recherche longue des paramètres
-#     ETAPES="1 2" bash lancer_tout.sh          # seulement certaines étapes
+#     bash lancer_tout.sh                       # tout, pour les deux services, puis les transferts
+#     SERVICES="MEDF" bash lancer_tout.sh       # un seul service
+#     ETAPES="10" bash lancer_tout.sh           # seulement certaines étapes (ici : les transferts)
 #     RAPIDE=1 bash lancer_tout.sh              # essai rapide (moins d'itérations)
 #
 # Réglages (variables d'environnement, valeurs par défaut entre crochets) :
-#     SOURCE     CSV exporté de l'outil  [/mnt/c/Users/User/Desktop/MEMOIRE/saisie_ia/registre-ped-tous-les-mois.csv]
-#     LITS       capacité de référence  [20]
-#     LITS_FICHIER  capacité variable (date_debut;lits), si la date du passage de 15 à 20 lits est connue
-#     OUTIL      dépôt outil-saisi       [../../outil-saisi]
-#     COMPTAGES  méthodes de comptage   ["minuit journee pondere"]
-#     HORIZONS   horizons en jours      ["1 7"]
+#     SERVICES     services traités               ["PED MEDF"]
+#     SOURCE_PED   CSV de l'outil, pédiatrie      [MEMOIRE/saisie_ia/registre-ped-tous-les-mois.csv]
+#     SOURCE_MEDF  CSV de l'outil, médecine femme [MEMOIRE/saisie_ia/registre-medf-COMPLET.csv]
+#     LITS_PED     lits de la pédiatrie            [18 : 20 installés, souvent 2 ou 3 hors service]
+#     LITS_MEDF    lits de la médecine femme       [17]
+#     OUTIL        dépôt outil-saisi               [../../outil-saisi]
+#     COMPTAGES    méthodes de comptage            ["minuit pic journee pondere"]
+#     HORIZONS     horizons en jours               ["1 7"]
 #
-# Étapes :
+# Étapes (1 à 9 : pour chaque service ; 10 : entre les services) :
 #     0  vérification de tous les calculs sur des données fictives (outil = Python = calcul direct)
-#     1  conversion du CSV de l'outil et reconstitution de l'occupation (+ scénarios de 15 à 20 lits)
+#     1  conversion du CSV de l'outil et reconstitution de l'occupation ; réunion des exports des services
 #     2  entraînement des niveaux 0 à 5 avec recherche des hyperparamètres par grille
 #     3  banc des choix de conception (D1 à D11 : 23 modèles, noyau, perte, τ, variables…)
 #     4  banc du prétraitement (P1 à P8)
@@ -32,21 +36,29 @@
 #     6  sensibilité à la convention des jours
 #     7  toutes les figures
 #     8  modèle de survie J0 / J1 / J2
+#     9  export des résultats pour l'outil de saisie (resultats/resultats_nera_<SERVICE>.json)
+#    10  transfert entre services, dans les deux sens (PED → MEDF et MEDF → PED), pour chaque comptage :
+#        P modèle propre · A local · B transfert direct · C groupé · G1 et G2 modèle unique (les deux
+#        services comme une seule source) · persistance ; mêmes jours évalués, Diebold-Mariano
+#    11  lien triage → lits (pédiatrie, chaque comptage) : corrélation urgences / admissions et banc D12 ;
+#        demande d'avoir lancé AVANT module_triage/lancer_triage.py (fichiers probabilites_enfant.csv)
 # La validation finale (septembre-octobre 2026) n'est PAS lancée ici : une seule fois, à la fin.
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
 set -u
 cd "$(dirname "$0")"
 PY="${PY:-$HOME/memoire-env/bin/python}"
 OUTIL="${OUTIL:-../../outil-saisi}"
-SOURCE="${SOURCE:-/mnt/c/Users/User/Desktop/MEMOIRE/saisie_ia/registre-ped-tous-les-mois.csv}"
-LITS="${LITS:-20}"
-COMPTAGES="${COMPTAGES:-minuit journee pondere}"
+SAISIE=/mnt/c/Users/User/Desktop/MEMOIRE/saisie_ia
+SERVICES="${SERVICES:-PED MEDF}"
+declare -A SOURCE=([PED]="${SOURCE_PED:-$SAISIE/registre-ped-tous-les-mois.csv}" [MEDF]="${SOURCE_MEDF:-$SAISIE/registre-medf-COMPLET.csv}")
+declare -A LITS=([PED]="${LITS_PED:-18}" [MEDF]="${LITS_MEDF:-17}")
+COMPTAGES="${COMPTAGES:-minuit pic journee pondere}"
 HORIZONS="${HORIZONS:-1 7}"
-ETAPES="${ETAPES:-0 1 2 3 4 5 6 7 8}"
+ETAPES="${ETAPES:-0 1 2 3 4 5 6 7 8 9 10 11}"
+export PYTHONUNBUFFERED=1          # les journaux se remplissent au fur et à mesure (avancement visible)
 RAPIDE_OPT=""; [ "${RAPIDE:-0}" = "1" ] && RAPIDE_OPT="--rapide"
-CAPACITE="--lits $LITS"; [ -n "${LITS_FICHIER:-}" ] && CAPACITE="--lits-fichier $LITS_FICHIER"
 JOURNAL=resultats/journaux; mkdir -p "$JOURNAL" donnees
-EXPORT=donnees/export_outil_PED.csv
+EXPORT_TOUS=donnees/export_outil_PED_MEDF.csv   # séjours de tous les services réunis (transfert, modèle unique)
 
 etape() { [[ " $ETAPES " == *" $1 "* ]]; }
 lancer() {   # lancer <nom du journal> <commande…> : affiche le début et la fin, garde tout dans le journal
@@ -56,20 +68,54 @@ lancer() {   # lancer <nom du journal> <commande…> : affiche le début et la f
 }
 
 etape 0 && lancer verification bash -c "cd '$OUTIL' && '$PY' -m verification.verifier_calculs"
-if etape 1; then
-  lancer conversion "$PY" -m traitement.depuis_outil "$SOURCE" --service PED --sortie "$EXPORT"
+
+for S in $SERVICES; do
+  EXPORT=donnees/export_outil_$S.csv
+  L=${LITS[$S]}
+  echo "════ Service $S ($L lits)"
+  if etape 1; then
+    lancer "conversion_$S" "$PY" -m traitement.depuis_outil "${SOURCE[$S]}" --service "$S" --sortie "$EXPORT"
+    for c in $COMPTAGES; do
+      lancer "occupation_${S}_$c" "$PY" -m traitement.rapport_occupation "$EXPORT" --service "$S" --lits "$L" --inconnues estimee \
+        --fenetre-censure p95 --rodage-debut --comptage "$c" --scenarios-lits $(seq $((L - 3)) $((L + 2)))
+    done
+  fi
   for c in $COMPTAGES; do
-    lancer "occupation_$c" "$PY" -m traitement.rapport_occupation "$EXPORT" --service PED $CAPACITE --inconnues estimee \
-      --fenetre-censure p95 --rodage-debut --comptage "$c" --scenarios-lits 15 16 17 18 19 20
+    etape 2 && lancer "niveaux_${S}_$c" "$PY" lancer_niveaux.py --service "$S" --horizons $HORIZONS --tau 0.8 --recherche grille --comptage "$c"
+    etape 3 && lancer "banc_choix_${S}_$c" "$PY" benchmark_choix.py --service "$S" --horizons $HORIZONS --comptage "$c" $RAPIDE_OPT
+    etape 5 && lancer "banc_parametres_${S}_$c" "$PY" benchmark_parametres.py --service "$S" --horizons $HORIZONS --comptage "$c" $RAPIDE_OPT
+    etape 6 && lancer "sensibilite_${S}_$c" "$PY" sensibilite.py --service "$S" --horizons $HORIZONS --comptage "$c"
+    etape 7 && lancer "figures_${S}_$c" "$PY" visualisations.py --service "$S" --comptage "$c" $RAPIDE_OPT
+  done
+  etape 4 && lancer "banc_pretraitement_$S" "$PY" benchmark_pretraitement.py "$EXPORT" --service "$S" --lits "$L" --horizons $HORIZONS $RAPIDE_OPT
+  etape 8 && lancer "survie_$S" "$PY" modele_survie.py "$EXPORT" --service "$S" --lits "$L" --causes
+  etape 9 && lancer "export_resultats_$S" "$PY" exporter_resultats.py --service "$S"
+done
+
+# ── Les exports des services réunis en un seul fichier (même en-tête) : source du transfert et du modèle unique.
+if etape 1 && [ -f donnees/export_outil_PED.csv ] && [ -f donnees/export_outil_MEDF.csv ]; then
+  { cat donnees/export_outil_PED.csv; tail -n +2 donnees/export_outil_MEDF.csv; } > "$EXPORT_TOUS"
+  echo "── exports réunis : $EXPORT_TOUS"
+fi
+
+if etape 10; then
+  echo "════ Transfert entre services (les deux sens, chaque comptage)"
+  for c in $COMPTAGES; do
+    lancer "transfert_PED_vers_MEDF_$c" "$PY" transfert.py "$EXPORT_TOUS" --source PED --cibles MEDF \
+      --lits PED=${LITS[PED]} MEDF=${LITS[MEDF]} --horizons $HORIZONS --comptage "$c"
+    lancer "transfert_MEDF_vers_PED_$c" "$PY" transfert.py "$EXPORT_TOUS" --source MEDF --cibles PED \
+      --lits PED=${LITS[PED]} MEDF=${LITS[MEDF]} --horizons $HORIZONS --comptage "$c"
   done
 fi
-for c in $COMPTAGES; do
-  etape 2 && lancer "niveaux_$c" "$PY" lancer_niveaux.py --service PED --horizons $HORIZONS --tau 0.8 --recherche grille --comptage "$c"
-  etape 3 && lancer "banc_choix_$c" "$PY" benchmark_choix.py --service PED --horizons $HORIZONS --comptage "$c" $RAPIDE_OPT
-  etape 5 && lancer "banc_parametres_$c" "$PY" benchmark_parametres.py --service PED --horizons $HORIZONS --comptage "$c" $RAPIDE_OPT
-  etape 6 && lancer "sensibilite_$c" "$PY" sensibilite.py --service PED --horizons $HORIZONS --comptage "$c"
-  etape 7 && lancer "figures_$c" "$PY" visualisations.py --service PED --comptage "$c" $RAPIDE_OPT
-done
-etape 4 && lancer banc_pretraitement "$PY" benchmark_pretraitement.py "$EXPORT" --service PED --lits "$LITS" --horizons $HORIZONS $RAPIDE_OPT
-etape 8 && lancer survie "$PY" modele_survie.py "$EXPORT" --service PED --lits "$LITS" --causes
+if etape 11; then
+  echo "════ Lien triage → lits"
+  if [ -f ../module_triage/resultats/triage/probabilites_enfant.csv ]; then
+    for c in $COMPTAGES; do
+      lancer "lien_triage_PED_$c" "$PY" lien_triage_lits.py --service PED --horizons $HORIZONS --comptage "$c"
+    done
+    etape 9 && lancer export_resultats_PED "$PY" exporter_resultats.py --service PED   # pour inclure le banc D12
+  else
+    echo "   ignoré : lancez d'abord module_triage/lancer_triage.py (probabilites_enfant.csv absent)"
+  fi
+fi
 echo "── $(date '+%H:%M') fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/"
