@@ -24,6 +24,10 @@ Dimensions comparées
   D9  Combinaison                        meilleur modèle seul, moyenne simple, empilement appris
   D10 Recherche d'hyperparamètres        défaut, grille, essaim particulaire  (option --recherche)
   D11 Chaque variable une à une          toutes les variables, puis la même sans chacune d'elles
+  D13 Variantes de SVM                   tous les SVM du catalogue (svr/variantes.py) : linéaire, RBF,
+                                         quantile RBF, quantile composite (retenu), noyau laplacien,
+                                         noyau polynomial, LS-SVR à quantiles LOO ; c'est ce banc (avec
+                                         D1) que selection.py lit pour choisir le SVM le plus adapté
 
 Protocole commun
 ----------------
@@ -72,6 +76,7 @@ from svr.modeles import Entrainement, IntervalleQuantile, Perte, SVRLineaire, SV
 from svr.niveaux import Hyperparametres, fabrique
 from svr.noyaux import NoyauComposite, NoyauRBF
 from svr.reproductibilite import ecrire_environnement
+from svr.variantes import CATALOGUE, RETENU, fabrique_catalogue
 from svr.validation import Decoupage, decoupage_final, evaluer, origines_glissantes
 from validation_finale import hyperparametres
 
@@ -183,8 +188,8 @@ def main() -> None:
     p.add_argument("--tau", type=float, default=0.8)
     p.add_argument("--pas", type=int, default=28, help="jours entre deux origines de la validation glissante (28)")
     p.add_argument("--debut-validation", help="première origine (défaut : 6 mois avant le verrou)")
-    p.add_argument("--dimensions", nargs="+", default=[f"D{i}" for i in (*range(1, 10), 11)],
-                   help="dimensions à lancer (D1 … D9 et D11 par défaut ; D10 avec --recherche)")
+    p.add_argument("--dimensions", nargs="+", default=[f"D{i}" for i in (*range(1, 10), 11, 13)],
+                   help="dimensions à lancer (D1 … D9, D11 et D13 par défaut ; D10 avec --recherche)")
     p.add_argument("--recherche", action="store_true", help="ajoute D10 (grille et essaim : long)")
     p.add_argument("--rapide", action="store_true", help="800 itérations au lieu de celles des hyperparamètres")
     option_comptage(p)
@@ -400,6 +405,15 @@ def main() -> None:
             publier(d)
 
         # ── D11 · Chaque variable une à une (ablation) ──────────────────────
+        if "D13" in dims:
+            d = Dimension("D13", "Variantes de SVM", "Quel SVM est le plus adapté à la série du service ? (mêmes jours, mêmes variables)", h, a.tau)
+            for cle, (nom, famille, _) in CATALOGUE.items():
+                if famille != "svm":
+                    continue
+                prev, s = prevoir(fabrique_catalogue(cle, hp, tab.blocs))
+                d.ajouter(nom, y, prev, s, retenu=(cle == RETENU), cle=cle)
+            publier(d)
+
         if "D11" in dims:
             d = Dimension("D11", "Chaque variable, une à une",
                           "Que perd le modèle si on lui retire cette seule variable ? (modèle RBF du niveau 2, mêmes jours)", h, a.tau)

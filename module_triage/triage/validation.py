@@ -48,7 +48,7 @@ import torch
 from svr.classification import CalibrationPlatt, auc
 from svr.modeles import TYPE, Entrainement
 
-from .modeles import fabrique
+from .modeles import A_PORTEE, fabrique
 from .representations import Representation
 from .variables import Preparateur, TableauTriage
 
@@ -170,8 +170,7 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
         blocs = tab.blocs if config.representation == "originales" else {"constantes": list(range(Xa.shape[1])), "autres": []}
         cp, cn = rapport_classes(y_app, config.couts, config.rapport_couts)
         grille = [(None, None)] if config.modele in ("regle", "arbre", "foret") else \
-            [(C, g) for C in config.grille_C for g in (config.grille_portee if config.modele.startswith("svm_") and
-                                                         config.modele != "svm_lineaire" else (1.0,))]
+            [(C, g) for C in config.grille_C for g in (config.grille_portee if config.modele in A_PORTEE else (1.0,))]
         meilleur = None
         for C, g in grille:
             fab = fabrique(config.modele, C or 1.0, g or 1.0, cp, cn, blocs, config.entrainement)

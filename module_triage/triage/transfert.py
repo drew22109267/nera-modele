@@ -64,7 +64,9 @@ import torch
 
 from svr.classification import CalibrationPlatt, SVMLineaireClassifieur, auc
 from svr.modeles import TYPE, Entrainement
+from traitement.urgences import PLAINTES
 
+from .modeles import FourierAleatoire
 from .validation import Decoupage, rapport_classes
 from .variables import Preparateur, TableauTriage
 
@@ -76,19 +78,6 @@ SOURCES = {"cible_fourier": "Cameroun seul", "source_seule": "externe seule", "s
 
 VARIANTES = ("cible_fourier", "source_seule", "source_recalibree", "reunies", "augmentation",
              "regularisation_biaisee", "a_svm", "score_source")
-
-
-class FourierAleatoire:
-    """φ(x) = √(2/D) cos(Ωx + b), Ω ~ N(0, 2γ I), b ~ U[0, 2π] : φ(x)ᵀφ(z) ≈ exp(−γ‖x − z‖²)."""
-
-    def __init__(self, d: int, D: int = 500, gamma: float = 0.1, graine: int = 0):
-        g = torch.Generator().manual_seed(graine)
-        self.Omega = torch.randn(D, d, generator=g, dtype=TYPE) * math.sqrt(2 * gamma)
-        self.b = torch.rand(D, generator=g, dtype=TYPE) * 2 * math.pi
-        self.echelle = math.sqrt(2 / D)
-
-    def __call__(self, X: torch.Tensor) -> torch.Tensor:
-        return self.echelle * torch.cos(X @ self.Omega.T + self.b)
 
 
 class SVMAPriori(SVMLineaireClassifieur):
@@ -287,4 +276,11 @@ def evaluer_transfert(tab: TableauTriage, decoupages: list[Decoupage], pre: Pret
 def lire_source(chemin: str, groupe: str) -> pd.DataFrame:
     """Passages NHAMCS du groupe (fichier écrit par preparer_nhamcs.py)."""
     s = pd.read_csv(chemin, parse_dates=["date_passage"], low_memory=False)
-    return s[s["groupe"] == groupe].reset_index(drop=True)
+    s = s[s["groupe"] == groupe].reset_index(drop=True)
+    # Fichier préparé avant l'ajout de familles de plaintes : la famille absente est « non observée » (NaN), donc
+    # hors des variables communes, jusqu'à ce que preparer_nhamcs.py soit relancé. Colonnes dans l'ordre du registre.
+    for f in PLAINTES:
+        if f"plainte_{f}" not in s:
+            s[f"plainte_{f}"] = float("nan")
+    autres = [c for c in s.columns if not c.startswith("plainte_")]
+    return s[autres + [f"plainte_{f}" for f in PLAINTES]]

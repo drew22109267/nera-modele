@@ -27,6 +27,14 @@ autre chose que l'erreur (vraisemblance clinique, loi de Little, comptages réel
 Mêmes jours évalués pour toutes les variantes (intersection des dates cibles), même modèle (SVR quantile à noyau
 composite, niveau 4, hyperparamètres retenus), même validation glissante, même horizon.
 
+Banc CROISÉ P1 × modèles (option --croise)
+------------------------------------------
+La meilleure façon de traiter les durées inconnues peut dépendre du modèle. Avec --croise, chacune des neuf méthodes
+de P1 est essayée avec CHAQUE modèle du catalogue (svr/variantes.py : sept SVM et quatre concurrents), sur les
+mêmes jours. Deux tests de Diebold-Mariano par case, sur la série retenue : contre la paire retenue (estimée ×
+SVR quantile composite) et contre le même modèle avec l'imputation retenue (l'imputation change-t-elle quelque
+chose POUR CE modèle ?). Sorties : pretraitement_<SERVICE>_P1xM_h<h>.csv et une section du rapport.
+
 Exemple :
     ~/memoire-env/bin/python benchmark_pretraitement.py donnees/<export>.csv --service PED --lits 18 --horizons 1 7
 Sorties : resultats/pretraitement_<SERVICE>_<P>_h<h>.csv, resultats/pretraitement_<SERVICE>.md
@@ -55,6 +63,8 @@ from svr.caracteristiques import construire
 from svr.niveaux import Hyperparametres, fabrique
 from svr.reproductibilite import ecrire_environnement
 from svr.validation import Decoupage, evaluer, origines_glissantes
+from svr.concurrents import HyperConcurrents
+from svr.variantes import CATALOGUE, RETENU as MODELE_RETENU, fabrique_catalogue
 from validation_finale import hyperparametres
 
 TYPE = torch.float64
@@ -151,18 +161,73 @@ def exclure_trous(tab, decs: list[Decoupage], trous: set, retards: int = 7) -> l
     return [Decoupage(dc.entrainement[~touche[dc.entrainement]], dc.evaluation, dc.origine) for dc in decs]
 
 
-def prevoir(occ: pd.DataFrame, h: int, hp: Hyperparametres, debut_val, pas: int, trous: str) -> pd.DataFrame:
-    """Prévisions du niveau 4 et de la persistance, indexées par la date cible."""
+def prevoir(occ: pd.DataFrame, h: int, hp: Hyperparametres, debut_val, pas: int, trous: str,
+            modele: str | None = None, hp_niveaux: dict | None = None, hpc: HyperConcurrents | None = None) -> pd.DataFrame:
+    """Prévisions (niveau 4, ou un modèle du catalogue) et de la persistance, indexées par la date cible."""
     tab = construire(occ, h, debut_min=13)
     decs = origines_glissantes(tab, debut_val, DATE_VERROU, pas=pas)
     if trous == "exclure":
         decs = exclure_trous(tab, decs, jours_de_trou(occ))
-    r = evaluer(tab, decs, fabrique(4, hp, tab.blocs))
+    fab = fabrique(4, hp, tab.blocs) if modele is None else fabrique_catalogue(modele, hp_niveaux, tab.blocs, hpc)
+    r = evaluer(tab, decs, fab)
     pers = R.persistance(tab.serie, r["origines"], h)
     t = pd.DataFrame({"y": r["y"].numpy(), "persistance": pers.numpy()}, index=r["dates"])
-    for tau, v in r["prevision"].items():
-        t[f"q{tau}"] = v.numpy()
+    if isinstance(r["prevision"], dict):
+        for tau, v in r["prevision"].items():
+            t[f"q{tau}"] = v.numpy()
+    else:                                                    # modèle ponctuel : même valeur pour tous les quantiles
+        t["q0.5"] = r["prevision"].numpy()
     return t
+
+
+def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut_val, sortie: Path) -> list[str]:
+    """P1 × modèles : chaque méthode des durées inconnues avec chaque modèle du catalogue, mêmes jours."""
+    chemin_hp = sortie / f"hyperparametres_{a.service}_h{h}.json"
+    hpn = hyperparametres(chemin_hp) if chemin_hp.exists() else {n: Hyperparametres(tau=a.tau) for n in (1, 2, 3, 4)}
+    hpc = HyperConcurrents(tau=a.tau)
+    if a.rapide:
+        hpn = {n: dataclasses.replace(v, entrainement=dataclasses.replace(v.entrainement, iterations=800)) for n, v in hpn.items()}
+        hpc = dataclasses.replace(hpc, arbres=60, etapes=80, epoques=300, graines=1)
+    _, variantes = DIMENSIONS["P1"]
+    print(f"\n── P1 × modèles (J+{h}) : {len(variantes)} méthodes × {len(a.modeles)} modèles")
+    previsions = {}
+    for nom_imp, changement in variantes:
+        cfg = dataclasses.replace(RETENU, **changement)
+        occ, _, _ = construire_serie(df, a.service, a.lits, cfg)
+        for cle in a.modeles:
+            debut = time.perf_counter()
+            previsions[(changement["inconnues"], cle)] = (nom_imp, prevoir(occ, h, hp, debut_val, a.pas, cfg.trous, cle, hpn, hpc),
+                                                          time.perf_counter() - debut)
+            print(f"   {nom_imp} × {CATALOGUE[cle][0]}")
+    communs = sorted(set.intersection(*(set(v[1].index) for v in previsions.values())))
+    y_ref = torch.tensor(occ_ref["presents"].reindex(communs).to_numpy(), dtype=TYPE)
+    med = {k: torch.tensor(v[1].loc[communs, "q0.5"].to_numpy(), dtype=TYPE) for k, v in previsions.items()}
+    paire_ref = (RETENU.inconnues, MODELE_RETENU)
+    lignes = []
+    for (imp, cle), (nom_imp, t, secondes) in previsions.items():
+        t = t.loc[communs]
+        y = torch.tensor(t["y"].to_numpy(), dtype=TYPE)
+        qcol = f"q{a.tau}" if f"q{a.tau}" in t else "q0.5"
+        q = torch.tensor(t[qcol].to_numpy(), dtype=TYPE)
+        l = {"imputation": nom_imp, "modèle": CATALOGUE[cle][0], "famille": CATALOGUE[cle][1], "cle_imputation": imp, "cle_modele": cle,
+             "MAE retenue": round(M.mae(y_ref, med[(imp, cle)]), 3), "MAE propre": round(M.mae(y, med[(imp, cle)]), 3),
+             f"pinball τ={a.tau} propre": round(M.pinball_moyenne(y, q, a.tau), 4), "temps (s)": round(secondes, 1)}
+        for nom_test, contre in (("vs paire retenue", paire_ref), ("vs imputation retenue, même modèle", (RETENU.inconnues, cle))):
+            if (imp, cle) == contre or contre not in med:
+                l[f"DM p {nom_test}"], l[nom_test] = None, "— référence"
+                continue
+            dm = M.diebold_mariano(y_ref, med[(imp, cle)], med[contre], h=h)
+            l[f"DM p {nom_test}"] = dm["p_valeur"]
+            l[nom_test] = ("identique" if dm["plus_precis"] == "indéterminé" else
+                           ("meilleur" if dm["plus_precis"] == "A" else "moins bon") if dm["significatif_5pc"] else "équivalent")
+        lignes.append(l)
+    tab = pd.DataFrame(lignes).sort_values("MAE retenue").set_index(["imputation", "modèle"])
+    tab.to_csv(sortie / f"pretraitement_{a.service}_P1xM_h{h}.csv", sep=";", encoding="utf-8-sig")
+    print(tab.to_string())
+    meilleur = tab.index[0]
+    return [f"\n### P1 × modèles (J+{h}) : chaque méthode des durées inconnues avec chaque modèle\n",
+            f"{len(communs)} jours évalués ; tri par MAE contre la série retenue.\n", en_markdown(tab.reset_index()), "\n",
+            f"Meilleure paire : **{meilleur[0]} × {meilleur[1]}**.\n"]
 
 
 def main() -> None:
@@ -171,6 +236,8 @@ def main() -> None:
     p.add_argument("--horizons", type=int, nargs="+", default=[1, 7]); p.add_argument("--tau", type=float, default=0.8)
     p.add_argument("--pas", type=int, default=28); p.add_argument("--dimensions", nargs="+", default=list(DIMENSIONS))
     p.add_argument("--rapide", action="store_true", help="800 itérations d'optimisation")
+    p.add_argument("--croise", action="store_true", help="ajoute le banc croisé P1 × modèles (long)")
+    p.add_argument("--modeles", nargs="+", default=list(CATALOGUE), help="modèles du banc croisé (tout le catalogue)")
     a = p.parse_args()
     sortie = Path("resultats"); sortie.mkdir(exist_ok=True)
     ecrire_environnement(sortie / f"pretraitement_{a.service}_environnement.json", **vars(a))
@@ -236,6 +303,8 @@ def main() -> None:
             rapport += [f"\n### {code} · {titre}\n", f"{len(communs)} jours évalués.\n", en_markdown(tab), "\n",
                         (f"Significativement meilleur que le choix retenu : {', '.join(mieux)} — à revoir." if mieux
                          else f"Aucune variante ne fait significativement mieux que le choix retenu ({nom_ref})."), "\n"]
+        if a.croise:
+            rapport += banc_croise(df, a, h, hp, occ_ref, debut_val, sortie)
     (sortie / f"pretraitement_{a.service}.md").write_text("\n".join(rapport), encoding="utf-8")
     print(f"\nRapport : {(sortie / f'pretraitement_{a.service}.md').resolve()}")
 

@@ -35,6 +35,19 @@ alerte si P(grave) ≥ s* = 1/(1 + c₊/c₋).
 |      | (urgences des États-Unis, > 100 000)       | réunies, augmentation (Daumé), régularisation biaisée,  |
 |      |                                            | A-SVM, score de la source comme variable                |
 T9 demande la source préparée une fois par preparer_nhamcs.py (option --source-externe) ; sans elle, T9 est ignoré.
+| T10  | valeurs manquantes × modèles (croisé)      | chaque traitement de T8 avec chaque modèle de T2        |
+| T11  | plaintes × modèles (croisé)                | familles fixées à l'avance, sac de mots, familles + mots,|
+|      |                                            | sans plaintes ; chacune avec chaque modèle de T2        |
+| T12  | passages d'âge illisible, groupe déduit    | avec, sans (comparés sur les passages d'âge écrit)      |
+|      | de la profession                           |                                                         |
+| T13  | rapport des coûts c₊/c₋ (seuil s*)         | 1, 2, 3, 4, 6 : même modèle, seuil s* = 1/(1 + c₊/c₋)   |
+MEO : comptée grave par défaut, choix CLINIQUE fixé à l'avance (le patient gardé en surveillance a besoin de soins ;
+le renvoyer serait un sous-triage). T1 est une analyse de sensibilité : la cible change d'une variante à l'autre,
+donc les variantes ne sont comparées (McNemar) que sur les passages hors MEO communs aux trois, où la cible est
+la même. On ne choisit JAMAIS la définition de la cible d'après le score.
+Chaque ligne donne aussi le taux d'alerte et la spécificité à 90 % et 95 % de sensibilité (lus sur la courbe ROC).
+Sélection : le SVM (modèle, valeurs manquantes, plaintes, transfert) de plus petit coût moyen, écrit dans
+resultats/triage/choix_retenu_<groupe>.json ; --utiliser-selection le prend comme modèle principal (test final).
 Raccordement (après les groupes) : les prévisions des modèles enfants et adultes sont réunies et comparées,
 sur TOUS les passages des urgences, au modèle commun appris sur tout le monde (McNemar, mêmes passages).
 Chaque variante est comparée à la référence du banc par le test de McNemar sur les mêmes passages.
@@ -54,14 +67,16 @@ from svr.modeles import Entrainement
 from traitement import verrou
 from traitement.urgences import decrire, lire_passages
 from triage.mesures import mcnemar, resume, seuil_optimal
-from triage.modeles import MODELES
+from triage.modeles import FAMILLE_SVM, MODELES
 from triage.validation import COUTS, ConfigTriage, decoupage_final, decoupages_croises, decoupages_mensuels, evaluer
 from triage.imputation import IMPUTATIONS
 from triage.transfert import SOURCES, ConfigTransfert, Pretraine, evaluer_transfert, lire_source
 from triage.representations import REPRESENTATIONS
-from triage.variables import FORMES, MEO, OptionsVariables, construire
+from triage.variables import FORMES, MEO, OptionsVariables, construire, vocabulaire
 
-BANCS = ("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9")
+BANCS = ("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13")
+RAPPORTS_COUTS = (1.0, 2.0, 3.0, 4.0, 6.0)
+PLAINTES_VARIANTES = ("familles", "mots", "familles + mots", "sans plaintes")
 SOURCE_EXTERNE = "/mnt/c/Users/User/Desktop/MEMOIRE/donnees_externes/nhamcs/passages_nhamcs.csv.gz"
 
 
@@ -83,6 +98,7 @@ class Banc:
         self.source = None               # passages NHAMCS du groupe (banc T9)
         self.cfg_transfert = ConfigTransfert()
         self.pretraine, self.transferts = None, {}
+        self.vocab = ()                  # vocabulaire du sac de mots (banc T11)
 
     def lancer(self, options: OptionsVariables, config: ConfigTriage, passages: pd.DataFrame | None = None):
         tab = construire(self.passages if passages is None else passages, options)
@@ -102,24 +118,70 @@ class Banc:
         return ligne
 
 
+def options_plaintes(nom: str, vocab: tuple[str, ...]) -> dict:
+    """Options de variables d'une variante du banc T11."""
+    return {"familles": dict(plaintes=True, mots=()), "mots": dict(plaintes=False, mots=vocab),
+            "familles + mots": dict(plaintes=True, mots=vocab), "sans plaintes": dict(plaintes=False, mots=())}[nom]
+
+
+def restreindre(res: dict, ids: list) -> dict:
+    """Les résultats d'un modèle sur une liste de passages (identifiants), dans cet ordre."""
+    position = {i: k for k, i in enumerate(res["ids"])}
+    k = torch.tensor([position[i] for i in ids], dtype=torch.long)
+    return {**res, "y": res["y"][k], "p": res["p"][k], "meo": res["meo"][k], "ids": list(ids),
+            "indices": torch.tensor(list(ids), dtype=torch.long)}
+
+
+def selectionner(lignes: list[dict]) -> dict:
+    """
+    Le meilleur SVM d'après les bancs (règle fixée à l'avance) : parmi les lignes de la famille SVM des bancs
+    T2, T8, T10, T11 et T9 (les variantes « cas complets » sont exclues : elles ne portent pas sur tous les passages),
+    le plus petit COÛT MOYEN par passage (c₊ par grave manqué, c₋ par fausse alerte : le critère du problème) ;
+    à égalité, la plus grande AUC. Tout vient de la validation mensuelle avant le verrou.
+    """
+    candidats = [l for l in lignes if l.get("svm") and l.get("imputation") != "suppression_lignes"
+                 and l.get("cout_moyen") == l.get("cout_moyen")]
+    if not candidats:
+        return {}
+    meilleur = min(candidats, key=lambda l: (l["cout_moyen"], -(l.get("auc") or 0)))
+    return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "transfert", "cout_moyen", "auc",
+                                         "sensibilite", "specificite", "mcnemar_p")}
+
+
 def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: ConfigTriage,
                     tous: pd.DataFrame, groupe: str) -> list[dict]:
     lignes = []
     ref = b.lancer(opts, cfg)
     b.reference = ref
     lignes.append(b.ligne("principal", "modèle principal", ref, None))
-    print(f"  modèle principal : sensibilité {lignes[-1]['sensibilite']:.3f}, AUC {lignes[-1]['auc']:.3f}")
+    lignes[-1].update(modele=cfg.modele, imputation=cfg.imputation, svm=cfg.modele in FAMILLE_SVM)
+    print(f"  modèle principal : sensibilité {lignes[-1]['sensibilite']:.3f}, spécificité {lignes[-1]['specificite']:.3f}, "
+          f"alertes {lignes[-1]['taux_alerte']:.1%}, AUC {lignes[-1]['auc']:.3f}, "
+          f"spécificité à 90 % de sensibilité {lignes[-1]['spec_sens90']:.3f}")
     if "T1" in bancs:
+        # Analyse de sensibilité de la cible. Les mesures globales ne se comparent pas (la cible change) ; la
+        # comparaison juste porte sur les passages hors MEO présents dans les trois variantes (même cible).
+        par_meo = {}
         for meo in MEO:
             r = ref if meo == opts.meo else b.lancer(dataclasses.replace(opts, meo=meo), cfg)
-            lignes.append(b.ligne("T1", f"MEO {meo}", r, None))
-            lignes.append(b.ligne("T1", f"MEO {meo} (passages hors MEO)", r, None, masque=r["meo"] == 0))
+            par_meo[meo] = r
+            lignes.append(b.ligne("T1", f"MEO {meo} (cible propre, non comparable)", r, None))
+        hors = [{i for i, m in zip(r["ids"], r["meo"].tolist()) if m == 0} for r in par_meo.values()]
+        communs = [i for i in ref["ids"] if all(i in h for h in hors)]
+        base = restreindre(ref, communs)
+        for meo, r in par_meo.items():
+            lignes.append(b.ligne("T1", f"MEO {meo} — passages hors MEO communs", restreindre(r, communs),
+                                  None if meo == opts.meo else base))
+            print(f"  T1 MEO {meo:<10} hors MEO ({len(communs)} passages) : AUC {lignes[-1]['auc']:.3f}, "
+                  f"spécificité à 90 % de sensibilité {lignes[-1]['spec_sens90']:.3f}")
     if "T2" in bancs:
         regle = b.lancer(opts, dataclasses.replace(cfg, modele="regle"))
         for m in MODELES:
             r = regle if m == "regle" else ref if m == cfg.modele else b.lancer(opts, dataclasses.replace(cfg, modele=m))
             lignes.append(b.ligne("T2", m, r, regle))
-            print(f"  T2 {m:<14} sensibilité {lignes[-1]['sensibilite']:.3f}, AUC {lignes[-1]['auc']:.3f}")
+            lignes[-1].update(modele=m, imputation=cfg.imputation, svm=m in FAMILLE_SVM)
+            print(f"  T2 {m:<24} sensibilité {lignes[-1]['sensibilite']:.3f}, alertes {lignes[-1]['taux_alerte']:.1%}, "
+                  f"AUC {lignes[-1]['auc']:.3f}, spec@90 {lignes[-1]['spec_sens90']:.3f}")
     if "T3" in bancs:
         for c in COUTS:
             r = ref if c == cfg.couts else b.lancer(opts, dataclasses.replace(cfg, couts=c))
@@ -157,8 +219,57 @@ def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: Conf
                 lignes.append(b.ligne("T8", f"{cfg.imputation} (mêmes passages complets)", ref, None, masque=masque))
             else:
                 lignes.append(b.ligne("T8", imp, r, ref))
+                lignes[-1].update(modele=cfg.modele, imputation=imp, svm=cfg.modele in FAMILLE_SVM)
             print(f"  T8 {imp:<20} passages {lignes[-1]['passages']}, sensibilité {lignes[-1]['sensibilite']:.3f}, "
                   f"AUC {lignes[-1]['auc']:.3f}")
+    if "T10" in bancs:
+        # Croisé : chaque traitement des valeurs manquantes avec chaque modèle (la règle n'utilise pas les variables).
+        for m in MODELES:
+            if m == "regle":
+                continue
+            for imp in IMPUTATIONS:
+                try:
+                    r = ref if (m, imp) == (cfg.modele, cfg.imputation) else \
+                        b.lancer(opts, dataclasses.replace(cfg, modele=m, imputation=imp))
+                except ValueError as e:
+                    print(f"  T10 {imp} × {m} impossible : {e}")
+                    continue
+                lignes.append(b.ligne("T10", f"{imp} × {m}", r, ref if imp != "suppression_lignes" else None))
+                lignes[-1].update(modele=m, imputation=imp, svm=m in FAMILLE_SVM)
+                print(f"  T10 {imp:<20} × {m:<24} coût {lignes[-1]['cout_moyen']:.3f}, AUC {lignes[-1]['auc']:.3f}")
+    if "T11" in bancs:
+        # Plaintes : familles fixées à l'avance, sac de mots, les deux, ou rien — croisé avec chaque modèle.
+        for m in MODELES:
+            if m == "regle":
+                continue
+            for nom in PLAINTES_VARIANTES:
+                o2 = dataclasses.replace(opts, **options_plaintes(nom, b.vocab))
+                c2 = dataclasses.replace(cfg, modele=m)
+                r = ref if (o2, c2) == (opts, cfg) else b.lancer(o2, c2)
+                lignes.append(b.ligne("T11", f"{nom} × {m}", r, ref))
+                lignes[-1].update(modele=m, imputation=cfg.imputation, plaintes=nom, svm=m in FAMILLE_SVM)
+                print(f"  T11 {nom:<16} × {m:<24} coût {lignes[-1]['cout_moyen']:.3f}, AUC {lignes[-1]['auc']:.3f}")
+    if "T12" in bancs and "groupe_deduit" in b.passages and b.passages["groupe_deduit"].sum() > 0:
+        # Passages d'âge illisible rattachés au groupe par la profession : aident-ils ? Comparaison sur les
+        # passages d'âge ÉCRIT seulement (les mêmes pour les deux modèles), McNemar.
+        sans = b.lancer(opts, cfg, passages=b.passages[b.passages["groupe_deduit"] == 0].reset_index(drop=True))
+        dans_ref = set(ref["ids"])
+        communs = [i for i in sans["ids"] if i in dans_ref]
+        ref_c = restreindre(ref, communs)
+        lignes.append(b.ligne("T12", "avec les groupes déduits (passages d'âge écrit)", ref_c, None))
+        lignes.append(b.ligne("T12", "sans les groupes déduits", restreindre(sans, communs), ref_c))
+        print(f"  T12 avec groupes déduits AUC {lignes[-2]['auc']:.3f} ; sans : AUC {lignes[-1]['auc']:.3f} "
+              f"({int(b.passages['groupe_deduit'].sum())} passages déduits)")
+    if "T13" in bancs:
+        # Le rapport des coûts ne change pas l'apprentissage (coûts de classe équilibrés), seulement le seuil :
+        # mêmes probabilités, seuil s* = 1/(1 + c₊/c₋). Le coût moyen dépend de c₊/c₋ : comparer les lignes
+        # par la sensibilité, la spécificité et le taux d'alerte, pas par le coût.
+        for rc in RAPPORTS_COUTS:
+            s = seuil_optimal(rc)
+            lignes.append({"banc": "T13", "variante": f"c₊/c₋ = {rc:g} (seuil {s:.3f})",
+                           **resume(ref["y"], ref["p"], s, rc)})
+            print(f"  T13 c₊/c₋ = {rc:<3g} seuil {s:.3f} : sensibilité {lignes[-1]['sensibilite']:.3f}, "
+                  f"spécificité {lignes[-1]['specificite']:.3f}, alertes {lignes[-1]['taux_alerte']:.1%}")
     if "T9" in bancs and b.source is not None and len(b.source):
         print(f"  T9 pré-entraînement sur {len(b.source)} passages NHAMCS ({groupe})…")
         tab = construire(b.passages, opts)
@@ -170,6 +281,7 @@ def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: Conf
         for v, r in b.transferts.items():
             r["groupe"] = [tab.groupe[i] for i in r["indices"].tolist()]
             lignes.append(b.ligne("T9", v, r, ref))
+            lignes[-1].update(modele="transfert", transfert=v, svm=True)
             lignes[-1]["donnees"] = SOURCES[v]
             # Deuxième comparaison : contre le Cameroun seul dans la MÊME représentation (le transfert aide-t-il ?).
             if temoin is not None and r is not temoin and torch.equal(r["indices"], temoin["indices"]):
@@ -266,6 +378,8 @@ def main() -> None:
     p.add_argument("--rapide", action="store_true", help="essai de la chaîne : peu d'itérations, pas de grille")
     p.add_argument("--source-externe", default=SOURCE_EXTERNE, help="passages NHAMCS préparés (banc T9)")
     p.add_argument("--fourier", type=int, default=500, help="T9 : nombre de caractéristiques de Fourier aléatoires (500)")
+    p.add_argument("--utiliser-selection", action="store_true",
+                   help="modèle principal = choix_retenu_<groupe>.json (écrit par les bancs) ; à utiliser pour le test final")
     p.add_argument("--extraction", help="test final : date du relevé du registre (aaaa-mm-jj)")
     p.add_argument("--confirmation", help="test final : phrase d'ouverture du coffre")
     a = p.parse_args()
@@ -302,6 +416,8 @@ def main() -> None:
         bancs = a.bancs
     passages["id_passage"] = range(len(passages))           # pour raccorder les modèles enfants et adultes
     tous = passages[passages["groupe"].notna()].reset_index(drop=True)
+    vocab = vocabulaire(passages, verrou.DATE_VERROU)        # texte seul, passages d'avant le verrou
+    print(f"Sac de mots : {len(vocab)} mots écrits dans au moins 5 passages avant le {verrou.DATE_VERROU:%d/%m/%Y}")
 
     rapport = [f"# Triage — {'test final' if final else 'validation mensuelle'}\n",
                f"Seuil d'alerte s* = 1/(1 + {a.rapport_couts:g}) = {seuil:.3f}. Mesures sur les passages jamais vus.\n"]
@@ -314,23 +430,50 @@ def main() -> None:
             continue
         b = Banc(part, decouper, seuil, a.rapport_couts)
         b.cfg_transfert = ConfigTransfert(D=a.fourier, entrainement=cfg.entrainement)
+        b.vocab = vocab
+        cfg_g, opts_g, sel = cfg, opts, {}
+        chemin_sel = sortie / f"choix_retenu_{g}.json"
+        if a.utiliser_selection and chemin_sel.exists():
+            sel = json.loads(chemin_sel.read_text(encoding="utf-8"))
+            if sel.get("modele") in MODELES:
+                cfg_g = dataclasses.replace(cfg, modele=sel["modele"], imputation=sel.get("imputation") or cfg.imputation)
+            if sel.get("plaintes") in PLAINTES_VARIANTES:
+                opts_g = dataclasses.replace(opts, **options_plaintes(sel["plaintes"], vocab))
+            print(f"  modèle principal = sélection des bancs : {sel.get('variante')} ({sel.get('banc')})")
         if "T9" in bancs and Path(a.source_externe).exists():
             b.source = lire_source(a.source_externe, g)
         try:
-            lignes = bancs_du_groupe(b, bancs, opts, cfg, tous, g)
+            lignes = bancs_du_groupe(b, bancs, opts_g, cfg_g, tous, g)
+            if sel.get("transfert") and Path(a.source_externe).exists():
+                # La sélection est un modèle transféré : on l'évalue aussi (au test final, sur le coffre).
+                b.source = lire_source(a.source_externe, g)
+                tab = construire(part, opts_g)
+                b.pretraine = Pretraine(construire(b.source, opts_g), tab, b.cfg_transfert)
+                r = evaluer_transfert(tab, decouper(tab.dates), b.pretraine, b.cfg_transfert, (sel["transfert"],))[sel["transfert"]]
+                lignes.append(b.ligne("sélection", f"transfert {sel['transfert']}", r, b.reference))
         except ValueError as e:
             print(f"  impossible : {e}")
             continue
         for l in lignes:
             l["groupe"] = g
         tout += lignes
-        exporter_probabilites(b, part, opts, cfg, g, sortie, None if final else fin)
+        exporter_probabilites(b, part, opts_g, cfg_g, g, sortie, None if final else fin)
         references[g] = b.reference
         (sortie / f"choix_{g}.json").write_text(json.dumps(b.choix, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+        if not final and bancs:
+            choix = selectionner(lignes)
+            if choix:
+                chemin_sel.write_text(json.dumps(choix, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+                print(f"  ► SVM sélectionné ({g}) : {choix['variante']} [{choix['banc']}], coût moyen {choix['cout_moyen']:.3f}, "
+                      f"AUC {choix['auc']:.3f}")
+                rapport.append(f"\n**SVM sélectionné ({g}) : {choix['variante']}** (banc {choix['banc']}) — coût moyen "
+                               f"{choix['cout_moyen']:.3f}, AUC {choix['auc']:.3f}, sensibilité {choix['sensibilite']:.3f}. "
+                               "Règle : plus petit coût moyen parmi les SVM des bancs T2, T8, T10, T11 et T9.\n")
         df = pd.DataFrame(lignes)
         rapport.append(f"\n## {g.capitalize()}\n")
         colonnes = ["banc", "variante"] + [c for c in ("donnees",) if c in df] + ["passages", "graves", "sensibilite",
-                    "specificite", "sous_triage", "sur_triage", "vpp", "cout_moyen", "auc", "brier"] + \
+                    "specificite", "sous_triage", "sur_triage", "vpp", "taux_alerte", "cout_moyen", "auc",
+                    "spec_sens90", "spec_sens95", "brier"] + \
                    [c for c in ("mcnemar_p", "mcnemar_p_vs_cameroun_seul") if c in df]
         rapport.append(en_markdown(df[colonnes].round(3)))
     if len(references) == 2:
@@ -341,7 +484,8 @@ def main() -> None:
             rapport.append("\n## Raccordement : enfants et adultes réunis, tous les passages des urgences\n")
             rapport.append("Modèles séparés (chacun sur son groupe) réunis, comparés au modèle commun sur les mêmes passages.\n")
             rapport.append(en_markdown(df[["banc", "variante", "passages", "graves", "sensibilite", "specificite", "sous_triage",
-                                           "sur_triage", "vpp", "cout_moyen", "auc", "brier"]
+                                           "sur_triage", "vpp", "taux_alerte", "cout_moyen", "auc",
+                                           "spec_sens90", "spec_sens95", "brier"]
                                           + [c for c in ("mcnemar_p",) if c in df]].round(3)))
         except ValueError as e:
             print(f"\nRaccordement impossible : {e}")

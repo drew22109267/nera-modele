@@ -44,6 +44,8 @@ from svr import references as R
 from svr.caracteristiques import construire
 from svr.modeles import Entrainement
 from svr.niveaux import Hyperparametres, fabrique
+from svr.variantes import CATALOGUE, fabrique_catalogue
+import json
 from svr.validation import Decoupage, decoupage_final, decoupages_test_mensuels, evaluer, origines_glissantes
 
 NOMS = {1: "1 · SVR linéaire", 2: "2 · SVR RBF", 3: "3 · SVR quantile RBF", 4: "4 · SVR quantile composite"}
@@ -71,12 +73,18 @@ def main() -> None:
     p.add_argument("--reentrainement", choices=["mensuel", "aucun"], default="mensuel",
                    help="mensuel : réentraîner au début de chaque mois du coffre ; aucun : un seul entraînement")
     p.add_argument("--debut-validation", help="début de la validation glissante utilisée pour l'empilement")
+    p.add_argument("--inconnues", help="durées inconnues ; par défaut celle de resultats/selection_<SERVICE>.json, sinon « estimee »")
+    p.add_argument("--fenetre-censure", default="p95", type=lambda v: v if v == "p95" else int(v))
     option_comptage(p)
     a = p.parse_args()
     nom = etiquette(a.service, a.comptage)
 
+    # Le modèle et le prétraitement choisis par les bancs (selection.py), s'ils existent.
+    chemin_sel = Path("resultats") / f"selection_{nom}.json"
+    selection = json.loads(chemin_sel.read_text(encoding="utf-8")) if chemin_sel.exists() else {}
+    inconnues = a.inconnues or selection.get("imputation", "estimee")
     df = lire_export(a.export, confirmation_coffre=a.confirmation)          # coffre ouvert (journalisé)
-    sejours, _ = preparer_sejours(df, a.service, a.extraction)
+    sejours, _ = preparer_sejours(df, a.service, a.extraction, a.fenetre_censure, inconnues)
     debut = periode_exploitable(sejours)["debut"]
     occ = reconstituer_occupation(sejours, a.extraction, lits=a.lits, debut=debut, comptage=a.comptage)
     debut_val = pd.Timestamp(a.debut_validation) if a.debut_validation else DATE_VERROU - pd.DateOffset(months=6)
@@ -95,9 +103,13 @@ def main() -> None:
         previsions = {"0 · persistance": R.persistance(tab.serie, orig, h),
                       "0 · saisonnière": R.saisonniere(tab.serie, orig, h),
                       "0 · moyenne mobile 7 j": R.moyenne_mobile(tab.serie, orig, h)}
-        for niveau, nom in NOMS.items():
-            print(f"  {nom}…")
-            previsions[nom] = evaluer(tab, blocs, fabrique(niveau, hp[niveau], tab.blocs))["prevision"]
+        for niveau, nom_niveau in NOMS.items():
+            print(f"  {nom_niveau}…")
+            previsions[nom_niveau] = evaluer(tab, blocs, fabrique(niveau, hp[niveau], tab.blocs))["prevision"]
+        cle = selection.get("modele")
+        if cle in CATALOGUE and cle != "svr_q_composite":
+            print(f"  modèle sélectionné par les bancs : {CATALOGUE[cle][0]}…")
+            previsions[f"sélection · {CATALOGUE[cle][0]}"] = evaluer(tab, blocs, fabrique_catalogue(cle, hp, tab.blocs))["prevision"]
 
         # Empilement : poids appris sur les prévisions hors échantillon d'avant le verrou.
         glissants = origines_glissantes(tab, debut_val, DATE_VERROU, pas=14)
@@ -131,10 +143,10 @@ def main() -> None:
         print(par_mois.to_string(), "\n")
         par_mois.to_csv(sortie / f"validation_finale_{nom}_h{h}_par_mois{suffixe}.csv", sep=";", encoding="utf-8-sig")
         ordre = list(previsions)
-        for i, nom in enumerate(ordre[1:], start=1):
-            for contre in {"0 · persistance", ordre[i - 1]} - {nom}:
-                tests.append({"horizon": h, "reentrainement": a.reentrainement, "modele_A": nom, "modele_B": contre,
-                              **M.diebold_mariano(y, point(previsions[nom]), point(previsions[contre]), h=h)})
+        for i, nom_a in enumerate(ordre[1:], start=1):
+            for contre in {"0 · persistance", ordre[i - 1]} - {nom_a}:
+                tests.append({"horizon": h, "reentrainement": a.reentrainement, "modele_A": nom_a, "modele_B": contre,
+                              **M.diebold_mariano(y, point(previsions[nom_a]), point(previsions[contre]), h=h)})
 
     pd.DataFrame(tests).to_csv(sortie / f"validation_finale_{nom}_tests{suffixe}.csv", sep=";", encoding="utf-8-sig", index=False)
     print(f"Résultats écrits dans {sortie.resolve()}")

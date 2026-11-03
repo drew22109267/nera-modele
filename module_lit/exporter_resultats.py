@@ -39,6 +39,8 @@ from traitement.comptage import COMPTAGES, etiquette
 # (motif du fichier, groupe, titre du groupe) ; {s} = service. Le code (P1, D4…) et l'horizon sont lus dans le nom.
 FICHIERS = [
     (r"pretraitement_{s}_(P\d+)_h(\d+)\.csv", "pretraitement", "Banc du prétraitement"),
+    (r"pretraitement_{s}_P1xM_h(\d+)\.csv", "croise", "Banc croisé : durées inconnues × modèles"),
+    (r"selection_{s}\.csv", "selection", "Sélection : le SVM et le prétraitement retenus d'après les bancs"),
     (r"benchmark_{s}_(D\d+)_h(\d+)\.csv", "choix", "Banc des choix de conception"),
     (r"ablation_{s}_h(\d+)\.csv", "niveaux", "Niveaux 0 à 5 (ablation)"),
     (r"ablation_{s}_tests\.csv", "niveaux_tests", "Niveaux : tests entre niveaux"),
@@ -104,7 +106,7 @@ def tables_du_comptage(dossier: Path, service: str, comptage: str) -> list[dict]
     phrases = {g: conclusions_markdown(dossier / m.format(s=lab)) for g, m in RAPPORTS.items()}
     tables = []
     for motif, groupe, titre_groupe in FICHIERS:
-        unique = groupe in ("pretraitement", "survie", "durees_inconnues")
+        unique = groupe in ("pretraitement", "survie", "durees_inconnues", "croise")
         if unique and comptage != "minuit":
             continue
         rx = re.compile(motif.format(s=re.escape(lab)) + "$")

@@ -26,9 +26,9 @@ et le nettoyage sont dans le paquet `traitement` du dépôt outil-saisi (`traite
 | Garde (jour, garde de nuit, permanence) | contexte |
 | Sexe, âge | variables ; l'âge choisit aussi le groupe (enfant < 15 ans, adulte) et les normes des constantes |
 | Pouls, TA, glycémie, poids, température, FR, SpO2 | constantes : brutes, en écart à la norme de l'âge, ou en seuils d'alerte (banc T5) |
-| Plaintes | 18 familles de plaintes (liste fixée à l'avance) et nombre de plaintes |
+| Plaintes | 28 familles de plaintes (liste fixée à l'avance, en français et en anglais : le registre est bilingue), nombre de plaintes, et sac de mots (banc T11) |
 | Décision (orientation) | **cible** : grave (hospitalisé, référé, décédé, SCAM), non grave (externe), MEO placée par le banc T1 |
-| Profession | sert seulement à reconnaître un nourrisson (« NRS ») quand l'âge manque |
+| Profession | sert seulement quand l'âge est illisible : nourrisson (« NRS »), et groupe déduit (« enfant », « écolier » → enfant ; profession d'adulte → adulte ; « élève » reste sans groupe), banc T12 |
 | Diagnostic | **jamais une variable** : il est écrit après l'examen, le donner au modèle serait une fuite de l'avenir |
 | N° dossier, résidence | **jamais lus** : identifiants ou quasi-identifiants |
 
@@ -52,7 +52,7 @@ comptée dans le rapport de lecture) :
 | Modèles | règle de seuils, logistique, arbre, forêt, SVM linéaire, SVM RBF, SVM composite, tous à coûts de classe | `triage/modeles.py` |
 | Validation | un découpage par mois ; dans l'entraînement : apprentissage, puis calibration (choix des réglages et Platt) | `triage/validation.py` |
 | Décision | alerte si P(grave) ≥ s* = c₋/(c₊ + c₋) | `triage/mesures.py` |
-| Mesures | sensibilité (prioritaire), sous-triage, sur-triage, spécificité, VPP, coût moyen, AUC, Brier, log-loss, McNemar | `triage/mesures.py` |
+| Mesures | sensibilité (prioritaire), sous-triage, sur-triage, spécificité, VPP, taux d'alerte, coût moyen, AUC, spécificité à 90 % et 95 % de sensibilité (lue sur la courbe ROC), Brier, log-loss, McNemar | `triage/mesures.py` |
 | Bancs | T1 à T7, chaque variante comparée à la référence par McNemar | `lancer_triage.py` |
 
 Modèle principal : SVM à noyau RBF, constantes en écart à la norme de l'âge, plaintes, contexte et
@@ -63,7 +63,7 @@ choix** : c'est leur rôle.
 
 | Banc | Question | Variantes |
 |---|---|---|
-| T1 | place de la mise en observation | grave, non grave, exclue (mesures aussi sur les passages hors MEO, communs aux trois) |
+| T1 | place de la mise en observation (analyse de sensibilité) | grave (défaut, choix clinique fixé à l'avance), non grave, exclue ; la cible change d'une variante à l'autre : les variantes ne sont comparées (McNemar) que sur les passages hors MEO communs aux trois, où la cible est la même. La définition de la cible n'est jamais choisie d'après le score |
 | T2 | modèle | règle de seuils, logistique, arbre, forêt, SVM linéaire, RBF, composite |
 | T3 | coûts de classe | égaux, équilibrés (n₋/n₊), rapport du service (c₊/c₋) |
 | T4 | variables | constantes seules ; + plaintes ; + contexte ; + indicatrices de valeurs manquantes |
@@ -72,6 +72,10 @@ choix** : c'est leur rôle.
 | T7 | résumer les variables avant de classer | originales, ACP (80 % de variance), AFDM (indicatrices recodées (x − p)/√p), k-means (4 groupes), originales + k-means ; tout appris sur l'apprentissage seulement (`triage/representations.py`) |
 | T8 | valeurs manquantes | cas complets (passages incomplets retirés, référence comparée sur les mêmes passages), variables à plus de 50 % de manquants retirées, médiane, moyenne, médiane par tranche d'âge, k plus proches voisins, régressions enchaînées (ridge), loi normale par EM, ACP itérative ; tout appris sur l'apprentissage seulement (`triage/imputation.py`) |
 | T9 | transfert d'un SVM pré-entraîné | source : NHAMCS-ED (urgences des États-Unis, CDC, 2015-2022, environ 150 000 passages, même groupe d'âge) ; SVM sur caractéristiques de Fourier aléatoires (approximation du noyau RBF) ; variantes : Cameroun seul, source seule, source recalibrée, données réunies, augmentation (Daumé), régularisation biaisée, A-SVM, score de la source ; référence : le modèle principal (`triage/transfert.py`, `triage/nhamcs.py`) |
+| T10 | valeurs manquantes × modèles | chaque traitement de T8 avec chaque modèle de T2 |
+| T11 | plaintes × modèles | familles fixées à l'avance, sac de mots (mots écrits dans au moins 5 passages avant le verrou, tirés du texte seul), familles + mots, sans plaintes ; chacune avec chaque modèle de T2 |
+| T12 | passages d'âge illisible | avec ou sans les passages dont le groupe est déduit de la profession, comparés sur les passages d'âge écrit (McNemar) |
+| T13 | rapport des coûts c₊/c₋ | 1, 2, 3, 4, 6 : mêmes probabilités, seuil s* = 1/(1 + c₊/c₋) ; sensibilité, spécificité et taux d'alerte de chaque seuil (le rapport est à valider avec le service) |
 | Raccordement | enfants et adultes réunis | les prévisions des deux modèles séparés, réunies, comparées au modèle commun sur TOUS les passages des urgences (mêmes passages, McNemar), avec le détail par groupe |
 
 ## 4. Transfert d'apprentissage : pourquoi et comment (banc T9)
@@ -85,7 +89,7 @@ environ 144 000 passages dont les constantes sont notées à plus de 90 %.
 **Comment.**
 
 1. `triage/nhamcs.py` ramène NHAMCS au format du registre : température °F → °C, codes de motif de consultation
-   → les 18 familles de plaintes (table fixée à l'avance), devenir → grave (hospitalisé, transféré, décédé,
+   → les 28 familles de plaintes (table fixée à l'avance), devenir → grave (hospitalisé, transféré, décédé,
    parti contre avis), MEO (observation puis domicile) ou non grave. Enfants avec enfants, adultes avec adultes :
    jamais de transfert enfant → adulte.
 2. `triage/transfert.py` pré-entraîne un SVM sur la source. Un SVM à noyau sur 100 000 passages demanderait une

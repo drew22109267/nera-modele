@@ -12,6 +12,10 @@ Groupes de variables (banc T4, options cumulables)
 ---------------------------------------------------
     base        âge (années), sexe féminin (0/1), constantes (forme choisie par `constantes`, banc T5)
     plaintes    une indicatrice par famille de plaintes (liste fixée à l'avance) + nombre de plaintes
+    mots        sac de mots (banc T11) : une indicatrice par MOT des plaintes, pour chaque mot du vocabulaire.
+                Le vocabulaire = les mots écrits dans au moins 5 passages AVANT le verrou (vocabulaire()) : il est
+                tiré du texte seul, jamais de la décision, et ne regarde pas la période de test. Il reconnaît ce
+                que les familles ratent (mots rares, fautes, anglais) ; le SVM pèse chaque mot (régularisation).
     contexte    garde de nuit, permanence (week-end, férié), samedi ou dimanche, mois (sinus, cosinus)
     manquants   une indicatrice « constante non prise » par constante : ne pas prendre une constante est
                 aussi une information (un patient très bien portant… ou une urgence vitale)
@@ -28,12 +32,14 @@ prévoir : aucune information des passages à prévoir n'entre dans la préparat
 from __future__ import annotations
 
 import math
+from collections import Counter
 from dataclasses import dataclass
 
 import pandas as pd
 import torch
 
 from svr.modeles import TYPE
+from traitement.urgences import mots as mots_de
 
 from .imputation import Imputeur
 from .normes import CONSTANTES_NORMEES, AGE_NOURRISSON, alertes, ecarts, plage
@@ -47,6 +53,7 @@ MEO = ("grave", "non_grave", "exclue")
 class OptionsVariables:
     constantes: str = "ecart"        # 'brutes', 'ecart' ou 'seuils' (banc T5)
     plaintes: bool = True            # banc T4
+    mots: tuple[str, ...] = ()       # vocabulaire du sac de mots (banc T11) ; vide = pas de mots
     contexte: bool = True
     manquants: bool = True
     meo: str = "grave"               # banc T1
@@ -98,6 +105,8 @@ def construire(passages: pd.DataFrame, options: OptionsVariables | None = None) 
         colonnes_plaintes = [c for c in passages.columns if c.startswith("plainte_")]
         noms += colonnes_plaintes + ["nombre_plaintes"]
         continues.append(len(noms) - 1)
+    if o.mots:
+        noms += [f"mot_{m}" for m in o.mots]
     if o.contexte:
         noms += ["garde_nuit", "permanence", "week_end", "mois_sin", "mois_cos"]
         continues += [len(noms) - 2, len(noms) - 1]
@@ -130,6 +139,13 @@ def construire(passages: pd.DataFrame, options: OptionsVariables | None = None) 
             v += [1.0 if math.isnan(_val(p.get(c))) else 0.0 for c in CONSTANTES]
         if o.plaintes:
             v += [float(p.get(c) or 0) for c in colonnes_plaintes] + [float(p.get("nombre_plaintes") or 0)]
+        if o.mots:
+            if "plaintes_texte" in passages:
+                texte = p.get("plaintes_texte")
+                ecrits = mots_de(texte if isinstance(texte, str) else "")
+                v += [float(m in ecrits) for m in o.mots]
+            else:                                         # source sans texte (NHAMCS) : mots non observés
+                v += [math.nan] * len(o.mots)
         if o.contexte:
             d = pd.Timestamp(p["date_passage"])
             angle = 2 * math.pi * (d.month - 1) / 12
@@ -150,6 +166,15 @@ def construire(passages: pd.DataFrame, options: OptionsVariables | None = None) 
                                 "autres": list(range(fin_constantes, len(noms)))},
                          alertes=torch.tensor(nb_alertes, dtype=TYPE), meo=torch.tensor(meo, dtype=TYPE),
                          groupe=groupes, ids=ids)
+
+
+def vocabulaire(passages: pd.DataFrame, avant: pd.Timestamp, min_passages: int = 5) -> tuple[str, ...]:
+    """Mots des plaintes écrits dans au moins `min_passages` passages datés avant `avant` (texte seul)."""
+    if "plaintes_texte" not in passages:
+        return ()
+    textes = passages.loc[passages["date_passage"] < avant, "plaintes_texte"].dropna()
+    compte = Counter(m for t in textes for m in mots_de(t))
+    return tuple(sorted(m for m, n in compte.items() if n >= min_passages))
 
 
 def _val(v) -> float:

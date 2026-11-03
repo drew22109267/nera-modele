@@ -14,7 +14,7 @@ Mise en correspondance avec le registre des urgences (traitement/urgences.py, m�
   FR, TA, SpO2   RESPR, BPSYS/BPDIAS, POPCT
   glycémie, poids  absents de NHAMCS : toujours manquants (le transfert travaille sur les variables COMMUNES)
   plaintes       RFV1 à RFV5 (classification des motifs de consultation du NCHS), libellé anglais → les
-                 18 familles du registre (PLAINTES_RFV ci-dessous, liste fixée à l'avance) ; le traumatisme
+                 28 familles du registre (PLAINTES_RFV ci-dessous, liste fixée à l'avance) ; le traumatisme
                  regroupe le module « blessures » (codes 50000 à 59999) hors brûlures et conscience
   moment         ARRTIME (heure d'arrivée) : garde de 18 h à 8 h ; permanence le samedi et le dimanche de jour ;
                  sinon jour — comme le registre (jour, garde de nuit, permanence)
@@ -58,6 +58,16 @@ PLAINTES_RFV = {
     "ictere": r"jaundice",
     "refus_alimentation": r"feeding problem|decreased appetite",
     "deshydratation": r"dehydrat|thirst",
+    "asthenie": r"weakness|tired|fatigue|malaise",
+    "vertiges": r"vertigo|dizz",
+    "frissons": r"chills",
+    "deficit_neurologique": r"paralysis|numbness|tingling|stroke|speech",
+    "metabolique": r"diabet|blood sugar|glucose|frequent urination",
+    "douleur_pelvienne": r"pelvic",
+    "douleur_osteo_articulaire": r"\bback\b|joint|knee|neck pain|muscle|\bhip|shoulder|leg pain|arm pain|body ache",
+    "orl": r"nasal|\bnose|throat|\bear\b|earache|sinus|head cold",
+    "palpitations": r"palpitation|heart pounding|racing",
+    "cutane": r"rash|itch|\bskin",
 }
 GRAVE = ("ADMITHOS", "OBSHOS", "TRANOTH", "TRANPSYC", "DIEDED", "DOA", "LEFTAMA")
 SANS_CIBLE = ("LWBS", "LBTC", "NODISP")

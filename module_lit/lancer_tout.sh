@@ -30,8 +30,8 @@
 #     0  vérification de tous les calculs sur des données fictives (outil = Python = calcul direct)
 #     1  conversion du CSV de l'outil et reconstitution de l'occupation ; réunion des exports des services
 #     2  entraînement des niveaux 0 à 5 avec recherche des hyperparamètres par grille
-#     3  banc des choix de conception (D1 à D11 : 23 modèles, noyau, perte, τ, variables…)
-#     4  banc du prétraitement (P1 à P8)
+#     3  banc des choix de conception (D1 à D11 et D13 : 23 modèles, noyau, perte, τ, variables, variantes de SVM…)
+#     4  banc du prétraitement (P1 à P8) et banc croisé P1 × modèles (9 méthodes × 11 modèles)
 #     5  sensibilité de chaque paramètre
 #     6  sensibilité à la convention des jours
 #     7  toutes les figures
@@ -42,6 +42,8 @@
 #        services comme une seule source) · persistance ; mêmes jours évalués, Diebold-Mariano
 #    11  lien triage → lits (pédiatrie, chaque comptage) : corrélation urgences / admissions et banc D12 ;
 #        demande d'avoir lancé AVANT module_triage/lancer_triage.py (fichiers probabilites_enfant.csv)
+#    12  sélection : le SVM et le traitement des durées inconnues retenus d'après les bancs (selection.py),
+#        pour chaque service et chaque comptage ; relue par validation_finale.py
 # La validation finale (septembre-octobre 2026) n'est PAS lancée ici : une seule fois, à la fin.
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
 set -u
@@ -54,7 +56,7 @@ declare -A SOURCE=([PED]="${SOURCE_PED:-$SAISIE/registre-ped-tous-les-mois.csv}"
 declare -A LITS=([PED]="${LITS_PED:-18}" [MEDF]="${LITS_MEDF:-17}")
 COMPTAGES="${COMPTAGES:-minuit pic journee pondere}"
 HORIZONS="${HORIZONS:-1 7}"
-ETAPES="${ETAPES:-0 1 2 3 4 5 6 7 8 9 10 11}"
+ETAPES="${ETAPES:-0 1 2 3 4 5 6 7 8 9 10 11 12}"
 export PYTHONUNBUFFERED=1          # les journaux se remplissent au fur et à mesure (avancement visible)
 RAPIDE_OPT=""; [ "${RAPIDE:-0}" = "1" ] && RAPIDE_OPT="--rapide"
 JOURNAL=resultats/journaux; mkdir -p "$JOURNAL" donnees
@@ -87,7 +89,7 @@ for S in $SERVICES; do
     etape 6 && lancer "sensibilite_${S}_$c" "$PY" sensibilite.py --service "$S" --horizons $HORIZONS --comptage "$c"
     etape 7 && lancer "figures_${S}_$c" "$PY" visualisations.py --service "$S" --comptage "$c" $RAPIDE_OPT
   done
-  etape 4 && lancer "banc_pretraitement_$S" "$PY" benchmark_pretraitement.py "$EXPORT" --service "$S" --lits "$L" --horizons $HORIZONS $RAPIDE_OPT
+  etape 4 && lancer "banc_pretraitement_$S" "$PY" benchmark_pretraitement.py "$EXPORT" --service "$S" --lits "$L" --horizons $HORIZONS --croise $RAPIDE_OPT
   etape 8 && lancer "survie_$S" "$PY" modele_survie.py "$EXPORT" --service "$S" --lits "$L" --causes
   etape 9 && lancer "export_resultats_$S" "$PY" exporter_resultats.py --service "$S"
 done
@@ -117,5 +119,12 @@ if etape 11; then
   else
     echo "   ignoré : lancez d'abord module_triage/lancer_triage.py (probabilites_enfant.csv absent)"
   fi
+fi
+if etape 12; then
+  echo "════ Sélection du SVM et du prétraitement"
+  for S in $SERVICES; do
+    for c in $COMPTAGES; do lancer "selection_${S}_$c" "$PY" selection.py --service "$S" --comptage "$c"; done
+    etape 9 && lancer "export_resultats_$S" "$PY" exporter_resultats.py --service "$S"     # la sélection dans l'outil
+  done
 fi
 echo "── $(date '+%H:%M') fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/"

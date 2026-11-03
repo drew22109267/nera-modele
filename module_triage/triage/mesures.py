@@ -14,6 +14,14 @@ Matrice de confusion (décision : alerte si P(grave) ≥ s)
     sur-triage   = FP / (VN + FP) = 1 − spécificité
     VPP          = VP / (VP + FP)          part des alertes justifiées
     coût moyen   = (c₊ FN + c₋ FP) / n     c₊ : coût d'un grave manqué, c₋ : d'une fausse alerte (c₋ = 1)
+    taux d'alerte = (VP + FP) / n          part des passages mis en alerte (1 = tout le monde : plus de tri)
+
+Spécificité à sensibilité fixée (point de la courbe ROC, sans seuil choisi à l'avance)
+--------------------------------------------------------------------------------------
+    spec@90 = la plus grande spécificité parmi les seuils t qui détectent au moins 90 % des graves.
+Comme l'AUC, c'est une lecture de la courbe ROC (pas une règle de décision) : « en gardant 90 % des graves,
+quelle part des non-graves le modèle écarte-t-il ? ». Elle compare les modèles là où le triage travaille
+(sensibilité élevée), même quand le seuil s* met presque tout le monde en alerte.
 
 Test de McNemar : deux modèles A et B jugés sur les MÊMES passages
 -------------------------------------------------------------------
@@ -58,7 +66,21 @@ def resume(y, p, seuil: float, rapport_couts: float) -> dict:
             "sous_triage": _part(m["FN"], m["VP"] + m["FN"]), "sur_triage": _part(m["FP"], m["VN"] + m["FP"]),
             "vpp": _part(m["VP"], m["VP"] + m["FP"]),
             "cout_moyen": (rapport_couts * m["FN"] + m["FP"]) / n if n else float("nan"),
+            "taux_alerte": _part(m["VP"] + m["FP"], n),
+            "spec_sens90": specificite_a_sensibilite(y, p, 0.90), "spec_sens95": specificite_a_sensibilite(y, p, 0.95),
             "auc": auc(p, y01), "brier": brier(p, y01), "log_loss": log_loss(p, y01)}
+
+
+def specificite_a_sensibilite(y, p, cible: float) -> float:
+    """Plus grande spécificité parmi les seuils dont la sensibilité atteint `cible` (voir l'en-tête)."""
+    grave = torch.as_tensor(y, dtype=TYPE) > 0
+    p = torch.as_tensor(p, dtype=TYPE)
+    if grave.all() or not grave.any():
+        return float("nan")
+    for t in torch.unique(p).flip(0):                  # seuils décroissants : la sensibilité ne fait que monter
+        if float((p[grave] >= t).to(TYPE).mean()) >= cible:
+            return float((p[~grave] < t).to(TYPE).mean())
+    return 0.0
 
 
 def mcnemar(y, alerte_a, alerte_b) -> dict:

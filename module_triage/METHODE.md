@@ -29,9 +29,14 @@ Toutes sont connues **à l'arrivée** du patient.
   - brute : x ;
   - écart à la norme de l'âge : e⁺ = max(0, (x − haut)/haut), e⁻ = max(0, (bas − x)/bas) ;
   - seuil : 1(x > haut), 1(x < bas).
-- **Plaintes** : 18 indicatrices de familles (fièvre, convulsions, détresse respiratoire, trouble de la
-  conscience, traumatisme…) et le nombre de plaintes. La liste des familles est **fixée à l'avance** : choisir
-  les mots les plus fréquents sur les données serait déjà apprendre sur les passages à prévoir.
+- **Plaintes** : 28 indicatrices de familles (fièvre, convulsions, détresse respiratoire, trouble de la
+  conscience, traumatisme, asthénie, déficit neurologique…), reconnues en français et en anglais (le registre
+  est bilingue), et le nombre de plaintes. La liste des familles est **fixée à l'avance**, jamais choisie
+  d'après les décisions. La première liste (18 familles, français seul) ne reconnaissait aucune plainte chez
+  40 % des enfants et 57 % des adultes ; elle a été complétée en lisant le TEXTE des plaintes non reconnues
+  (82 % et 74 % reconnus ensuite).
+- **Sac de mots** (banc T11) : une indicatrice par mot des plaintes ; vocabulaire = mots écrits dans au moins
+  5 passages avant le verrou, tiré du texte seul (aucune décision, aucune donnée de test).
 - **Contexte** : garde de nuit, permanence, week-end, mois (sinus et cosinus de 2π(m − 1)/12, voir le guide des
   modèles, section 1.1).
 - **Valeurs manquantes** : une indicatrice par constante (1 si elle n'a pas été prise).

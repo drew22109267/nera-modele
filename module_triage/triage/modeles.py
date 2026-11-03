@@ -36,6 +36,21 @@ des échantillons bootstrap, avec √d variables tirées à chaque coupure.
 ------------------------------
 Score = nombre de signes d'alerte (constantes hors de leur plage normale selon l'âge, normes.py). Rien
 n'est appris : c'est ce que ferait un soignant qui applique une grille de seuils.
+
+5. Variantes de SVM (comparées par le banc T2, croisées avec les valeurs manquantes par le banc T10)
+----------------------------------------------------------------------------------------------------
+  svm_laplacien        noyau K = exp(−γ‖x − z‖₁) : la distance « en blocs » pèse moins une seule constante
+                       très anormale que le RBF (qui l'élève au carré)
+  svm_polynomial       noyau K = (γ xᵀz + 1)² : les interactions d'ordre 2 (fièvre × pouls, âge × FR…)
+  svm_hinge_carree     L2-SVM : perte C_i max(0, 1 − y_i f_i)², dérivable ; g_i = −2 C_i y_i max(0, 1 − y_i f_i)
+                       (pénalise plus fort les graves franchement mal classés)
+  lssvm                SVM à moindres carrés (Suykens et Vandewalle, 1999) : y_i f_i = 1 − e_i, perte ½ Σ C_i e_i² ;
+                       un système linéaire  [0 1ᵀ ; 1 K + diag(1/C_i)] [b ; α] = [0 ; y], sans itérations
+  svm_fourier          SVM linéaire sur les caractéristiques de Fourier aléatoires φ(x) (Rahimi et Recht, 2007),
+                       φ(x)ᵀφ(z) ≈ exp(−γ‖x − z‖²) : le SVM RBF approché, celui du transfert (banc T9)
+  svm_composite_constantes / svm_composite_plaintes
+                       noyau composite K = β K₁ + (1 − β) K₂ avec β = ¾ (les constantes pèsent plus) ou β = ¼
+                       (les plaintes et le contexte pèsent plus), à côté de β = ½ (svm_composite)
 """
 from __future__ import annotations
 
@@ -48,6 +63,7 @@ from svr.concurrents import Arbre
 from svr.modeles import TYPE, Entrainement, ModeleSVR
 from svr.empilement import softplus
 from svr.noyaux import NoyauComposite, NoyauRBF, sigmoide
+from svr.variantes import NoyauLaplacien, NoyauPolynomial
 
 
 def couts_exemples(y: torch.Tensor, C_positif: float, C_negatif: float) -> torch.Tensor:
@@ -96,14 +112,79 @@ class SVMNoyauClassifieur(ModeleSVR):
 
 
 class NoyauMelange:
-    """K = ½ RBF(γ₁) sur le bloc 1 + ½ RBF(γ₂) sur le bloc 2 (poids fixe)."""
+    """K = β RBF(γ₁) sur le bloc 1 + (1 − β) RBF(γ₂) sur le bloc 2 (poids fixe, ½ par défaut)."""
 
-    def __init__(self, bloc1: list[int], bloc2: list[int], gamma1: float, gamma2: float):
-        self.composite = NoyauComposite(bloc1, bloc2, gamma1, gamma2)
+    def __init__(self, bloc1: list[int], bloc2: list[int], gamma1: float, gamma2: float, beta: float = 0.5):
+        self.composite, self.beta = NoyauComposite(bloc1, bloc2, gamma1, gamma2), beta
 
     def __call__(self, X, Z):
         K1, K2 = self.composite.partiels(X, Z)
-        return NoyauComposite.melanger(K1, K2, torch.zeros(1, dtype=TYPE))      # σ(0) = ½
+        return self.beta * K1 + (1 - self.beta) * K2
+
+
+class SVMHingeCarree(SVMNoyauClassifieur):
+    """L2-SVM : J = ½ αᵀKα + Σ C_i max(0, 1 − y_i f_i)²."""
+
+    def objectif_et_gradients(self, y):
+        a, f = self.parametres["alpha"], self._f_entrainement()
+        ecart = (1 - y * f).clamp(min=0)
+        g = -2 * self.C_exemple * y * ecart
+        J = 0.5 * float(a @ (self.K @ a)) + float((self.C_exemple * ecart ** 2).sum())
+        direction = a + g
+        grad_alpha = direction if self.entrainement.preconditionne else self.K @ direction
+        return J, {"alpha": grad_alpha, "b": g.sum().reshape(1)}, f
+
+
+class LSSVMClassifieur:
+    """SVM à moindres carrés, coûts par exemple : un système linéaire (voir l'en-tête)."""
+
+    def __init__(self, noyau, C_positif: float = 1.0, C_negatif: float = 1.0):
+        self.noyau, self.C_positif, self.C_negatif = noyau, C_positif, C_negatif
+
+    def entrainer(self, X, y) -> "LSSVMClassifieur":
+        X = torch.as_tensor(X, dtype=TYPE)
+        y = torch.where(torch.as_tensor(y, dtype=TYPE) > 0, 1.0, -1.0).to(TYPE)
+        C = couts_exemples(y, self.C_positif, self.C_negatif)
+        n = len(y)
+        H = torch.zeros(n + 1, n + 1, dtype=TYPE)
+        H[0, 1:] = 1.0
+        H[1:, 0] = 1.0
+        H[1:, 1:] = self.noyau(X, X) + torch.diag(1.0 / C)
+        sol = torch.linalg.solve(H, torch.cat([torch.zeros(1, dtype=TYPE), y]))
+        self.b, self.alpha, self.X = sol[0], sol[1:], X
+        return self
+
+    def predire(self, X):
+        return self.noyau(torch.as_tensor(X, dtype=TYPE), self.X) @ self.alpha + self.b
+
+
+class FourierAleatoire:
+    """φ(x) = √(2/D) cos(Ωx + b), Ω ~ N(0, 2γ I), b ~ U[0, 2π] : φ(x)ᵀφ(z) ≈ exp(−γ‖x − z‖²)."""
+
+    def __init__(self, d: int, D: int = 500, gamma: float = 0.1, graine: int = 0):
+        g = torch.Generator().manual_seed(graine)
+        self.Omega = torch.randn(D, d, generator=g, dtype=TYPE) * math.sqrt(2 * gamma)
+        self.b = torch.rand(D, generator=g, dtype=TYPE) * 2 * math.pi
+        self.echelle = math.sqrt(2 / D)
+
+    def __call__(self, X: torch.Tensor) -> torch.Tensor:
+        return self.echelle * torch.cos(torch.as_tensor(X, dtype=TYPE) @ self.Omega.T + self.b)
+
+
+class SVMFourier:
+    """SVM linéaire sur les caractéristiques de Fourier aléatoires (le SVM RBF approché)."""
+
+    def __init__(self, gamma: float, C_positif: float, C_negatif: float, entrainement: Entrainement, D: int = 500):
+        self.gamma, self.cp, self.cn, self.e, self.D = gamma, C_positif, C_negatif, entrainement, D
+
+    def entrainer(self, X, y) -> "SVMFourier":
+        X = torch.as_tensor(X, dtype=TYPE)
+        self.phi = FourierAleatoire(X.shape[1], self.D, self.gamma)
+        self.svm = SVMLineaireClassifieur(self.cp, self.cn, self.e).entrainer(self.phi(X), y)
+        return self
+
+    def predire(self, X):
+        return self.svm.predire(self.phi(X))
 
 
 class RegressionLogistique(ModeleSVR):
@@ -173,7 +254,12 @@ class ForetClassification:
         return torch.stack([a.predire(X) for a in self.arbres]).mean(dim=0)
 
 
-MODELES = ("regle", "logistique", "arbre", "foret", "svm_lineaire", "svm_rbf", "svm_composite")
+MODELES = ("regle", "logistique", "arbre", "foret", "svm_lineaire", "svm_rbf", "svm_composite",
+           "svm_composite_constantes", "svm_composite_plaintes", "svm_laplacien", "svm_polynomial",
+           "svm_hinge_carree", "lssvm", "svm_fourier")
+A_PORTEE = {"svm_rbf", "svm_composite", "svm_composite_constantes", "svm_composite_plaintes", "svm_laplacien",
+            "svm_polynomial", "svm_hinge_carree", "lssvm", "svm_fourier"}      # modèles dont la grille règle la portée
+FAMILLE_SVM = {m for m in MODELES if m.startswith(("svm_", "lssvm"))}
 
 
 def fabrique(nom: str, C: float, portee: float, C_positif: float, C_negatif: float, blocs: dict[str, list[int]],
@@ -196,9 +282,21 @@ def fabrique(nom: str, C: float, portee: float, C_positif: float, C_negatif: flo
     if nom == "svm_rbf":
         d = len(blocs["constantes"]) + len(blocs["autres"])
         return lambda: SVMNoyauClassifieur(NoyauRBF(portee / d), cp, cn, e)
-    if nom == "svm_composite":
+    d = len(blocs["constantes"]) + len(blocs["autres"])
+    if nom in ("svm_composite", "svm_composite_constantes", "svm_composite_plaintes"):
         b1, b2 = blocs["constantes"], blocs["autres"]
         if not b2:
             raise ValueError("Noyau composite : le bloc « plaintes et contexte » est vide.")
-        return lambda: SVMNoyauClassifieur(NoyauMelange(b1, b2, portee / len(b1), portee / len(b2)), cp, cn, e)
+        beta = {"svm_composite": 0.5, "svm_composite_constantes": 0.75, "svm_composite_plaintes": 0.25}[nom]
+        return lambda: SVMNoyauClassifieur(NoyauMelange(b1, b2, portee / len(b1), portee / len(b2), beta), cp, cn, e)
+    if nom == "svm_laplacien":
+        return lambda: SVMNoyauClassifieur(NoyauLaplacien(portee / d), cp, cn, e)
+    if nom == "svm_polynomial":
+        return lambda: SVMNoyauClassifieur(NoyauPolynomial(portee / d, 2), cp, cn, e)
+    if nom == "svm_hinge_carree":
+        return lambda: SVMHingeCarree(NoyauRBF(portee / d), cp, cn, e)
+    if nom == "lssvm":
+        return lambda: LSSVMClassifieur(NoyauRBF(portee / d), cp, cn)
+    if nom == "svm_fourier":
+        return lambda: SVMFourier(portee / d, cp, cn, e)
     raise ValueError(f"Modèle inconnu : {nom}. Choix : {', '.join(MODELES)}.")
