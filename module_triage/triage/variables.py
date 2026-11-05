@@ -25,7 +25,8 @@ Valeurs manquantes et standardisation : `Preparateur`, appris sur l'entraînemen
 -----------------------------------------------------------------------------------------
     1. chaque valeur manquante est complétée selon le traitement choisi (médiane par défaut ; les neuf
        traitements comparés par le banc T8 sont dans triage/imputation.py) ;
-    2. les colonnes continues sont standardisées : z = (x − μ)/σ, μ et σ de l'entraînement.
+    2. les colonnes continues sont mises à l'échelle, par défaut z = (x − μ)/σ, μ et σ de l'entraînement
+       (le banc T14 compare z-score, robuste (médiane, Q3 − Q1), min-max et aucune mise à l'échelle).
 Les deux étapes sont apprises sur les passages d'entraînement et appliquées telles quelles aux passages à
 prévoir : aucune information des passages à prévoir n'entre dans la préparation.
 """
@@ -38,6 +39,7 @@ from dataclasses import dataclass
 import pandas as pd
 import torch
 
+from svr.caracteristiques import Standardiseur
 from svr.modeles import TYPE
 from traitement.urgences import mots as mots_de
 
@@ -185,19 +187,25 @@ def _val(v) -> float:
     return f
 
 
+ECHELLES = ("zscore", "robuste", "minmax", "aucune")     # banc T14
+
 class Preparateur:
     """Imputation (banc T8, médiane par défaut) puis standardisation, apprises sur l'entraînement seulement."""
 
-    def __init__(self, continues: list[int], imputation: str = "mediane"):
-        self.continues = continues
+    def __init__(self, continues: list[int], imputation: str = "mediane", echelle: str = "zscore"):
+        if echelle not in ECHELLES:
+            raise ValueError(f"Mise à l'échelle inconnue : {echelle}. Choix : {', '.join(ECHELLES)}.")
+        self.continues, self.echelle = continues, echelle
         self.imputeur = Imputeur(imputation, continues)
 
     def ajuster(self, X: torch.Tensor) -> "Preparateur":
         self.imputeur.ajuster(X)
         Z = self._imputer(X)[:, self.continues]
-        self.moyenne = Z.mean(dim=0)
-        self.ecart = Z.std(dim=0, unbiased=False)
-        self.ecart[self.ecart < 1e-12] = 1.0             # colonne constante : on ne divise pas par 0
+        if self.echelle == "aucune":
+            self.moyenne, self.ecart = torch.zeros(Z.shape[1], dtype=Z.dtype), torch.ones(Z.shape[1], dtype=Z.dtype)
+        else:                                            # même calcul que le module lit (constante : écart 1)
+            s = Standardiseur(list(range(Z.shape[1])), self.echelle).ajuster(Z)
+            self.moyenne, self.ecart = s.moyenne, s.ecart
         return self
 
     def _imputer(self, X: torch.Tensor) -> torch.Tensor:

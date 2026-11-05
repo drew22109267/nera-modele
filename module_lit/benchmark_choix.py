@@ -16,7 +16,8 @@ Dimensions comparées
                                          « coût d'une pénurie / coût d'un lit vide »
   D5  Variables d'entrée                 retards seuls, + flux, + calendrier, complet,
                                          + jours fériés camerounais, 3 / 7 / 14 jours de retard
-  D6  Prétraitement                      avec ou sans standardisation
+  D6  Prétraitement                      mise à l'échelle : z-score, robuste (médiane, écart
+                                         interquartile), min-max, aucune
   D7  Fenêtre d'entraînement             croissante (tout le passé) ou glissante (365, 180, 90 jours)
                                          — mesure aussi ce que coûte un historique court
   D8  Optimisation                       descente de gradient, momentum, Adam ; Adam sans moyenne
@@ -332,10 +333,12 @@ def main() -> None:
 
         # ── D6 · Standardisation ────────────────────────────────────────────
         if "D6" in dims:
-            d = Dimension("D6", "Prétraitement", "La standardisation des variables est-elle utile ? (modèle RBF du niveau 2)", h, a.tau)
-            prev, s = prevoir(fabrique(2, hp[2], tab.blocs)); d.ajouter("Avec standardisation", y, prev, s, retenu=True)
-            brut = dataclasses.replace(tab, continues=[])          # plus aucune colonne standardisée
-            prev, s = prevoir(fabrique(2, hp[2], tab.blocs), brut); d.ajouter("Sans standardisation", y, prev, s)
+            d = Dimension("D6", "Prétraitement", "Quelle mise à l'échelle des variables ? (modèle RBF du niveau 2)", h, a.tau)
+            for nom, variante, ret in [("z-score : (x − moyenne)/écart-type", tab, True),
+                                       ("Robuste : (x − médiane)/(Q3 − Q1)", dataclasses.replace(tab, echelle="robuste"), False),
+                                       ("Min-max : (x − min)/(max − min)", dataclasses.replace(tab, echelle="minmax"), False),
+                                       ("Aucune mise à l'échelle", dataclasses.replace(tab, continues=[]), False)]:
+                prev, s = prevoir(fabrique(2, hp[2], tab.blocs), variante); d.ajouter(nom, y, prev, s, retenu=ret)
             publier(d)
 
         # ── D7 · Fenêtre d'entraînement ─────────────────────────────────────

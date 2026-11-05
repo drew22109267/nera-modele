@@ -64,3 +64,27 @@ def test_mediane_age_et_suppression_colonnes():
     assert prep.imputeur.retirees == [1]
     assert torch.all(prep.transformer(X2)[:, 1] == 0)           # colonne retirée = constante
     assert not math.isnan(float(prep.transformer(X2).sum()))
+
+
+def test_k_du_knn_choisi_par_validation_croisee():
+    from triage.imputation import K_GRILLE
+    X, _, _ = donnees()
+    imp = Imputeur("knn", continues=[0, 1, 2, 3]).ajuster(X[:200])
+    assert imp.k in K_GRILLE and imp.erreurs_k[imp.k] == min(imp.erreurs_k.values())
+    assert Imputeur("knn", continues=[0, 1, 2, 3], k=7).ajuster(X[:200]).k == 7     # k imposé : pas de choix
+
+
+@pytest.mark.parametrize("echelle", ["zscore", "robuste", "minmax", "aucune"])
+def test_mises_a_l_echelle_du_preparateur(echelle):
+    X, _, _ = donnees()
+    prep = Preparateur([0, 1, 2, 3], "mediane", echelle).ajuster(X[:200])
+    Z = prep.transformer(X[:200])
+    assert not torch.isnan(Z).any()
+    if echelle == "zscore":
+        assert torch.allclose(Z.mean(0), torch.zeros(4, dtype=TYPE), atol=1e-9)
+    elif echelle == "minmax":
+        assert torch.allclose(Z.min(0).values, torch.zeros(4, dtype=TYPE)) and torch.allclose(Z.max(0).values, torch.ones(4, dtype=TYPE))
+    elif echelle == "robuste":
+        assert torch.allclose(Z.median(0).values, torch.zeros(4, dtype=TYPE), atol=1e-2)
+    else:
+        assert torch.equal(Z, prep._imputer(X[:200]))

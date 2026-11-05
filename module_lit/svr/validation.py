@@ -91,7 +91,7 @@ def evaluer(tab: Tableau, decoupages: list[Decoupage], fabrique) -> dict:
     """
     y_vrai, prev, dates, origines = [], [], [], []
     for dec in decoupages:
-        std = Standardiseur(tab.continues).ajuster(tab.X[dec.entrainement])
+        std = Standardiseur(tab.continues, tab.echelle).ajuster(tab.X[dec.entrainement])
         modele = fabrique().entrainer(std.transformer(tab.X[dec.entrainement]), tab.y[dec.entrainement])
         prev.append(modele.predire(std.transformer(tab.X[dec.evaluation])))
         y_vrai.append(tab.y[dec.evaluation])

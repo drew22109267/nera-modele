@@ -72,6 +72,7 @@ class ConfigTriage:
     part_calibration: float = 0.25
     representation: str = "originales"              # banc T7 (triage/representations.py)
     imputation: str = "mediane"                     # banc T8 (triage/imputation.py)
+    echelle: str = "zscore"                         # banc T14 (triage/variables.py, ECHELLES)
     entrainement: Entrainement = field(default_factory=lambda: Entrainement(iterations=2000))
 
 
@@ -162,7 +163,7 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
         if len(torch.unique(y_app)) < 2 or len(torch.unique(y_cal)) < 2:
             choix.append({"mois": f"{dec.mois:%Y-%m}", "ignore": "une seule classe à l'apprentissage ou à la calibration"})
             continue
-        prep = Preparateur(tab.continues, config.imputation).ajuster(tab.X[app])
+        prep = Preparateur(tab.continues, config.imputation, config.echelle).ajuster(tab.X[app])
         Xa, Xc, Xe = (prep.transformer(tab.X[i]) for i in (app, cal, dec.evaluation))
         # Banc T7 : ACP, AFDM ou k-means apprises sur l'apprentissage seulement, puis appliquées aux autres.
         rep = Representation(config.representation, tab.continues).ajuster(Xa)

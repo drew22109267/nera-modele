@@ -20,6 +20,10 @@ avec la moyenne et l'écart-type calculés sur les SEULES lignes d'entraînement
 découpage (sinon le test « voit » des informations du futur). Le noyau RBF dépend des
 distances : sans standardisation, une variable en dizaines (l'occupation) écraserait une
 variable entre −1 et 1 (le sinus du mois). Les indicatrices 0/1 ne sont pas standardisées.
+Trois mises à l'échelle sont possibles (comparées par le banc D6, le z-score est retenu) :
+  zscore    z = (x − moyenne)/écart-type
+  robuste   z = (x − médiane)/(Q3 − Q1)        moins sensible aux jours extrêmes
+  minmax    z = (x − min)/(max − min)          tout entre 0 et 1 sur l'entraînement
 """
 from __future__ import annotations
 
@@ -45,6 +49,7 @@ class Tableau:
     continues: list[int]             # colonnes à standardiser
     serie: torch.Tensor              # occupation complète (pour les références)
     h: int
+    echelle: str = "zscore"          # mise à l'échelle des colonnes continues (banc D6)
 
 
 def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, flux: bool = True,
@@ -117,18 +122,35 @@ def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, fl
                    continues=continues, serie=y_serie, h=h)
 
 
+ECHELLES = ("zscore", "robuste", "minmax")
+
+
 @dataclass
 class Standardiseur:
-    """z = (x − μ)/σ sur les colonnes continues ; μ et σ appris sur l'entraînement seulement."""
+    """
+    z = (x − centre)/écart sur les colonnes continues ; centre et écart appris sur l'entraînement seulement.
+      zscore   centre = moyenne, écart = écart-type        robuste  centre = médiane, écart = Q3 − Q1
+      minmax   centre = minimum, écart = maximum − minimum
+    (`moyenne` et `ecart` gardent leur nom pour les trois : ce sont le centre et l'écart.)
+    """
     colonnes: list[int]
+    echelle: str = "zscore"
 
     def ajuster(self, X: torch.Tensor) -> "Standardiseur":
+        if self.echelle not in ECHELLES:
+            raise ValueError(f"Mise à l'échelle inconnue : {self.echelle} (attendues : {', '.join(ECHELLES)}).")
         sous = X[:, self.colonnes]
         if not self.colonnes:                           # aucune colonne à standardiser (variante « sans »)
             self.moyenne = self.ecart = torch.empty(0, dtype=X.dtype)
             return self
-        self.moyenne = sous.mean(dim=0)
-        self.ecart = sous.std(dim=0, unbiased=False)
+        if self.echelle == "zscore":
+            self.moyenne, self.ecart = sous.mean(dim=0), sous.std(dim=0, unbiased=False)
+        elif self.echelle == "robuste":
+            q = torch.quantile(sous, torch.tensor([0.25, 0.5, 0.75], dtype=sous.dtype), dim=0)
+            self.moyenne, self.ecart = q[1], q[2] - q[0]
+        else:
+            self.moyenne = sous.min(dim=0).values
+            self.ecart = sous.max(dim=0).values - self.moyenne
         self.ecart[self.ecart < 1e-12] = 1.0            # variable constante : on ne divise pas par 0
         return self
 

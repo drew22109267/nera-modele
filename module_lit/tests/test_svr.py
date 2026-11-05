@@ -245,6 +245,15 @@ def test_standardiseur_appris_sur_l_entrainement_seulement():
     assert Z[:2, 0].tolist() == [-1.0, 1.0] and Z[:, 1].tolist() == [0.0, 1.0, 0.0]
 
 
+def test_standardiseur_robuste_et_minmax():
+    X = torch.tensor([[1.0], [2.0], [3.0], [4.0], [100.0]], dtype=T)
+    r = Standardiseur([0], "robuste").ajuster(X)
+    assert float(r.moyenne[0]) == 3.0 and float(r.ecart[0]) == 2.0         # médiane 3, Q3 − Q1 = 4 − 2
+    m = Standardiseur([0], "minmax").ajuster(X)
+    Z = m.transformer(X)
+    assert float(Z.min()) == 0.0 and float(Z.max()) == 1.0
+
+
 def test_references():
     serie = torch.arange(30, dtype=T)
     orig = torch.tensor([20, 25])

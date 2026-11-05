@@ -25,10 +25,15 @@ z = (x − x̄_obs)/s_obs ; elles rendent les valeurs dans l'échelle d'origine.
   moyenne               x_ij ← moyenne de la colonne j (optimale pour l'erreur quadratique si rien d'autre n'est su).
   mediane_age           médiane de la colonne j dans la tranche d'âge du passage : < 1 an, 1–4, 5–14, 15–39, 40–64,
                         ≥ 65 ans (les normes des constantes dépendent de l'âge) ; tranche vide : médiane globale.
-  knn                   k plus proches voisins (k = 10) parmi les passages d'apprentissage, avec la distance
+  knn                   k plus proches voisins parmi les passages d'apprentissage, avec la distance
                         euclidienne sur les seules colonnes observées des deux côtés, remise à l'échelle :
                             d²(a, b) = (p / |o_a ∩ o_b|) Σ_{j ∈ o_a ∩ o_b} (z_aj − z_bj)²
                         x_ij ← moyenne de x_kj sur les k voisins qui ont la colonne j.
+                        k est choisi par validation croisée en 5 plis sur l'apprentissage (au plus 1 500 passages
+                        tirés au hasard) : chaque case OBSERVÉE d'un pli est cachée, prédite par les k voisins des
+                        autres plis, pour chaque k de K_GRILLE ;
+                            k* = argmin_k (1/N) Σ (ẑ_ij^(k) − z_ij)²   (N cases, échelle standardisée ;
+                                                                         ex aequo : le plus petit k).
   regression            équations enchaînées (principe de MICE, version déterministe) : on remplit d'abord par
                         la moyenne, puis, 10 fois de suite, chaque colonne incomplète est prédite par une régression
                         ridge sur toutes les autres :
@@ -49,6 +54,8 @@ z = (x − x̄_obs)/s_obs ; elles rendent les valeurs dans l'échelle d'origine.
 """
 from __future__ import annotations
 
+import math
+
 import torch
 
 from svr.modeles import TYPE
@@ -57,6 +64,8 @@ IMPUTATIONS = ("suppression_lignes", "suppression_colonnes", "mediane", "moyenne
                "regression", "em", "acp_iterative")
 TRANCHES_AGE = (0.0, 1.0, 5.0, 15.0, 40.0, 65.0, float("inf"))
 SEUIL_COLONNE = 0.5          # suppression_colonnes : part de manquants au-delà de laquelle la variable est retirée
+K_GRILLE = (1, 3, 5, 7, 10, 15, 21, 31, 51)      # valeurs de k essayées par la validation croisée du k-NN
+PLIS_K, LIGNES_CHOIX_K = 5, 1500
 
 
 def _nanmediane(X: torch.Tensor) -> torch.Tensor:
@@ -74,11 +83,12 @@ def _motifs(M: torch.Tensor):
 class Imputeur:
     """Apprend un traitement des valeurs manquantes sur l'apprentissage, puis complète n'importe quel tableau."""
 
-    def __init__(self, methode: str = "mediane", continues: list[int] | None = None, col_age: int = 0, k: int = 10):
+    def __init__(self, methode: str = "mediane", continues: list[int] | None = None, col_age: int = 0, k: int | None = None):
         if methode not in IMPUTATIONS:
             raise ValueError(f"Imputation inconnue : {methode}. Choix : {', '.join(IMPUTATIONS)}.")
         self.methode, self.continues, self.col_age, self.k = methode, list(continues or []), col_age, k
         self.retirees: list[int] = []
+        self.erreurs_k = None                      # k = None : choisi par validation croisée (k-NN)
 
     # ── apprentissage ──────────────────────────────────────────────────────────────────────────
     def ajuster(self, X: torch.Tensor) -> "Imputeur":
@@ -110,6 +120,50 @@ class Imputeur:
 
     def _ajuster_knn(self, Z):
         self.Z_app = Z
+        if self.k is None:
+            self.k, self.erreurs_k = self._choisir_k(Z)
+
+    @staticmethod
+    def _choisir_k(Z, plis: int = PLIS_K, graine: int = 1):
+        """
+        Validation croisée en `plis` plis : pour chaque pli et chaque colonne j, les cases observées de j sont
+        cachées et prédites par la moyenne de x_j chez les k plus proches des autres plis (distance sur les autres
+        colonnes observées des deux côtés). Renvoie le k de plus petite erreur quadratique moyenne (échelle
+        standardisée, toutes colonnes confondues ; ex aequo : le plus petit) et l'erreur de chaque k.
+        Moins de 2 × plis passages : k = √n.
+        """
+        gen = torch.Generator().manual_seed(graine)
+        if len(Z) > LIGNES_CHOIX_K:
+            Z = Z[torch.randperm(len(Z), generator=gen)[:LIGNES_CHOIX_K]]
+        n, p = Z.shape
+        grille = [k for k in K_GRILLE if k <= n - -(-n // plis)]
+        if n < 2 * plis or not grille:
+            return max(1, round(math.sqrt(n))), None
+        ordre = torch.randperm(n, generator=gen)
+        somme, cases = dict.fromkeys(grille, 0.0), 0
+        for f in range(plis):
+            test, app = ordre[f::plis], torch.cat([ordre[g::plis] for g in range(plis) if g != f])
+            Ma, Mb = (~torch.isnan(Z[test])).to(TYPE), (~torch.isnan(Z[app])).to(TYPE)
+            za, zb = torch.nan_to_num(Z[test]), torch.nan_to_num(Z[app])
+            S = (Ma * za ** 2) @ Mb.T + Ma @ (Mb * zb ** 2).T - 2 * (Ma * za) @ (Mb * zb).T
+            C = Ma @ Mb.T
+            for j in range(p):
+                lignes, donneurs = Ma[:, j] > 0, Mb[:, j] > 0
+                if not lignes.any() or not donneurs.any():
+                    continue
+                # On retire la colonne j de la distance : les deux côtés l'ont, elle comptait pour (z_aj − z_bj)².
+                Sj = S[lignes][:, donneurs] - (za[lignes, j:j + 1] - zb[donneurs, j].unsqueeze(0)) ** 2
+                Cj = C[lignes][:, donneurs] - 1
+                d2 = torch.where(Cj > 0, Sj.clamp(min=0) * p / Cj.clamp(min=1), torch.full_like(Sj, float("inf")))
+                valeurs = zb[donneurs, j][torch.argsort(d2, dim=1, stable=True)]
+                for k in grille:
+                    pred = valeurs[:, :k].mean(dim=1)
+                    somme[k] += float(((pred - za[lignes, j]) ** 2).sum())
+                cases += int(lignes.sum())
+        if not cases:
+            return max(1, round(math.sqrt(n))), None
+        erreurs = {k: s / cases for k, s in somme.items()}
+        return min(erreurs, key=lambda k: (erreurs[k], k)), erreurs
 
     def _ajuster_regression(self, Z, tours: int = 10, lam: float = 1.0):
         M = ~torch.isnan(Z)
