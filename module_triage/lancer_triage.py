@@ -41,12 +41,13 @@ T9 demande la source préparée une fois par preparer_nhamcs.py (option --source
 | T12  | passages d'âge illisible, groupe déduit    | avec, sans (comparés sur les passages d'âge écrit)      |
 |      | de la profession                           |                                                         |
 | T13  | rapport des coûts c₊/c₋ (seuil s*)         | 1, 2, 3, 4, 6 : même modèle, seuil s* = 1/(1 + c₊/c₋)   |
+| T14  | mise à l'échelle des constantes            | z-score, robuste (médiane, Q3 − Q1), min-max, aucune    |
 MEO : comptée grave par défaut, choix CLINIQUE fixé à l'avance (le patient gardé en surveillance a besoin de soins ;
 le renvoyer serait un sous-triage). T1 est une analyse de sensibilité : la cible change d'une variante à l'autre,
 donc les variantes ne sont comparées (McNemar) que sur les passages hors MEO communs aux trois, où la cible est
 la même. On ne choisit JAMAIS la définition de la cible d'après le score.
 Chaque ligne donne aussi le taux d'alerte et la spécificité à 90 % et 95 % de sensibilité (lus sur la courbe ROC).
-Sélection : le SVM (modèle, valeurs manquantes, plaintes, transfert) de plus petit coût moyen, écrit dans
+Sélection : le SVM (modèle, valeurs manquantes, plaintes, mise à l'échelle, transfert) de plus petit coût moyen, écrit dans
 resultats/triage/choix_retenu_<groupe>.json ; --utiliser-selection le prend comme modèle principal (test final).
 Raccordement (après les groupes) : les prévisions des modèles enfants et adultes sont réunies et comparées,
 sur TOUS les passages des urgences, au modèle commun appris sur tout le monde (McNemar, mêmes passages).
@@ -72,9 +73,9 @@ from triage.validation import COUTS, ConfigTriage, decoupage_final, decoupages_c
 from triage.imputation import IMPUTATIONS
 from triage.transfert import SOURCES, ConfigTransfert, Pretraine, evaluer_transfert, lire_source
 from triage.representations import REPRESENTATIONS
-from triage.variables import FORMES, MEO, OptionsVariables, construire, vocabulaire
+from triage.variables import ECHELLES, FORMES, MEO, OptionsVariables, construire, vocabulaire
 
-BANCS = ("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13")
+BANCS = ("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14")
 RAPPORTS_COUTS = (1.0, 2.0, 3.0, 4.0, 6.0)
 PLAINTES_VARIANTES = ("familles", "mots", "familles + mots", "sans plaintes")
 SOURCE_EXTERNE = "/mnt/c/Users/User/Desktop/MEMOIRE/donnees_externes/nhamcs/passages_nhamcs.csv.gz"
@@ -135,7 +136,7 @@ def restreindre(res: dict, ids: list) -> dict:
 def selectionner(lignes: list[dict]) -> dict:
     """
     Le meilleur SVM d'après les bancs (règle fixée à l'avance) : parmi les lignes de la famille SVM des bancs
-    T2, T8, T10, T11 et T9 (les variantes « cas complets » sont exclues : elles ne portent pas sur tous les passages),
+    T2, T8, T10, T11, T14 et T9 (les variantes « cas complets » sont exclues : elles ne portent pas sur tous les passages),
     le plus petit COÛT MOYEN par passage (c₊ par grave manqué, c₋ par fausse alerte : le critère du problème) ;
     à égalité, la plus grande AUC. Tout vient de la validation mensuelle avant le verrou.
     """
@@ -144,7 +145,7 @@ def selectionner(lignes: list[dict]) -> dict:
     if not candidats:
         return {}
     meilleur = min(candidats, key=lambda l: (l["cout_moyen"], -(l.get("auc") or 0)))
-    return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "transfert", "cout_moyen", "auc",
+    return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "echelle", "transfert", "cout_moyen", "auc",
                                          "sensibilite", "specificite", "mcnemar_p")}
 
 
@@ -270,6 +271,13 @@ def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: Conf
                            **resume(ref["y"], ref["p"], s, rc)})
             print(f"  T13 c₊/c₋ = {rc:<3g} seuil {s:.3f} : sensibilité {lignes[-1]['sensibilite']:.3f}, "
                   f"spécificité {lignes[-1]['specificite']:.3f}, alertes {lignes[-1]['taux_alerte']:.1%}")
+    if "T14" in bancs:
+        # Mise à l'échelle des colonnes continues, apprise sur l'apprentissage seul ; même modèle, mêmes passages.
+        for ech in ECHELLES:
+            r = ref if ech == cfg.echelle else b.lancer(opts, dataclasses.replace(cfg, echelle=ech))
+            lignes.append(b.ligne("T14", ech, r, ref))
+            lignes[-1].update(modele=cfg.modele, imputation=cfg.imputation, echelle=ech, svm=cfg.modele in FAMILLE_SVM)
+            print(f"  T14 {ech:<8} coût {lignes[-1]['cout_moyen']:.3f}, AUC {lignes[-1]['auc']:.3f}")
     if "T9" in bancs and b.source is not None and len(b.source):
         print(f"  T9 pré-entraînement sur {len(b.source)} passages NHAMCS ({groupe})…")
         tab = construire(b.passages, opts)
@@ -382,20 +390,37 @@ def main() -> None:
                    help="modèle principal = choix_retenu_<groupe>.json (écrit par les bancs) ; à utiliser pour le test final")
     p.add_argument("--extraction", help="test final : date du relevé du registre (aaaa-mm-jj)")
     p.add_argument("--confirmation", help="test final : phrase d'ouverture du coffre")
+    p.add_argument("--fin-developpement", help="fin de la période de développement du triage (aaaa-mm-jj) : les bancs ne "
+                   "voient rien à partir de cette date, qui devient le coffre du triage (par défaut : le verrou commun). "
+                   "Le registre des urgences s'arrêtant le 25/01/2026, le mémoire utilise 2026-01-01 : janvier 2026 "
+                   "est mis de côté pour le test final.")
     a = p.parse_args()
 
+    fin_dev = pd.Timestamp(a.fin_developpement) if a.fin_developpement else verrou.DATE_VERROU
+    if fin_dev > verrou.DATE_VERROU:
+        raise SystemExit("La fin du développement ne peut pas dépasser le verrou commun.")
     final = a.confirmation is not None
+    sortie = Path("resultats") / "triage"
+    sortie.mkdir(parents=True, exist_ok=True)
     if final:
         if not a.extraction:
             raise SystemExit("Le test final demande --extraction (date du relevé).")
-        verrou.ouvrir_coffre(a.confirmation)
-    sortie = Path("resultats") / "triage"
-    sortie.mkdir(parents=True, exist_ok=True)
+        if pd.Timestamp(a.extraction) >= verrou.DATE_VERROU:
+            verrou.ouvrir_coffre(a.confirmation)              # données après le verrou commun : coffre général
+        else:                                                 # coffre propre au triage (avant le verrou commun)
+            if a.confirmation != verrou.PHRASE:
+                raise PermissionError(f"Coffre du triage fermé. Pour le test final uniquement, confirmez avec : « {verrou.PHRASE} ».")
+            journal = sortie / "test_final_ouvertures.log"
+            if journal.exists():
+                print("ATTENTION : le coffre du triage a déjà été ouvert :\n" + journal.read_text(encoding="utf-8"))
+            with journal.open("a", encoding="utf-8") as f:
+                f.write(f"{pd.Timestamp.now():%Y-%m-%d %H:%M:%S} — test final du triage sur les passages du "
+                        f"{fin_dev:%d/%m/%Y} au {pd.Timestamp(a.extraction):%d/%m/%Y}\n")
 
     passages, lecture = lire_passages(a.export)
     if len(passages) == 0:
         raise SystemExit("Aucun passage lisible dans ce fichier.")
-    fin = pd.Timestamp(a.extraction) + pd.Timedelta(days=1) if final else verrou.DATE_VERROU
+    fin = pd.Timestamp(a.extraction) + pd.Timedelta(days=1) if final else fin_dev
     passages = passages[passages["date_passage"] < fin].reset_index(drop=True)
     print(f"{lecture['passages']} passages lus ; {len(passages)} avant le {fin:%d/%m/%Y} "
           f"(date illisible : {lecture['date_illisible']}, valeurs écrites mais illisibles : {lecture['valeurs_ecrites_mais_illisibles']})")
@@ -409,15 +434,15 @@ def main() -> None:
     if a.rapide:
         cfg = dataclasses.replace(cfg, grille_C=(1.0,), grille_portee=(1.0,), entrainement=Entrainement(iterations=300))
     if final:
-        decouper = lambda dates: [decoupage_final(dates, verrou.DATE_VERROU)]
+        decouper = lambda dates: [decoupage_final(dates, fin_dev)]
         bancs = []                                   # au test final : le modèle retenu seulement, rien n'est choisi
     else:
-        decouper = lambda dates: decoupages_mensuels(dates, verrou.DATE_VERROU, a.mois_min)
+        decouper = lambda dates: decoupages_mensuels(dates, fin_dev, a.mois_min)
         bancs = a.bancs
     passages["id_passage"] = range(len(passages))           # pour raccorder les modèles enfants et adultes
     tous = passages[passages["groupe"].notna()].reset_index(drop=True)
-    vocab = vocabulaire(passages, verrou.DATE_VERROU)        # texte seul, passages d'avant le verrou
-    print(f"Sac de mots : {len(vocab)} mots écrits dans au moins 5 passages avant le {verrou.DATE_VERROU:%d/%m/%Y}")
+    vocab = vocabulaire(passages, fin_dev)                   # texte seul, passages d'avant la fin du développement
+    print(f"Sac de mots : {len(vocab)} mots écrits dans au moins 5 passages avant le {fin_dev:%d/%m/%Y}")
 
     rapport = [f"# Triage — {'test final' if final else 'validation mensuelle'}\n",
                f"Seuil d'alerte s* = 1/(1 + {a.rapport_couts:g}) = {seuil:.3f}. Mesures sur les passages jamais vus.\n"]
@@ -436,7 +461,8 @@ def main() -> None:
         if a.utiliser_selection and chemin_sel.exists():
             sel = json.loads(chemin_sel.read_text(encoding="utf-8"))
             if sel.get("modele") in MODELES:
-                cfg_g = dataclasses.replace(cfg, modele=sel["modele"], imputation=sel.get("imputation") or cfg.imputation)
+                cfg_g = dataclasses.replace(cfg, modele=sel["modele"], imputation=sel.get("imputation") or cfg.imputation,
+                                            echelle=sel.get("echelle") or cfg.echelle)
             if sel.get("plaintes") in PLAINTES_VARIANTES:
                 opts_g = dataclasses.replace(opts, **options_plaintes(sel["plaintes"], vocab))
             print(f"  modèle principal = sélection des bancs : {sel.get('variante')} ({sel.get('banc')})")
