@@ -83,6 +83,14 @@ def _nanmediane(X: torch.Tensor) -> torch.Tensor:
     return torch.where(torch.isnan(m), torch.zeros_like(m), m)
 
 
+def _nanborne(Z: torch.Tensor, f) -> torch.Tensor:
+    """Minimum ou maximum de chaque colonne sur les cases observées (colonne vide : 0, la moyenne)."""
+    M = ~torch.isnan(Z)
+    remplace = float("inf") if f is torch.amin else -float("inf")
+    b = f(torch.where(M, Z, torch.full_like(Z, remplace)), dim=0)
+    return torch.where(M.any(dim=0), b, torch.zeros_like(b))
+
+
 def _motifs(M: torch.Tensor):
     """Regroupe les lignes par motif de cases observées (même motif = mêmes matrices à inverser)."""
     motifs, inverse = torch.unique(M, dim=0, return_inverse=True)
@@ -127,6 +135,7 @@ class Imputeur:
             ecart = torch.sqrt(torch.nanmean((XS - self.centre) ** 2, dim=0))
             self.echelle = torch.where(ecart > 1e-12, ecart, torch.ones_like(ecart))
             Z = (XS - self.centre) / self.echelle
+            self.z_min, self.z_max = _nanborne(Z, torch.amin), _nanborne(Z, torch.amax)
             if self.methode in A_REGLAGE and self.reglage is None:
                 self.reglage, self.erreurs_reglage = self._choisir_reglage(Z)
             getattr(self, f"_ajuster_{self.methode}")(Z)
@@ -325,6 +334,7 @@ class Imputeur:
         elif self.methode in ("knn", *A_REGLAGE):
             Z = (X[:, self.S] - self.centre) / self.echelle
             Z = getattr(self, f"_completer_{self.methode}")(Z)
+            Z = torch.minimum(torch.maximum(Z, self.z_min), self.z_max)     # jamais hors des valeurs vues à l'apprentissage
             XS = X[:, self.S]
             X[:, self.S] = torch.where(torch.isnan(XS), Z * self.echelle + self.centre, XS)   # l'observé ne bouge pas
         # Tout ce qui reste vide (mediane, suppression_*, colonnes hors S, âge manquant…) : médiane de l'apprentissage.
