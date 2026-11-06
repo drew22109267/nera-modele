@@ -32,6 +32,14 @@ de n₁ graves sur n passages vaut n p(1 − p), avec p = n₁/n : c'est n fois 
 2 près). La valeur d'une feuille est p, la part de graves. La forêt fait la moyenne de B arbres appris sur
 des échantillons bootstrap, avec √d variables tirées à chaque coupure.
 
+3 bis. XGBoost (xgboost)
+--------------------------
+svr.concurrents.XGBoost, perte logistique pondérée par les coûts de classe C₊, C₋ (y ∈ {0, 1}) : arbres du
+second ordre, gain ½ [G_G²/(H_G + λ) + G_D²/(H_D + λ) − G²/(H + λ)] − γ, poids de feuille −G/(H + λ).
+Score = F(x) (logit), calibré par Platt comme les autres. 300 arbres, λ = 1, 80 % des lignes et des variables
+par arbre ; la profondeur (2, 3, 4, 6) et le taux η (0,05 ; 0,1 ; 0,3) sont choisis sur l'AUC de calibration,
+comme C et la portée des SVM.
+
 4. Règle de référence (regle)
 ------------------------------
 Score = nombre de signes d'alerte (constantes hors de leur plage normale selon l'âge, normes.py). Rien
@@ -59,7 +67,7 @@ import math
 import torch
 
 from svr.classification import SVMLineaireClassifieur
-from svr.concurrents import Arbre
+from svr.concurrents import Arbre, XGBoost
 from svr.modeles import TYPE, Entrainement, ModeleSVR
 from svr.empilement import softplus
 from svr.noyaux import NoyauComposite, NoyauRBF, sigmoide
@@ -254,7 +262,24 @@ class ForetClassification:
         return torch.stack([a.predire(X) for a in self.arbres]).mean(dim=0)
 
 
-MODELES = ("regle", "logistique", "arbre", "foret", "svm_lineaire", "svm_rbf", "svm_composite",
+class XGBoostClassification:
+    """XGBoost à perte logistique, chaque passage pesé par son coût de classe (C₊ grave, C₋ non grave)."""
+
+    def __init__(self, profondeur: int, taux: float, C_positif: float, C_negatif: float, etapes: int = 300):
+        self.profondeur, self.taux, self.cp, self.cn, self.etapes = profondeur, taux, C_positif, C_negatif, etapes
+
+    def entrainer(self, X, y) -> "XGBoostClassification":
+        y = torch.as_tensor(y, dtype=TYPE)
+        self.modele = XGBoost("logistique", etapes=self.etapes, taux=self.taux, profondeur=self.profondeur).entrainer(
+            X, (y > 0).to(TYPE), couts_exemples(y, self.cp, self.cn))
+        return self
+
+    def predire(self, X):
+        return self.modele.predire(X)
+
+
+GRILLE_XGBOOST = [(prof, eta) for prof in (2, 3, 4, 6) for eta in (0.05, 0.1, 0.3)]
+MODELES = ("regle", "logistique", "arbre", "foret", "xgboost", "svm_lineaire", "svm_rbf", "svm_composite",
            "svm_composite_constantes", "svm_composite_plaintes", "svm_laplacien", "svm_polynomial",
            "svm_hinge_carree", "lssvm", "svm_fourier")
 A_PORTEE = {"svm_rbf", "svm_composite", "svm_composite_constantes", "svm_composite_plaintes", "svm_laplacien",
@@ -277,6 +302,8 @@ def fabrique(nom: str, C: float, portee: float, C_positif: float, C_negatif: flo
         return lambda: ArbreClassification()
     if nom == "foret":
         return lambda: ForetClassification()
+    if nom == "xgboost":                     # C = profondeur, portée = taux η (grille GRILLE_XGBOOST)
+        return lambda: XGBoostClassification(int(C), portee, C_positif, C_negatif)
     if nom == "svm_lineaire":
         return lambda: SVMLineaireClassifieur(cp, cn, e)
     if nom == "svm_rbf":

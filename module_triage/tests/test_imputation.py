@@ -88,3 +88,12 @@ def test_mises_a_l_echelle_du_preparateur(echelle):
         assert torch.allclose(Z.median(0).values, torch.zeros(4, dtype=TYPE), atol=1e-2)
     else:
         assert torch.equal(Z, prep._imputer(X[:200]))
+
+
+@pytest.mark.parametrize("methode", ["regression", "em", "acp_iterative", "softimpute"])
+def test_reglage_choisi_par_validation_croisee(methode):
+    X, _, _ = donnees()
+    imp = Imputeur(methode, continues=[0, 1, 2, 3]).ajuster(X)
+    assert imp.erreurs_reglage is not None and imp.erreurs_reglage[imp.reglage] == min(imp.erreurs_reglage.values())
+    if methode == "acp_iterative":
+        assert imp.rang == 2                                    # l'âge, et x1 (x2 et x3 le suivent) : deux axes

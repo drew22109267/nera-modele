@@ -46,8 +46,14 @@ z = (x − x̄_obs)/s_obs ; elles rendent les valeurs dans l'échelle d'origine.
                         jusqu'à stabilité de μ et Σ (au plus 100 tours) ; puis chaque case manquante reçoit son
                         espérance conditionnelle E[z_m | z_o]. Le terme C_i empêche de sous-estimer la variance
                         (ce que ferait une simple régression répétée).
+  softimpute            même famille que l'ACP itérative, sans couper à un rang : σ_i ← max(σ_i − λ, 0)
+                        (Mazumder, Hastie et Tibshirani, 2010), λ = fraction de σ_1 ; coordonnées d'une ligne
+                        rétrécies par (σ_i − λ)/σ_i.
+  Réglages (λ de la ridge et de l'EM, rang de l'ACP, λ/σ_1 du SoftImpute) choisis par validation croisée : 5 plis
+  de cases OBSERVÉES cachées (au plus 1 500 passages), erreur quadratique moyenne sur ces cases, échelle
+  standardisée ; ex aequo : le plus simple.
   acp_iterative         imputation de rang faible : on remplit par 0 (la moyenne), on garde les k premiers axes
-                        de l'ACP (k : 80 % de la variance), on remplace les cases manquantes par la reconstruction
+                        de l'ACP (k choisi par validation croisée ; 80 % de la variance si trop peu de passages), on remplace les cases manquantes par la reconstruction
                         Z ≈ U_k S_k V_kᵀ, et on recommence jusqu'à stabilité. Pour un nouveau passage, ses
                         coordonnées s sur les axes viennent des seules colonnes observées :
                             s = (V_oᵀ V_o + αI)⁻¹ V_oᵀ z_o,   z_m ← V_m s.
@@ -61,7 +67,11 @@ import torch
 from svr.modeles import TYPE
 
 IMPUTATIONS = ("suppression_lignes", "suppression_colonnes", "mediane", "moyenne", "mediane_age", "knn",
-               "regression", "em", "acp_iterative")
+               "regression", "em", "acp_iterative", "softimpute")
+A_REGLAGE = ("regression", "em", "acp_iterative", "softimpute")
+GRILLE_LAMBDA_RIDGE = (0.01, 0.1, 1.0, 10.0, 100.0)
+GRILLE_LAMBDA_EM = (1e-4, 1e-3, 1e-2, 1e-1)
+GRILLE_SOFTIMPUTE = (0.01, 0.03, 0.1, 0.2, 0.3, 0.5)
 TRANCHES_AGE = (0.0, 1.0, 5.0, 15.0, 40.0, 65.0, float("inf"))
 SEUIL_COLONNE = 0.5          # suppression_colonnes : part de manquants au-delà de laquelle la variable est retirée
 K_GRILLE = (1, 3, 5, 7, 10, 15, 21, 31, 51)      # valeurs de k essayées par la validation croisée du k-NN
@@ -83,12 +93,14 @@ def _motifs(M: torch.Tensor):
 class Imputeur:
     """Apprend un traitement des valeurs manquantes sur l'apprentissage, puis complète n'importe quel tableau."""
 
-    def __init__(self, methode: str = "mediane", continues: list[int] | None = None, col_age: int = 0, k: int | None = None):
+    def __init__(self, methode: str = "mediane", continues: list[int] | None = None, col_age: int = 0, k: int | None = None,
+                 reglage: float | None = None):
         if methode not in IMPUTATIONS:
             raise ValueError(f"Imputation inconnue : {methode}. Choix : {', '.join(IMPUTATIONS)}.")
         self.methode, self.continues, self.col_age, self.k = methode, list(continues or []), col_age, k
         self.retirees: list[int] = []
         self.erreurs_k = None                      # k = None : choisi par validation croisée (k-NN)
+        self.reglage, self.erreurs_reglage = reglage, None   # None : choisi par validation croisée
 
     # ── apprentissage ──────────────────────────────────────────────────────────────────────────
     def ajuster(self, X: torch.Tensor) -> "Imputeur":
@@ -107,7 +119,7 @@ class Imputeur:
                 dans = (age >= a) & (age < b)
                 med = torch.nanmedian(X[dans], dim=0).values if dans.any() else torch.full_like(self.mediane, float("nan"))
                 self.par_tranche.append(torch.where(torch.isnan(med), self.mediane, med))
-        if self.methode in ("knn", "regression", "em", "acp_iterative"):
+        if self.methode in ("knn", *A_REGLAGE):
             self.S = sorted(set(self.continues) | {j for j in range(X.shape[1]) if manque[:, j].any()})
             self.S = [j for j in self.S if (~manque[:, j]).any()]          # une colonne jamais observée : médiane (0)
             XS = X[:, self.S]
@@ -115,6 +127,8 @@ class Imputeur:
             ecart = torch.sqrt(torch.nanmean((XS - self.centre) ** 2, dim=0))
             self.echelle = torch.where(ecart > 1e-12, ecart, torch.ones_like(ecart))
             Z = (XS - self.centre) / self.echelle
+            if self.methode in A_REGLAGE and self.reglage is None:
+                self.reglage, self.erreurs_reglage = self._choisir_reglage(Z)
             getattr(self, f"_ajuster_{self.methode}")(Z)
         return self
 
@@ -165,7 +179,41 @@ class Imputeur:
         erreurs = {k: s / cases for k, s in somme.items()}
         return min(erreurs, key=lambda k: (erreurs[k], k)), erreurs
 
-    def _ajuster_regression(self, Z, tours: int = 10, lam: float = 1.0):
+    def _grille(self, p: int) -> tuple:
+        return {"regression": GRILLE_LAMBDA_RIDGE, "em": GRILLE_LAMBDA_EM, "softimpute": GRILLE_SOFTIMPUTE,
+                "acp_iterative": tuple(range(1, max(p, 2)))}[self.methode]
+
+    def _choisir_reglage(self, Z, plis: int = PLIS_K, graine: int = 1):
+        """
+        Les cases OBSERVÉES (au plus LIGNES_CHOIX_K passages) sont réparties au hasard en `plis` plis ; chaque pli
+        est caché à son tour, le traitement est appris sur le reste avec chaque valeur de la grille et complète les
+        cases cachées ; erreur = moyenne de (prédit − vrai)² (échelle standardisée). Ex aequo : le plus simple.
+        """
+        gen = torch.Generator().manual_seed(graine)
+        if len(Z) > LIGNES_CHOIX_K:
+            Z = Z[torch.randperm(len(Z), generator=gen)[:LIGNES_CHOIX_K]]
+        obs = torch.nonzero(~torch.isnan(Z))
+        if len(Z) < 2 * plis or len(obs) < 2 * plis:
+            return None, None
+        pli = torch.randperm(len(obs), generator=gen) % plis
+        grille = self._grille(Z.shape[1])
+        somme = dict.fromkeys(grille, 0.0)
+        for f in range(plis):
+            cache = obs[pli == f]
+            Zm = Z.clone()
+            Zm[cache[:, 0], cache[:, 1]] = float("nan")
+            vrai = Z[cache[:, 0], cache[:, 1]]
+            for v in grille:
+                essai = Imputeur(self.methode, reglage=v)
+                getattr(essai, f"_ajuster_{self.methode}")(Zm)
+                pred = getattr(essai, f"_completer_{self.methode}")(Zm)[cache[:, 0], cache[:, 1]]
+                somme[v] += float(((pred - vrai) ** 2).sum())
+        erreurs = {v: t / len(obs) for v, t in somme.items()}
+        simple = (lambda v: v) if self.methode == "acp_iterative" else (lambda v: -v)
+        return min(erreurs, key=lambda v: (erreurs[v], simple(v))), erreurs
+
+    def _ajuster_regression(self, Z, tours: int = 10):
+        lam = 1.0 if self.reglage is None else self.reglage
         M = ~torch.isnan(Z)
         Zf = torch.where(M, Z, torch.zeros_like(Z))
         self.incompletes = [j for j in range(Z.shape[1]) if (~M[:, j]).any()]
@@ -181,7 +229,8 @@ class Imputeur:
                 Zf[~obs, j] = A[~obs] @ b
         self.tours = tours
 
-    def _ajuster_em(self, Z, tours: int = 100, lam: float = 1e-3, tol: float = 1e-5):
+    def _ajuster_em(self, Z, tours: int = 100, tol: float = 1e-5):
+        lam = 1e-3 if self.reglage is None else self.reglage
         n, p = Z.shape
         M = ~torch.isnan(Z)
         mu = torch.zeros(p, dtype=TYPE)
@@ -225,9 +274,12 @@ class Imputeur:
     def _ajuster_acp_iterative(self, Z, tours: int = 100, part: float = 0.8, tol: float = 1e-6):
         M = ~torch.isnan(Z)
         Zf = torch.where(M, Z, torch.zeros_like(Z))
-        _, s, _ = torch.linalg.svd(Zf, full_matrices=False)
-        cumul = torch.cumsum(s ** 2, 0) / (s ** 2).sum()
-        self.rang = max(1, int((cumul < part).sum()) + 1)
+        if self.reglage is None:
+            _, s, _ = torch.linalg.svd(Zf, full_matrices=False)
+            cumul = torch.cumsum(s ** 2, 0) / (s ** 2).sum()
+            self.rang = max(1, int((cumul < part).sum()) + 1)
+        else:
+            self.rang = int(min(self.reglage, Z.shape[1]))
         for _ in range(tours):
             U, s, Vt = torch.linalg.svd(Zf, full_matrices=False)
             R = U[:, :self.rang] * s[:self.rang] @ Vt[:self.rang]
@@ -236,6 +288,28 @@ class Imputeur:
             if len(avant) == 0 or float((Zf[~M] - avant).abs().max()) < tol:
                 break
         self.V = Vt[:self.rang].T                                         # p × k
+        self.retrecir = torch.ones(self.rang, dtype=TYPE)
+
+    def _ajuster_softimpute(self, Z, tours: int = 100, tol: float = 1e-6):
+        """R = U diag(max(σ − λ, 0)) Vᵀ, cases vides ← R jusqu'à stabilité ; λ = reglage × σ_1 (Z rempli par 0)."""
+        M = ~torch.isnan(Z)
+        Zf = torch.where(M, Z, torch.zeros_like(Z))
+        lam = (0.1 if self.reglage is None else self.reglage) * float(torch.linalg.svdvals(Zf)[0])
+        for _ in range(tours):
+            U, s, Vt = torch.linalg.svd(Zf, full_matrices=False)
+            d = (s - lam).clamp(min=0)
+            avant = Zf[~M].clone()
+            Zf[~M] = ((U * d) @ Vt)[~M]
+            if len(avant) == 0 or float((Zf[~M] - avant).abs().max()) < tol:
+                break
+        garde = d > 0
+        garde[0] = True
+        self.rang = int(garde.sum())
+        self.V = Vt[garde].T
+        self.retrecir = torch.where(s[garde] > 0, d[garde] / s[garde], torch.zeros_like(d[garde]))
+
+    def _completer_softimpute(self, Z):
+        return self._completer_acp_iterative(Z)
 
     # ── application ────────────────────────────────────────────────────────────────────────────
     def transformer(self, X: torch.Tensor) -> torch.Tensor:
@@ -248,7 +322,7 @@ class Imputeur:
             for (a, b), med in zip(zip(TRANCHES_AGE[:-1], TRANCHES_AGE[1:]), self.par_tranche):
                 dans = ((age >= a) & (age < b)).unsqueeze(1) & manque
                 X = torch.where(dans, med.expand_as(X), X)
-        elif self.methode in ("knn", "regression", "em", "acp_iterative"):
+        elif self.methode in ("knn", *A_REGLAGE):
             Z = (X[:, self.S] - self.centre) / self.echelle
             Z = getattr(self, f"_completer_{self.methode}")(Z)
             XS = X[:, self.S]
@@ -299,7 +373,7 @@ class Imputeur:
             o, m = motif, ~motif
             if not m.any() or not o.any():
                 continue                                                 # rien à faire, ou rien d'observé : 0 (la moyenne)
-            Vo, Vm = self.V[o], self.V[m]
+            Vo, Vm = self.V[o], self.V[m] * self.retrecir                # SoftImpute : axes rétrécis
             s = torch.linalg.solve(Vo.T @ Vo + alpha * torch.eye(Vo.shape[1], dtype=TYPE), Vo.T @ Zc[lignes][:, o].T).T
             bloc = Zc[lignes]
             bloc[:, m] = s @ Vm.T

@@ -5,6 +5,7 @@ Modèles concurrents du SVR, écrits à la main (aucune bibliothèque d'apprenti
     B. Gradient boosting quantile    (Friedman, 2001)
     C. Perceptron multicouche (MLP)  quantile, rétropropagation écrite à la main
     D. LSTM                          quantile, rétropropagation dans le temps écrite à la main
+    E. XGBoost                       (Chen et Guestrin, 2016) : boosting du second ordre, gain régularisé
 
 Règle d'équité de la comparaison (à écrire dans le mémoire) : chaque concurrent reçoit EXACTEMENT
 le même tableau de variables que le SVR (svr/caracteristiques.py : 7 jours d'occupation passée,
@@ -17,6 +18,22 @@ Interface commune (celle de svr/validation.evaluer) :
     modele.entrainer(X, y) -> modele        X : n × p (standardisé), y : n
     modele.predire(X)      -> {τ: tenseur}  quantiles triés (pas de croisement)
 
+
+E. XGBoost (Chen et Guestrin, 2016) — aussi utilisé par le triage
+--------------------------------------------------------------------
+Comme le gradient boosting, une somme d'arbres F(x) = F₀ + η Σ_m f_m(x), mais chaque arbre minimise un
+développement de Taylor à l'ORDRE 2 de la perte, avec une pénalité sur l'arbre :
+    Σ_i [g_i f(x_i) + ½ h_i f(x_i)²] + γ T + ½ λ Σ_feuilles w²,   g_i = ∂ℓ/∂F, h_i = ∂²ℓ/∂F² en F(x_i).
+Dans une feuille de sommes G = Σ g_i, H = Σ h_i, le meilleur poids et la meilleure valeur sont
+    w* = −G/(H + λ),   −½ G²/(H + λ) ;
+une coupure (gauche, droite) est gardée si son gain est positif :
+    gain = ½ [G_G²/(H_G + λ) + G_D²/(H_D + λ) − G²/(H + λ)] − γ,
+et chaque feuille doit garder H ≥ min_hessien. Calcul en une passe par variable (cumuls de g et h triés).
+Pertes : carrée (g = F − y, h = 1) ; logistique pondérée, y ∈ {0, 1}, p = σ(F) (g = w(p − y),
+h = w p(1 − p)) ; pinball au quantile τ (g = 𝟙(y < F) − τ, h = 1 : la dérivée seconde de la pinball est
+nulle presque partout, on prend h = 1 comme LightGBM, ce qui revient à une descente de Newton « unitaire »).
+Sous-échantillonnage des lignes (sous) et des variables (colonnes) à chaque arbre ; F₀ = minimum de la
+perte constante (moyenne, logit de la part de graves, quantile τ).
 
 A. Arbre de régression (CART) — la brique des méthodes A et B
 -------------------------------------------------------------
@@ -143,7 +160,7 @@ class Arbre:
         k = torch.arange(1, n, dtype=TYPE)[:, None]                         # k exemples à gauche
         Sg, Qg, St, Qt = S[:-1], Q[:-1], S[-1], Q[-1]
         sce = (Qg - Sg ** 2 / k) + ((Qt - Qg) - (St - Sg) ** 2 / (n - k))
-        valide = (xs[1:] > xs[:-1]) & (k >= self.min_feuille) & (n - k >= self.min_feuille)
+        valide = (xs[1:] - xs[:-1] > 1e-9) & (k >= self.min_feuille) & (n - k >= self.min_feuille)
         sce = torch.where(valide, sce, torch.full_like(sce, float("inf")))
         i = int(torch.argmin(sce))
         ligne, colonne = divmod(i, len(cols))
@@ -163,6 +180,12 @@ class Arbre:
             if parent is not None:
                 (self.gauche if cote == "g" else self.droite)[parent] = noeud
             j, s, gain = self._coupure(X[idx], r[idx]) if prof < self.profondeur_max else (-1, 0.0, 0.0)
+            if gain > 1e-12:
+                # Deux valeurs presque égales (sin 0 = 0 et sin π ≈ 1e−16) : le milieu arrondi tombe sur l'une
+                # d'elles et un côté peut rester vide. Pas de coupure dans ce cas : le nœud devient une feuille.
+                a_gauche = int((X[idx, j] <= s).sum())
+                if a_gauche == 0 or a_gauche == len(idx):
+                    gain = 0.0
             self.var.append(j if gain > 1e-12 else -1)
             self.seuil.append(s)
             self.gauche.append(-1)
@@ -269,6 +292,108 @@ class GradientBoostingQuantile:
     def predire(self, X) -> torch.Tensor:
         X = torch.as_tensor(X, dtype=TYPE)
         return self.F0 + self.nu * sum(a.predire(X) for a in self.arbres)
+
+
+class ArbreXGB(Arbre):
+    """Arbre du second ordre (voir E. dans l'en-tête) ; même stockage et même prédiction que Arbre."""
+
+    def __init__(self, profondeur_max: int = 4, lam: float = 1.0, gamma: float = 0.0, min_hessien: float = 1.0,
+                 colonnes: torch.Tensor | None = None):
+        super().__init__(profondeur_max, 1)
+        self.lam, self.gamma, self.min_h, self.cols = lam, gamma, min_hessien, colonnes
+
+    def _coupure_xgb(self, X, g, h):
+        n, p = X.shape
+        cols = torch.arange(p) if self.cols is None else self.cols
+        if n < 2:
+            return -1, 0.0, 0.0
+        xs, ordre = torch.sort(X[:, cols], dim=0)
+        G, H = torch.cumsum(g[ordre], 0), torch.cumsum(h[ordre], 0)
+        GG, HG, GT, HT = G[:-1], H[:-1], G[-1], H[-1]
+        gain = 0.5 * (GG ** 2 / (HG + self.lam) + (GT - GG) ** 2 / (HT - HG + self.lam) - GT ** 2 / (HT + self.lam)) - self.gamma
+        valide = (xs[1:] - xs[:-1] > 1e-9) & (HG >= self.min_h) & (HT - HG >= self.min_h)
+        gain = torch.where(valide, gain, torch.full_like(gain, -float("inf")))
+        i = int(torch.argmax(gain))
+        ligne, colonne = divmod(i, len(cols))
+        meilleur = float(gain[ligne, colonne])
+        if not math.isfinite(meilleur) or meilleur <= 0:
+            return -1, 0.0, 0.0
+        return int(cols[colonne]), float((xs[ligne, colonne] + xs[ligne + 1, colonne]) / 2), meilleur
+
+    def construire_xgb(self, X, g, h) -> "ArbreXGB":
+        self.var, self.seuil, self.gauche, self.droite, self.valeur = [], [], [], [], []
+        pile = [(torch.arange(len(g)), 0, None, None)]
+        while pile:
+            idx, prof, parent, cote = pile.pop()
+            noeud = len(self.var)
+            if parent is not None:
+                (self.gauche if cote == "g" else self.droite)[parent] = noeud
+            j, s, gain = self._coupure_xgb(X[idx], g[idx], h[idx]) if prof < self.profondeur_max else (-1, 0.0, 0.0)
+            if gain > 0:
+                a_gauche = int((X[idx, j] <= s).sum())
+                if a_gauche == 0 or a_gauche == len(idx):
+                    gain = 0.0
+            self.var.append(j if gain > 0 else -1)
+            self.seuil.append(s)
+            self.gauche.append(-1)
+            self.droite.append(-1)
+            self.valeur.append(-float(g[idx].sum()) / (float(h[idx].sum()) + self.lam) if self.var[-1] < 0 else 0.0)
+            if self.var[-1] >= 0:
+                gauche = X[idx, j] <= s
+                pile.append((idx[~gauche], prof + 1, noeud, "d"))
+                pile.append((idx[gauche], prof + 1, noeud, "g"))
+        self.var, self.seuil = torch.tensor(self.var), torch.tensor(self.seuil, dtype=TYPE)
+        self.gauche, self.droite = torch.tensor(self.gauche), torch.tensor(self.droite)
+        self.valeur = torch.tensor(self.valeur, dtype=TYPE)
+        return self
+
+
+class XGBoost:
+    """Boosting du second ordre (voir E. dans l'en-tête). perte : 'carree', 'logistique' (y ∈ {0, 1}) ou 'pinball'."""
+
+    def __init__(self, perte: str = "carree", tau: float = 0.5, etapes: int = 300, taux: float = 0.1, profondeur: int = 4,
+                 lam: float = 1.0, gamma: float = 0.0, min_hessien: float = 1.0, sous: float = 0.8, colonnes: float = 0.8,
+                 graine: int = 0):
+        if perte not in ("carree", "logistique", "pinball"):
+            raise ValueError("XGBoost : perte ∈ (carree, logistique, pinball).")
+        self.perte, self.tau, self.M, self.eta, self.prof = perte, tau, etapes, taux, profondeur
+        self.lam, self.gamma, self.min_h, self.sous, self.part_col, self.graine = lam, gamma, min_hessien, sous, colonnes, graine
+
+    def _g_h(self, y, F, w):
+        if self.perte == "carree":
+            return w * (F - y), w.clone()
+        if self.perte == "logistique":
+            p = torch.sigmoid(F)
+            return w * (p - y), (w * p * (1 - p)).clamp(min=1e-12)
+        return w * ((y < F).to(TYPE) - self.tau), w.clone()
+
+    def entrainer(self, X, y, poids=None) -> "XGBoost":
+        X, y = torch.as_tensor(X, dtype=TYPE), torch.as_tensor(y, dtype=TYPE)
+        n, p = X.shape
+        w = torch.ones(n, dtype=TYPE) if poids is None else torch.as_tensor(poids, dtype=TYPE) * n / float(torch.as_tensor(poids).sum())
+        gen = torch.Generator().manual_seed(self.graine)
+        if self.perte == "carree":
+            self.F0 = float((w * y).sum() / w.sum())
+        elif self.perte == "logistique":
+            q = float((w * y).sum() / w.sum())
+            self.F0 = math.log(max(q, 1e-12) / max(1 - q, 1e-12))
+        else:
+            self.F0 = float(torch.quantile(y, self.tau))
+        F = torch.full((n,), self.F0, dtype=TYPE)
+        self.arbres = []
+        n_sous, m = max(2, int(self.sous * n)), max(1, int(round(self.part_col * p)))
+        for _ in range(self.M):
+            g, h = self._g_h(y, F, w)
+            idx = torch.randperm(n, generator=gen)[:n_sous]
+            cols = torch.randperm(p, generator=gen)[:m]
+            arbre = ArbreXGB(self.prof, self.lam, self.gamma, self.min_h, cols).construire_xgb(X[idx], g[idx], h[idx])
+            F = F + self.eta * arbre.predire(X)
+            self.arbres.append(arbre)
+        return self
+
+    def predire(self, X) -> torch.Tensor:
+        X = torch.as_tensor(X, dtype=TYPE)
+        return self.F0 + self.eta * sum(a.predire(X) for a in self.arbres)
 
 
 @dataclass
@@ -442,6 +567,10 @@ class HyperConcurrents:
     taux_boosting: float = 0.05
     profondeur_boosting: int = 3
     sous_echantillon: float = 0.8
+    # E. XGBoost (mêmes étapes et sous-échantillon que B)
+    taux_xgboost: float = 0.1
+    profondeur_xgboost: int = 4
+    lambda_xgboost: float = 1.0
     # C et D. réseaux
     couches: tuple = (32, 16)
     cache_lstm: int = 16
@@ -456,7 +585,8 @@ class HyperConcurrents:
 
 
 CONCURRENTS = {"foret": "A · forêt aléatoire quantile", "boosting": "B · gradient boosting quantile",
-               "mlp": "C · perceptron multicouche quantile", "lstm": "D · LSTM quantile"}
+               "mlp": "C · perceptron multicouche quantile", "lstm": "D · LSTM quantile",
+               "xgboost": "E · XGBoost quantile (second ordre)"}
 
 
 def fabrique_concurrent(nom: str, hp: HyperConcurrents, retards: int = 7):
@@ -466,6 +596,10 @@ def fabrique_concurrent(nom: str, hp: HyperConcurrents, retards: int = 7):
         return lambda: ForetAleatoireQuantile(q, hp.arbres, hp.profondeur_foret, hp.min_feuille, hp.part_variables)
     if nom == "boosting":
         un = lambda t: GradientBoostingQuantile(t, hp.etapes, hp.taux_boosting, hp.profondeur_boosting, hp.min_feuille, hp.sous_echantillon)
+        return lambda: EnsembleQuantiles(un, q)
+    if nom == "xgboost":
+        un = lambda t: XGBoost("pinball", t, hp.etapes, hp.taux_xgboost, hp.profondeur_xgboost, hp.lambda_xgboost,
+                               0.0, 1.0, hp.sous_echantillon, 0.8)
         return lambda: EnsembleQuantiles(un, q)
     if nom == "mlp":
         return lambda: PerceptronQuantile(q, hp.couches, hp.taux_reseau, hp.epoques, hp.patience, hp.lambda_, hp.graines)

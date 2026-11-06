@@ -42,12 +42,13 @@ T9 demande la source préparée une fois par preparer_nhamcs.py (option --source
 |      | de la profession                           |                                                         |
 | T13  | rapport des coûts c₊/c₋ (seuil s*)         | 1, 2, 3, 4, 6 : même modèle, seuil s* = 1/(1 + c₊/c₋)   |
 | T14  | mise à l'échelle des constantes            | z-score, robuste (médiane, Q3 − Q1), min-max, aucune    |
+| T15  | sélection des variables par le lasso       | toutes, lasso (λ par validation croisée), lasso 1 écart-type |
 MEO : comptée grave par défaut, choix CLINIQUE fixé à l'avance (le patient gardé en surveillance a besoin de soins ;
 le renvoyer serait un sous-triage). T1 est une analyse de sensibilité : la cible change d'une variante à l'autre,
 donc les variantes ne sont comparées (McNemar) que sur les passages hors MEO communs aux trois, où la cible est
 la même. On ne choisit JAMAIS la définition de la cible d'après le score.
 Chaque ligne donne aussi le taux d'alerte et la spécificité à 90 % et 95 % de sensibilité (lus sur la courbe ROC).
-Sélection : le SVM (modèle, valeurs manquantes, plaintes, mise à l'échelle, transfert) de plus petit coût moyen, écrit dans
+Sélection : le SVM (modèle, valeurs manquantes, plaintes, mise à l'échelle, lasso, transfert) de plus petit coût moyen, écrit dans
 resultats/triage/choix_retenu_<groupe>.json ; --utiliser-selection le prend comme modèle principal (test final).
 Raccordement (après les groupes) : les prévisions des modèles enfants et adultes sont réunies et comparées,
 sur TOUS les passages des urgences, au modèle commun appris sur tout le monde (McNemar, mêmes passages).
@@ -69,13 +70,13 @@ from traitement import verrou
 from traitement.urgences import decrire, lire_passages
 from triage.mesures import mcnemar, resume, seuil_optimal
 from triage.modeles import FAMILLE_SVM, MODELES
-from triage.validation import COUTS, ConfigTriage, decoupage_final, decoupages_croises, decoupages_mensuels, evaluer
+from triage.validation import COUTS, SELECTIONS, ConfigTriage, decoupage_final, decoupages_croises, decoupages_mensuels, evaluer
 from triage.imputation import IMPUTATIONS
 from triage.transfert import SOURCES, ConfigTransfert, Pretraine, evaluer_transfert, lire_source
 from triage.representations import REPRESENTATIONS
 from triage.variables import ECHELLES, FORMES, MEO, OptionsVariables, construire, vocabulaire
 
-BANCS = ("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14")
+BANCS = ("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "T13", "T14", "T15")
 RAPPORTS_COUTS = (1.0, 2.0, 3.0, 4.0, 6.0)
 PLAINTES_VARIANTES = ("familles", "mots", "familles + mots", "sans plaintes")
 SOURCE_EXTERNE = "/mnt/c/Users/User/Desktop/MEMOIRE/donnees_externes/nhamcs/passages_nhamcs.csv.gz"
@@ -136,7 +137,7 @@ def restreindre(res: dict, ids: list) -> dict:
 def selectionner(lignes: list[dict]) -> dict:
     """
     Le meilleur SVM d'après les bancs (règle fixée à l'avance) : parmi les lignes de la famille SVM des bancs
-    T2, T8, T10, T11, T14 et T9 (les variantes « cas complets » sont exclues : elles ne portent pas sur tous les passages),
+    T2, T8, T10, T11, T14, T15 et T9 (les variantes « cas complets » sont exclues : elles ne portent pas sur tous les passages),
     le plus petit COÛT MOYEN par passage (c₊ par grave manqué, c₋ par fausse alerte : le critère du problème) ;
     à égalité, la plus grande AUC. Tout vient de la validation mensuelle avant le verrou.
     """
@@ -145,7 +146,7 @@ def selectionner(lignes: list[dict]) -> dict:
     if not candidats:
         return {}
     meilleur = min(candidats, key=lambda l: (l["cout_moyen"], -(l.get("auc") or 0)))
-    return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "echelle", "transfert", "cout_moyen", "auc",
+    return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "echelle", "selection", "transfert", "cout_moyen", "auc",
                                          "sensibilite", "specificite", "mcnemar_p")}
 
 
@@ -278,6 +279,26 @@ def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: Conf
             lignes.append(b.ligne("T14", ech, r, ref))
             lignes[-1].update(modele=cfg.modele, imputation=cfg.imputation, echelle=ech, svm=cfg.modele in FAMILLE_SVM)
             print(f"  T14 {ech:<8} coût {lignes[-1]['cout_moyen']:.3f}, AUC {lignes[-1]['auc']:.3f}")
+    if "T15" in bancs:
+        # Lasso logistique appris chaque mois sur l'apprentissage seul ; le SVM n'apprend que sur les variables gardées.
+        # On écrit aussi la part des mois où chaque variable est gardée (stabilité de la sélection).
+        for sel in SELECTIONS:
+            r = ref if sel == cfg.selection else b.lancer(opts, dataclasses.replace(cfg, selection=sel))
+            lignes.append(b.ligne("T15", "toutes les variables" if sel == "aucune" else sel, r, ref))
+            lignes[-1].update(modele=cfg.modele, imputation=cfg.imputation, echelle=cfg.echelle, selection=sel,
+                              svm=cfg.modele in FAMILLE_SVM)
+            mois = [c["lasso"] for c in r["choix"] if "lasso" in c]
+            if mois:
+                lignes[-1]["variables_gardees"] = round(sum(m["variables_gardees"] for m in mois) / len(mois), 1)
+                compte = {}
+                for m in mois:
+                    for v in m["variables"]:
+                        compte[v] = compte.get(v, 0) + 1
+                freq = pd.DataFrame({"variable": list(compte), "part_des_mois": [n / len(mois) for n in compte.values()]})
+                freq.sort_values("part_des_mois", ascending=False).to_csv(
+                    Path("resultats") / "triage" / f"selection_{sel}_{groupe}.csv", index=False, encoding="utf-8")
+            print(f"  T15 {sel:<10} coût {lignes[-1]['cout_moyen']:.3f}, AUC {lignes[-1]['auc']:.3f}"
+                  + (f", variables gardées {lignes[-1]['variables_gardees']}" if mois else ""))
     if "T9" in bancs and b.source is not None and len(b.source):
         print(f"  T9 pré-entraînement sur {len(b.source)} passages NHAMCS ({groupe})…")
         tab = construire(b.passages, opts)
@@ -462,7 +483,8 @@ def main() -> None:
             sel = json.loads(chemin_sel.read_text(encoding="utf-8"))
             if sel.get("modele") in MODELES:
                 cfg_g = dataclasses.replace(cfg, modele=sel["modele"], imputation=sel.get("imputation") or cfg.imputation,
-                                            echelle=sel.get("echelle") or cfg.echelle)
+                                            echelle=sel.get("echelle") or cfg.echelle,
+                                            selection=sel.get("selection") or cfg.selection)
             if sel.get("plaintes") in PLAINTES_VARIANTES:
                 opts_g = dataclasses.replace(opts, **options_plaintes(sel["plaintes"], vocab))
             print(f"  modèle principal = sélection des bancs : {sel.get('variante')} ({sel.get('banc')})")
@@ -494,7 +516,7 @@ def main() -> None:
                       f"AUC {choix['auc']:.3f}")
                 rapport.append(f"\n**SVM sélectionné ({g}) : {choix['variante']}** (banc {choix['banc']}) — coût moyen "
                                f"{choix['cout_moyen']:.3f}, AUC {choix['auc']:.3f}, sensibilité {choix['sensibilite']:.3f}. "
-                               "Règle : plus petit coût moyen parmi les SVM des bancs T2, T8, T10, T11 et T9.\n")
+                               "Règle : plus petit coût moyen parmi les SVM des bancs T2, T8, T10, T11, T14, T15 et T9.\n")
         df = pd.DataFrame(lignes)
         rapport.append(f"\n## {g.capitalize()}\n")
         colonnes = ["banc", "variante"] + [c for c in ("donnees",) if c in df] + ["passages", "graves", "sensibilite",

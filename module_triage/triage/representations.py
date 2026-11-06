@@ -10,7 +10,8 @@ telle quelle aux passages de calibration et d'évaluation : aucune information d
 
     originales   les variables telles quelles (référence du banc)
     acp          analyse en composantes principales : on garde les k premiers axes qui expliquent au moins
-                 80 % de la variance. Les axes sont les vecteurs propres de la matrice de covariance des
+                 une part de la variance
+                 choisie (60 à 95 %, GRILLE_PART). Les axes sont les vecteurs propres de la matrice de covariance des
                  variables standardisées, triés par valeur propre décroissante ; un passage est remplacé par
                  ses coordonnées sur ces axes. Les variables binaires (plaintes, indicatrices) sont traitées
                  comme des nombres 0/1 : c'est ce que corrige l'AFDM.
@@ -18,8 +19,8 @@ telle quelle aux passages de calibration et d'évaluation : aucune information d
                  fréquence p est recodée (x − p)/√p, comme dans une analyse des correspondances multiples,
                  et chaque variable continue est centrée-réduite. Une indicatrice rare (convulsions) pèse
                  alors autant dans les axes qu'une constante, au lieu d'être écrasée par les variables
-                 continues. Mêmes règles : k axes pour 80 % de la variance.
-    kmeans       classification des passages en g groupes (k-means, g = 4, 10 départs, initialisation
+                 continues. Mêmes règles pour le nombre d'axes.
+    kmeans       classification des passages en g groupes (k-means, g choisi dans GRILLE_GROUPES, 10 départs, initialisation
                  k-means++ à graine fixe) ; chaque passage est remplacé par son groupe (g indicatrices). Le
                  modèle ne voit plus que le « profil » du patient.
     origine+kmeans   les variables d'origine, plus les g indicatrices du groupe : le profil s'ajoute aux
@@ -37,6 +38,9 @@ import torch
 from svr.modeles import TYPE
 
 REPRESENTATIONS = ("originales", "acp", "afdm", "kmeans", "origine+kmeans")
+# Réglages essayés (choisis avec C et la portée sur l'AUC de calibration, triage/validation.py) :
+GRILLE_PART = (0.6, 0.7, 0.8, 0.9, 0.95)         # ACP, AFDM : part de variance gardée
+GRILLE_GROUPES = (2, 3, 4, 6, 8)                 # k-means : nombre de groupes
 
 
 def _axes(Z: torch.Tensor, part: float) -> tuple[torch.Tensor, torch.Tensor, int]:

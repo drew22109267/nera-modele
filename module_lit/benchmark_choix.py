@@ -25,6 +25,8 @@ Dimensions comparées
   D9  Combinaison                        meilleur modèle seul, moyenne simple, empilement appris
   D10 Recherche d'hyperparamètres        défaut, grille, essaim particulaire  (option --recherche)
   D11 Chaque variable une à une          toutes les variables, puis la même sans chacune d'elles
+  D14 Sélection par le lasso            toutes les variables ; lasso (λ par validation croisée) ;
+                                         lasso à un écart-type (moins de variables) — svr/lasso.py
   D13 Variantes de SVM                   tous les SVM du catalogue (svr/variantes.py) : linéaire, RBF,
                                          quantile RBF, quantile composite (retenu), noyau laplacien,
                                          noyau polynomial, LS-SVR à quantiles LOO ; c'est ce banc (avec
@@ -69,6 +71,7 @@ from svr import analyse as A
 from svr import metriques as M
 from svr import references as R
 from svr.calendrier import feries, vacances
+from svr.lasso import SelectionLasso
 from svr.caracteristiques import Standardiseur, construire
 from svr import series_classiques as SC
 from svr.classiques import RegressionRidge, choisir_holt_winters, holt_winters
@@ -162,6 +165,22 @@ class SansColonne:
         return self.modele.predire(self._x(X))
 
 
+class AvecLasso:
+    """Le même modèle, sur les seules variables gardées par le lasso appris sur l'entraînement du découpage."""
+
+    def __init__(self, fabrique_modele, regle: str, journal: list):
+        self.modele, self.regle, self.journal = fabrique_modele(), regle, journal
+
+    def entrainer(self, X, y):
+        self.selection = SelectionLasso("carree", self.regle).ajuster(X, y)
+        self.journal.append(self.selection)
+        self.modele.entrainer(self.selection.transformer(X), y)
+        return self
+
+    def predire(self, X):
+        return self.modele.predire(self.selection.transformer(torch.as_tensor(X)))
+
+
 def chrono(fonction):
     """Exécute `fonction()` et renvoie (résultat, secondes écoulées)."""
     debut = time.perf_counter()
@@ -189,8 +208,8 @@ def main() -> None:
     p.add_argument("--tau", type=float, default=0.8)
     p.add_argument("--pas", type=int, default=28, help="jours entre deux origines de la validation glissante (28)")
     p.add_argument("--debut-validation", help="première origine (défaut : 6 mois avant le verrou)")
-    p.add_argument("--dimensions", nargs="+", default=[f"D{i}" for i in (*range(1, 10), 11, 13)],
-                   help="dimensions à lancer (D1 … D9, D11 et D13 par défaut ; D10 avec --recherche)")
+    p.add_argument("--dimensions", nargs="+", default=[f"D{i}" for i in (*range(1, 10), 11, 13, 14)],
+                   help="dimensions à lancer (D1 … D9, D11, D13 et D14 par défaut ; D10 avec --recherche)")
     p.add_argument("--recherche", action="store_true", help="ajoute D10 (grille et essaim : long)")
     p.add_argument("--rapide", action="store_true", help="800 itérations au lieu de celles des hyperparamètres")
     option_comptage(p)
@@ -425,6 +444,23 @@ def main() -> None:
             for j, nom in enumerate(tab.noms):
                 prev, s = prevoir(lambda j=j: SansColonne(fabrique(2, hp[2], tab.blocs), j))
                 d.ajouter(f"Sans {nom}", y, prev, s)
+            publier(d)
+
+        if "D14" in dims:
+            # Le lasso est appris à chaque origine sur l'entraînement seul ; on compte combien de fois chaque
+            # variable est gardée (stabilité de la sélection).
+            d = Dimension("D14", "Sélection des variables par le lasso",
+                          "Le modèle gagne-t-il à ne garder que les variables choisies par le lasso ? (modèle RBF du niveau 2)", h, a.tau)
+            prev, s = prevoir(fabrique(2, hp[2], tab.blocs))
+            d.ajouter("Toutes les variables", y, prev, s, retenu=True, **{"variables": len(tab.noms)})
+            frequences = {}
+            for regle, nom in (("lasso", "Lasso, λ de plus petite erreur"), ("lasso_1se", "Lasso à un écart-type (λ_1se)")):
+                journal = []
+                prev, s = prevoir(lambda r=regle, jr=journal: AvecLasso(fabrique(2, hp[2], tab.blocs), r, jr))
+                d.ajouter(nom, y, prev, s, **{"variables": round(sum(len(x.colonnes) for x in journal) / len(journal), 1)})
+                frequences[regle] = [sum(j in x.colonnes for x in journal) / len(journal) for j in range(len(tab.noms))]
+            pd.DataFrame({"variable": tab.noms, **{f"part gardée ({r})": v for r, v in frequences.items()}}).to_csv(
+                resultats / f"benchmark_{a.service}_D14_selection_h{h}.csv", sep=";", encoding="utf-8-sig", index=False)
             publier(d)
 
     (resultats / f"benchmark_{a.service}.md").write_text("\n".join(rapport), encoding="utf-8")

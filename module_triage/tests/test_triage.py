@@ -188,3 +188,23 @@ def test_representations_apprises_sur_l_apprentissage_seulement():
     assert sorted(round(float(c.mean())) for c in centres) == [0, 10]
     r = Representation("origine+kmeans", continues=[0, 1, 2], groupes=3).ajuster(X)
     assert r.transformer(X).shape == (60, 5 + 3)
+
+
+def test_selection_lasso_dans_la_chaine():
+    """Banc T15 : le lasso est appris chaque mois ; le modèle ne voit que les variables gardées."""
+    tab = construire(_passages(4), OptionsVariables())
+    decs = decoupages_mensuels(tab.dates, pd.Timestamp("2026-05-01"), mois_min=2)
+    res = evaluer(tab, decs, ConfigTriage(modele="svm_rbf", grille_C=(1.0,), grille_portee=(0.25,), selection="lasso_1se",
+                                          entrainement=Entrainement(iterations=400)))
+    mois = [c["lasso"] for c in res["choix"] if "lasso" in c]
+    assert len(mois) == 2
+    assert all(0 < m["variables_gardees"] < len(tab.noms) and set(m["variables"]) <= set(tab.noms) for m in mois)
+    assert resume(res["y"], res["p"], seuil=0.2, rapport_couts=4.0)["auc"] > 0.8
+
+
+def test_xgboost_dans_la_chaine():
+    tab = construire(_passages(4), OptionsVariables())
+    decs = decoupages_mensuels(tab.dates, pd.Timestamp("2026-05-01"), mois_min=2)
+    res = evaluer(tab, decs, ConfigTriage(modele="xgboost"))
+    assert resume(res["y"], res["p"], seuil=0.2, rapport_couts=4.0)["auc"] > 0.8
+    assert all(c["C"] in (2, 3, 4, 6) for c in res["choix"])

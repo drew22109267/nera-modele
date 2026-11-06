@@ -25,6 +25,12 @@ Après l'imputation et la standardisation, les variables peuvent être résumée
 par le groupe du passage (k-means) : voir triage/representations.py. Comme Preparateur, la représentation
 est apprise sur l'apprentissage seulement.
 
+Sélection des variables par le lasso (banc T15)
+-----------------------------------------------
+Après la représentation, un lasso logistique (svr/lasso.py), pondéré par les coûts de classe et de λ choisi
+par validation croisée en blocs consécutifs de l'apprentissage, garde les variables de coefficient non nul ;
+le modèle n'apprend que sur elles. « aucune » = toutes les variables (référence).
+
 Valeurs manquantes (banc T8)
 -----------------------------
 Le traitement des cases vides est appris avec Preparateur sur l'apprentissage seulement (triage/imputation.py).
@@ -46,13 +52,15 @@ import pandas as pd
 import torch
 
 from svr.classification import CalibrationPlatt, auc
+from svr.lasso import REGLES, SelectionLasso
 from svr.modeles import TYPE, Entrainement
 
-from .modeles import A_PORTEE, fabrique
-from .representations import Representation
+from .modeles import A_PORTEE, GRILLE_XGBOOST, fabrique
+from .representations import GRILLE_GROUPES, GRILLE_PART, Representation
 from .variables import Preparateur, TableauTriage
 
 COUTS = ("egaux", "equilibre", "service")
+SELECTIONS = ("aucune", *REGLES)                     # banc T15
 
 
 @dataclass
@@ -73,6 +81,7 @@ class ConfigTriage:
     representation: str = "originales"              # banc T7 (triage/representations.py)
     imputation: str = "mediane"                     # banc T8 (triage/imputation.py)
     echelle: str = "zscore"                         # banc T14 (triage/variables.py, ECHELLES)
+    selection: str = "aucune"                       # banc T15 : 'aucune', 'lasso' ou 'lasso_1se'
     entrainement: Entrainement = field(default_factory=lambda: Entrainement(iterations=2000))
 
 
@@ -164,22 +173,37 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
             choix.append({"mois": f"{dec.mois:%Y-%m}", "ignore": "une seule classe à l'apprentissage ou à la calibration"})
             continue
         prep = Preparateur(tab.continues, config.imputation, config.echelle).ajuster(tab.X[app])
-        Xa, Xc, Xe = (prep.transformer(tab.X[i]) for i in (app, cal, dec.evaluation))
-        # Banc T7 : ACP, AFDM ou k-means apprises sur l'apprentissage seulement, puis appliquées aux autres.
-        rep = Representation(config.representation, tab.continues).ajuster(Xa)
-        Xa, Xc, Xe = rep.transformer(Xa), rep.transformer(Xc), rep.transformer(Xe)
-        blocs = tab.blocs if config.representation == "originales" else {"constantes": list(range(Xa.shape[1])), "autres": []}
+        Xa0, Xc0, Xe0 = (prep.transformer(tab.X[i]) for i in (app, cal, dec.evaluation))
         cp, cn = rapport_classes(y_app, config.couts, config.rapport_couts)
-        grille = [(None, None)] if config.modele in ("regle", "arbre", "foret") else \
-            [(C, g) for C in config.grille_C for g in (config.grille_portee if config.modele in A_PORTEE else (1.0,))]
+        # Banc T7 : ACP, AFDM ou k-means apprises sur l'apprentissage seulement, puis appliquées aux autres. Leur
+        # réglage (part de variance gardée, nombre de groupes) est choisi avec C et la portée, sur la calibration.
+        reglages_rep = {"acp": GRILLE_PART, "afdm": GRILLE_PART, "kmeans": GRILLE_GROUPES,
+                        "origine+kmeans": GRILLE_GROUPES}.get(config.representation, (None,))
         meilleur = None
-        for C, g in grille:
-            fab = fabrique(config.modele, C or 1.0, g or 1.0, cp, cn, blocs, config.entrainement)
-            s_cal, s_ev = _scores(config.modele, fab, Xa, y_app, [Xc, Xe], [tab.alertes[cal], tab.alertes[dec.evaluation]])
-            a = auc(s_cal, y_cal)
-            if meilleur is None or a > meilleur[0] + 1e-12:
-                meilleur = (a, C, g, s_cal, s_ev)
-        a, C, g, s_cal, s_ev = meilleur
+        for r_rep in reglages_rep:
+            options = {} if r_rep is None else \
+                {"groupes": r_rep} if "kmeans" in config.representation else {"part_variance": r_rep}
+            rep_r = Representation(config.representation, tab.continues, **options).ajuster(Xa0)
+            Xa, Xc, Xe = rep_r.transformer(Xa0), rep_r.transformer(Xc0), rep_r.transformer(Xe0)
+            blocs = tab.blocs if config.representation == "originales" else {"constantes": list(range(Xa.shape[1])), "autres": []}
+            lasso = {}
+            if config.selection != "aucune":
+                noms = tab.noms if config.representation == "originales" else [f"axe_{j}" for j in range(Xa.shape[1])]
+                sel = SelectionLasso("logistique", config.selection).ajuster(Xa, y_app, torch.where(y_app > 0, cp, cn))
+                Xa, Xc, Xe = sel.transformer(Xa), sel.transformer(Xc), sel.transformer(Xe)
+                nouveau = {j: k for k, j in enumerate(sel.colonnes)}          # anciens indices → nouveaux
+                blocs = {b: [nouveau[j] for j in cols if j in nouveau] for b, cols in blocs.items()}
+                lasso = sel.description(noms)
+            grille = [(None, None)] if config.modele in ("regle", "arbre", "foret") else GRILLE_XGBOOST \
+                if config.modele == "xgboost" else \
+                [(C, g) for C in config.grille_C for g in (config.grille_portee if config.modele in A_PORTEE else (1.0,))]
+            for C, g in grille:
+                fab = fabrique(config.modele, C or 1.0, g or 1.0, cp, cn, blocs, config.entrainement)
+                s_cal, s_ev = _scores(config.modele, fab, Xa, y_app, [Xc, Xe], [tab.alertes[cal], tab.alertes[dec.evaluation]])
+                a = auc(s_cal, y_cal)
+                if meilleur is None or a > meilleur[0] + 1e-12:
+                    meilleur = (a, C, g, s_cal, s_ev, rep_r, lasso)
+        a, C, g, s_cal, s_ev, rep, lasso = meilleur
         platt = CalibrationPlatt().ajuster(s_cal, y_cal)
         ps.append(platt.probabilite(s_ev))
         scores.append(s_ev.to(TYPE))
@@ -188,7 +212,8 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
         choix.append({"mois": f"{dec.mois:%Y-%m}", "apprentissage": len(app), "calibration": len(cal),
                       "evaluation": len(dec.evaluation), "C": C, "portee": g, "C_plus_sur_C_moins": round(cp / cn, 3),
                       "auc_calibration": round(a, 4), "platt_A": round(platt.A, 4), "platt_B": round(platt.B, 4),
-                      "representation": config.representation, "imputation": config.imputation, **rep.description()})
+                      "representation": config.representation, "imputation": config.imputation, **rep.description(),
+                      **({"lasso": lasso} if lasso else {})})
     if not ys:
         raise ValueError("Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).")
     idx = torch.cat(idx_eval)

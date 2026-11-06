@@ -80,3 +80,27 @@ def test_interface_commune_et_tri():
         for a, b in zip(cles, cles[1:]):
             assert bool((q[a] <= q[b]).all()), nom              # pas de croisement des quantiles
         assert all(bool(torch.isfinite(v).all()) for v in q.values()), nom
+
+
+def test_arbre_valeurs_presque_egales():
+    """sin 0 = 0 et sin π ≈ 1e−16 : aucune feuille vide, aucune coupure entre ces deux valeurs."""
+    import math as m
+    from svr.concurrents import Arbre, GradientBoostingQuantile
+    x = torch.tensor([0.0, m.sin(m.pi)] * 20 + [1.0] * 10, dtype=torch.float64)[:, None]
+    y = torch.tensor([0.0, 5.0] * 20 + [9.0] * 10, dtype=torch.float64)
+    a = Arbre(3, 5).construire(x, y)
+    assert int((a.var >= 0).sum()) == 1                      # une seule coupure : entre ≈0 et 1
+    GradientBoostingQuantile(tau=0.8, etapes=5, min_feuille=5).entrainer(x, y)
+
+
+def test_xgboost_second_ordre():
+    """Perte carrée : suit une fonction en escalier ; pinball : le quantile 0,8 est au-dessus du quantile 0,2."""
+    from svr.concurrents import XGBoost
+    g = torch.Generator().manual_seed(0)
+    X = torch.rand(400, 3, generator=g, dtype=torch.float64)
+    y = torch.where(X[:, 0] > 0.5, 5.0, 1.0).to(torch.float64) + 0.3 * torch.randn(400, generator=g, dtype=torch.float64)
+    m = XGBoost("carree", etapes=60, taux=0.3, profondeur=2).entrainer(X, y)
+    assert float((m.predire(X) - y).abs().mean()) < 0.5
+    haut = XGBoost("pinball", 0.8, etapes=80, taux=0.3).entrainer(X, y).predire(X)
+    bas = XGBoost("pinball", 0.2, etapes=80, taux=0.3).entrainer(X, y).predire(X)
+    assert float((haut > bas).double().mean()) > 0.9
