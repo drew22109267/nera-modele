@@ -113,6 +113,10 @@ class Banc:
         if masque is not None:
             y, p = y[masque], p[masque]
         ligne = {"banc": banc, "variante": variante, **resume(y, p, self.seuil, self.rapport)}
+        if "seuil90" in res:                     # seuil s₉₀ fixé sur la calibration, appliqué aux passages évalués
+            t = res["seuil90"] if masque is None else res["seuil90"][masque]
+            m = resume(y, (p >= t).to(p.dtype), 0.5, self.rapport)
+            ligne.update({"sens_s90": m["sensibilite"], "spec_s90": m["specificite"], "alertes_s90": m["taux_alerte"]})
         if reference is not None and reference is not res and torch.equal(reference["indices"], res["indices"]):
             t = mcnemar(res["y"], res["p"] >= self.seuil, reference["p"] >= self.seuil)
             ligne.update({"mcnemar_b": t["b"], "mcnemar_c": t["c"], "mcnemar_p": t["p_valeur"]})
@@ -131,6 +135,7 @@ def restreindre(res: dict, ids: list) -> dict:
     position = {i: k for k, i in enumerate(res["ids"])}
     k = torch.tensor([position[i] for i in ids], dtype=torch.long)
     return {**res, "y": res["y"][k], "p": res["p"][k], "meo": res["meo"][k], "ids": list(ids),
+            **({"seuil90": res["seuil90"][k]} if "seuil90" in res else {}),
             "indices": torch.tensor(list(ids), dtype=torch.long)}
 
 
@@ -138,16 +143,23 @@ def selectionner(lignes: list[dict]) -> dict:
     """
     Le meilleur SVM d'après les bancs (règle fixée à l'avance) : parmi les lignes de la famille SVM des bancs
     T2, T8, T10, T11, T14, T15 et T9 (les variantes « cas complets » sont exclues : elles ne portent pas sur tous les passages),
-    le plus petit COÛT MOYEN par passage (c₊ par grave manqué, c₋ par fausse alerte : le critère du problème) ;
-    à égalité, la plus grande AUC. Tout vient de la validation mensuelle avant le verrou.
+    la plus grande SPÉCIFICITÉ AU SEUIL s₉₀ (seuil fixé sur la calibration pour détecter 90 % des graves, appliqué
+    aux mois évalués) ; à égalité, la plus grande AUC, puis le plus petit coût moyen.
+    Pourquoi pas le coût moyen au seuil s* (règle d'origine) : avec la moitié de graves (MEO comptée grave) et
+    c₊/c₋ = 4, s* = 0,2 fait alerter presque TOUS les passages par tous les modèles ; leurs coûts ne diffèrent alors
+    que de quelques millièmes, et le choix se ferait au hasard. Le changement est écrit dans le mémoire.
+    Tout vient de la validation mensuelle avant le verrou.
     """
     candidats = [l for l in lignes if l.get("svm") and l.get("imputation") != "suppression_lignes"
                  and l.get("cout_moyen") == l.get("cout_moyen")]
     if not candidats:
         return {}
-    meilleur = min(candidats, key=lambda l: (l["cout_moyen"], -(l.get("auc") or 0)))
+    def spec(l):
+        v = l.get("spec_s90")
+        return v if v == v and v is not None else -1.0
+    meilleur = min(candidats, key=lambda l: (-spec(l), -(l.get("auc") or 0), l["cout_moyen"]))
     return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "echelle", "selection", "transfert", "cout_moyen", "auc",
-                                         "sensibilite", "specificite", "mcnemar_p")}
+                                         "sensibilite", "specificite", "sens_s90", "spec_s90", "alertes_s90", "mcnemar_p")}
 
 
 def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: ConfigTriage,
@@ -512,16 +524,17 @@ def main() -> None:
             choix = selectionner(lignes)
             if choix:
                 chemin_sel.write_text(json.dumps(choix, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
-                print(f"  ► SVM sélectionné ({g}) : {choix['variante']} [{choix['banc']}], coût moyen {choix['cout_moyen']:.3f}, "
-                      f"AUC {choix['auc']:.3f}")
-                rapport.append(f"\n**SVM sélectionné ({g}) : {choix['variante']}** (banc {choix['banc']}) — coût moyen "
-                               f"{choix['cout_moyen']:.3f}, AUC {choix['auc']:.3f}, sensibilité {choix['sensibilite']:.3f}. "
-                               "Règle : plus petit coût moyen parmi les SVM des bancs T2, T8, T10, T11, T14, T15 et T9.\n")
+                print(f"  ► SVM sélectionné ({g}) : {choix['variante']} [{choix['banc']}], spécificité au seuil s₉₀ "
+                      f"{choix.get('spec_s90')}, AUC {choix['auc']:.3f}, coût moyen {choix['cout_moyen']:.3f}")
+                rapport.append(f"\n**SVM sélectionné ({g}) : {choix['variante']}** (banc {choix['banc']}) — au seuil s₉₀ : "
+                               f"sensibilité {choix.get('sens_s90')}, spécificité {choix.get('spec_s90')}, alertes "
+                               f"{choix.get('alertes_s90')} ; AUC {choix['auc']:.3f}, coût moyen au seuil s* {choix['cout_moyen']:.3f}. "
+                               "Règle : plus grande spécificité au seuil s₉₀ parmi les SVM des bancs T2, T8, T10, T11, T14, T15 et T9.\n")
         df = pd.DataFrame(lignes)
         rapport.append(f"\n## {g.capitalize()}\n")
         colonnes = ["banc", "variante"] + [c for c in ("donnees",) if c in df] + ["passages", "graves", "sensibilite",
                     "specificite", "sous_triage", "sur_triage", "vpp", "taux_alerte", "cout_moyen", "auc",
-                    "spec_sens90", "spec_sens95", "brier"] + \
+                    "spec_sens90", "spec_sens95", "brier"] + [c for c in ("sens_s90", "spec_s90", "alertes_s90") if c in df] + \
                    [c for c in ("mcnemar_p", "mcnemar_p_vs_cameroun_seul") if c in df]
         rapport.append(en_markdown(df[colonnes].round(3)))
     if len(references) == 2:

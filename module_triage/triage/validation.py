@@ -16,6 +16,10 @@ Dans chaque entraînement, trois rôles, dans l'ordre du temps
                         a. choix des réglages (C, portée du noyau) : celui de meilleure AUC ;
                         b. calibration de Platt du score du modèle choisi : P(grave | f) = 1/(1 + e^{A f + B}) ;
     3. évaluation     le mois M, jamais vu : probabilité calibrée, alerte si P ≥ s*.
+Seuil à sensibilité fixée (lecture complémentaire) : sur la calibration, s₉₀ = le plus grand seuil qui alerte
+au moins 90 % des graves de la calibration ; il est appliqué tel quel au mois M (rien du mois M n'est vu). On lit
+alors la sensibilité réelle, la spécificité et le taux d'alerte du mois M à ce seuil : quand s* alerte tout le
+monde (taux de graves élevé), c'est cette lecture qui dit combien de non-graves le modèle permet d'écarter.
 Platt doit être appris sur des passages NON utilisés pour apprendre le modèle : sur l'apprentissage lui-même,
 les scores sont trop confiants (le modèle les a appris par cœur), et les probabilités le seraient aussi.
 
@@ -46,6 +50,7 @@ Coûts de classe C₊/C₋ (banc T3)
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -157,7 +162,7 @@ def _scores(nom: str, fab, Xa, ya, autres: list[torch.Tensor], alertes: list[tor
 
 def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriage) -> dict:
     """Probabilités calibrées, hors échantillon, pour tous les passages évalués (voir l'en-tête)."""
-    ys, ps, scores, idx_eval, choix = [], [], [], [], []
+    ys, ps, scores, idx_eval, choix, seuils90 = [], [], [], [], [], []
     complet = ~torch.isnan(tab.X).any(dim=1)                 # passage sans aucune case vide
     for dec in decoupages:
         if config.imputation == "suppression_lignes":         # cas complets seulement, partout
@@ -205,18 +210,21 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
                     meilleur = (a, C, g, s_cal, s_ev, rep_r, lasso)
         a, C, g, s_cal, s_ev, rep, lasso = meilleur
         platt = CalibrationPlatt().ajuster(s_cal, y_cal)
+        p_graves = torch.sort(platt.probabilite(s_cal)[y_cal > 0]).values
+        s90 = float(p_graves[int(math.floor(0.10 * len(p_graves)))])      # ≥ 90 % des graves de la calibration au-dessus
+        seuils90.append(torch.full((len(dec.evaluation),), s90, dtype=TYPE))
         ps.append(platt.probabilite(s_ev))
         scores.append(s_ev.to(TYPE))
         ys.append(tab.y[dec.evaluation])
         idx_eval.append(dec.evaluation)
         choix.append({"mois": f"{dec.mois:%Y-%m}", "apprentissage": len(app), "calibration": len(cal),
                       "evaluation": len(dec.evaluation), "C": C, "portee": g, "C_plus_sur_C_moins": round(cp / cn, 3),
-                      "auc_calibration": round(a, 4), "platt_A": round(platt.A, 4), "platt_B": round(platt.B, 4),
+                      "auc_calibration": round(a, 4), "seuil_s90": round(s90, 4), "platt_A": round(platt.A, 4), "platt_B": round(platt.B, 4),
                       "representation": config.representation, "imputation": config.imputation, **rep.description(),
                       **({"lasso": lasso} if lasso else {})})
     if not ys:
         raise ValueError("Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).")
     idx = torch.cat(idx_eval)
-    return {"y": torch.cat(ys), "p": torch.cat(ps), "score": torch.cat(scores), "indices": idx,
+    return {"y": torch.cat(ys), "p": torch.cat(ps), "score": torch.cat(scores), "indices": idx, "seuil90": torch.cat(seuils90),
             "dates": tab.dates[idx.numpy()], "meo": tab.meo[idx], "complet": complet[idx],
             "ids": [tab.ids[i] for i in idx.tolist()] if tab.ids else None, "choix": choix}

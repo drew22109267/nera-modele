@@ -216,3 +216,17 @@ def test_svm_associe_a_xgboost():
     res = evaluer(tab, decs, ConfigTriage(modele="svm_rbf_xgboost", grille_C=(1.0,), grille_portee=(0.25,),
                                           entrainement=Entrainement(iterations=400)))
     assert resume(res["y"], res["p"], seuil=0.2, rapport_couts=4.0)["auc"] > 0.8
+
+
+def test_seuil_s90_fixe_sur_la_calibration():
+    """s₉₀ vient de la calibration (une valeur par mois) ; la sélection prend la plus grande spécificité à ce seuil."""
+    from lancer_triage import selectionner
+    tab = construire(_passages(4), OptionsVariables())
+    decs = decoupages_mensuels(tab.dates, pd.Timestamp("2026-05-01"), mois_min=2)
+    res = evaluer(tab, decs, ConfigTriage(modele="svm_rbf", grille_C=(1.0,), grille_portee=(0.25,),
+                                          entrainement=Entrainement(iterations=400)))
+    assert len(res["seuil90"]) == len(res["y"]) and len(torch.unique(res["seuil90"])) <= len(decs)
+    assert all(0 < c["seuil_s90"] < 1 for c in res["choix"])
+    lignes = [{"svm": True, "cout_moyen": 0.40, "auc": 0.70, "spec_s90": 0.10, "banc": "T2", "variante": "a"},
+              {"svm": True, "cout_moyen": 0.45, "auc": 0.68, "spec_s90": 0.35, "banc": "T2", "variante": "b"}]
+    assert selectionner(lignes)["variante"] == "b"
