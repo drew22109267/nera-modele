@@ -23,7 +23,7 @@
 #     LITS_PED     lits de la pédiatrie            [18 : 20 installés, souvent 2 ou 3 hors service]
 #     LITS_MEDF    lits de la médecine femme       [17]
 #     OUTIL        dépôt outil-saisi               [../../outil-saisi]
-#     COMPTAGES    méthodes de comptage            ["minuit pic journee pondere"]
+#     COMPTAGES    méthodes de comptage            ["minuit pic journee"]        
 #     HORIZONS     horizons en jours               ["1 7"]
 #
 # Étapes (1 à 9 : pour chaque service ; 10 : entre les services) :
@@ -54,7 +54,7 @@ SAISIE=/mnt/c/Users/User/Desktop/MEMOIRE/saisie_ia
 SERVICES="${SERVICES:-PED MEDF}"
 declare -A SOURCE=([PED]="${SOURCE_PED:-$SAISIE/registre-ped-tous-les-mois.csv}" [MEDF]="${SOURCE_MEDF:-$SAISIE/registre-medf-COMPLET.csv}")
 declare -A LITS=([PED]="${LITS_PED:-18}" [MEDF]="${LITS_MEDF:-17}")
-COMPTAGES="${COMPTAGES:-minuit pic journee pondere}"
+COMPTAGES="${COMPTAGES:-minuit pic journee        }"
 HORIZONS="${HORIZONS:-1 7}"
 ETAPES="${ETAPES:-0 1 2 3 4 5 6 7 8 9 10 11 12}"
 export PYTHONUNBUFFERED=1          # les journaux se remplissent au fur et à mesure (avancement visible)
