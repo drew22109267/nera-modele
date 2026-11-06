@@ -270,3 +270,15 @@ def test_grille_et_essaim_trouvent_le_minimum():
     assert g["C"] == 3.16 and g["e"] == 1.2
     p = essaim_particulaire({"C": Dimension(0.1, 100, "log"), "e": Dimension(0, 3)}, f, particules=10, iterations=40)["meilleur"]
     assert math.log10(p["C"]) == pytest.approx(0.5, abs=0.05) and p["e"] == pytest.approx(1.2, abs=0.05)
+
+
+def test_variables_diagnostics_au_soir_de_l_origine():
+    occ = petite_serie()
+    occ["presents_diag_paludisme"] = range(len(occ))
+    tab = construire(occ, h=3, diagnostics=True)
+    j = tab.noms.index("diag_paludisme")
+    i = 10
+    assert float(tab.X[i, j]) == int(tab.origines[i])            # valeur du soir de l'origine t, jamais de la cible
+    assert j in tab.continues and j in tab.blocs["flux_saison"]
+    with pytest.raises(ValueError):
+        construire(petite_serie(), h=3, diagnostics=True)

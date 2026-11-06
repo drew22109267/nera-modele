@@ -54,7 +54,7 @@ class Tableau:
 
 def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, flux: bool = True,
                calendrier: bool = True, feries: set | None = None, vacances: set | None = None,
-               debut_min: int = 0) -> Tableau:
+               debut_min: int = 0, diagnostics: bool = False) -> Tableau:
     """
     `occupation` : sortie de traitement.occupation.reconstituer_occupation (index = jours consécutifs).
 
@@ -66,6 +66,9 @@ def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, fl
                   et « la veille de la cible est fériée » (indicatrices 0/1, connues à l'avance)
       vacances    ensemble de jours de vacances scolaires (svr/calendrier.vacances) : ajoute
                   « la cible tombe pendant les vacances » (indicatrice 0/1, connue à l'avance)
+      diagnostics le soir du jour t, nombre d'enfants présents par famille de DIAGNOSTIC D'ENTRÉE (colonnes
+                  presents_diag_* de la série, traitement.occupation) : connu à l'origine, il dit QUI occupe les
+                  lits (un paludisme grave reste plus longtemps qu'une gastro-entérite)
       debut_min   première origine possible ; on la fixe quand on compare des variantes, pour
                   que toutes soient évaluées sur exactement les mêmes jours.
     Le défaut reproduit le tableau du modèle principal.
@@ -93,6 +96,11 @@ def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, fl
         noms += ["cible_feriee", "veille_feriee"]
     if vacances is not None:
         noms += ["cible_vacances"]
+    colonnes_diag = [c for c in occupation.columns if c.startswith("presents_diag_")] if diagnostics else []
+    if diagnostics and not colonnes_diag:
+        raise ValueError("Pas de colonnes presents_diag_* dans la série : refaites traitement.rapport_occupation.")
+    diag = torch.tensor(occupation[colonnes_diag].to_numpy(float), dtype=TYPE) if colonnes_diag else None
+    noms += [c.replace("presents_", "") for c in colonnes_diag]
     lignes = []
     for t in origines.tolist():
         cible = jours[t + h]
@@ -108,6 +116,8 @@ def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, fl
                         1.0 if (cible - pd.Timedelta(days=1)).date() in feries else 0.0]
         if vacances is not None:
             valeurs += [1.0 if cible.date() in vacances else 0.0]
+        if diag is not None:
+            valeurs += diag[t].tolist()                                                # présents par famille, soir de t
         lignes.append(torch.tensor(valeurs, dtype=TYPE))
 
     X = torch.stack(lignes)
@@ -115,7 +125,7 @@ def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, fl
     idx_flux = list(range(retards, X.shape[1]))
     # Variables continues (à standardiser) : retards, flux, sinus et cosinus du mois ; pas les indicatrices 0/1.
     continues = [j for j, nom in enumerate(noms)
-                 if nom.startswith("occ_") or nom in ("adm_3j", "adm_7j", "sorties_7j", "mois_sin", "mois_cos")]
+                 if nom.startswith(("occ_", "diag_")) or nom in ("adm_3j", "adm_7j", "sorties_7j", "mois_sin", "mois_cos")]
     return Tableau(X=X, y=y_serie[origines + h], origines=origines,
                    dates_origine=jours[origines.numpy()], dates_cible=jours[(origines + h).numpy()],
                    noms=noms, blocs={"occupation": idx_occ, "flux_saison": idx_flux},

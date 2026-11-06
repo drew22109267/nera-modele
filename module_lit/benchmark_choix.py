@@ -15,7 +15,8 @@ Dimensions comparées
   D4  Quantile décisionnel τ et coûts    τ = 0,5 … 0,9 : coût moyen pour différents rapports
                                          « coût d'une pénurie / coût d'un lit vide »
   D5  Variables d'entrée                 retards seuls, + flux, + calendrier, complet,
-                                         + jours fériés camerounais, 3 / 7 / 14 jours de retard
+                                         + jours fériés camerounais, 3 / 7 / 14 jours de retard,
+                                         + diagnostics d'entrée des enfants présents (par famille)
   D6  Prétraitement                      mise à l'échelle : z-score, robuste (médiane, écart
                                          interquartile), min-max, aucune
   D7  Fenêtre d'entraînement             croissante (tout le passé) ou glissante (365, 180, 90 jours)
@@ -342,9 +343,14 @@ def main() -> None:
                          ("Complet + vacances scolaires", dict(vacances=jours_vacances)),
                          ("Complet + fériés + vacances scolaires", dict(feries=jours_feries, vacances=jours_vacances)),
                          ("3 retards + flux + calendrier", dict(retards=3)),
-                         ("14 retards + flux + calendrier", dict(retards=14))]
+                         ("14 retards + flux + calendrier", dict(retards=14)),
+                         ("Complet + diagnostics d'entrée des présents", dict(diagnostics=True))]
             for nom, options in variantes:
-                t_var = construire(occ, h, debut_min=DEBUT_COMMUN, **options)
+                try:
+                    t_var = construire(occ, h, debut_min=DEBUT_COMMUN, **options)
+                except ValueError as e:
+                    print(f"  D5 {nom} ignorée : {e}")
+                    continue
                 d_var = origines_glissantes(t_var, debut_val, DATE_VERROU, pas=a.pas)
                 prev, s = prevoir(fabrique(2, hp[2], t_var.blocs), t_var, d_var)
                 d.ajouter(nom, evaluer(t_var, d_var, lambda: _Identite())["y"], prev, s,
