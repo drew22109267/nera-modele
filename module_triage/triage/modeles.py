@@ -40,6 +40,14 @@ Score = F(x) (logit), calibré par Platt comme les autres. 300 arbres, λ = 1, 8
 par arbre ; la profondeur (2, 3, 4, 6) et le taux η (0,05 ; 0,1 ; 0,3) sont choisis sur l'AUC de calibration,
 comme C et la portée des SVM.
 
+3 ter. SVM associé à XGBoost (svm_rbf_xgboost)
+------------------------------------------------
+Les deux modèles sont appris sur les mêmes passages ; chaque score est centré-réduit avec la moyenne et
+l'écart-type de ses scores d'apprentissage (les échelles d'un SVM et d'un logit ne se comparent pas), puis
+score = ½ (z_SVM + z_XGBoost), calibré par Platt comme les autres. La grille règle C et la portée du SVM ;
+XGBoost garde profondeur 3 et η = 0,1 (régler les deux grilles à la fois multiplierait les essais par 12).
+XGBoost seul est la ligne « xgboost » du banc T2.
+
 4. Règle de référence (regle)
 ------------------------------
 Score = nombre de signes d'alerte (constantes hors de leur plage normale selon l'âge, normes.py). Rien
@@ -278,12 +286,29 @@ class XGBoostClassification:
         return self.modele.predire(X)
 
 
+class SVMEtXGBoost:
+    """½ (score SVM RBF centré-réduit + score XGBoost centré-réduit), voir l'en-tête (3 ter)."""
+
+    def __init__(self, svm, xgb):
+        self.modeles = [svm, xgb]
+
+    def entrainer(self, X, y) -> "SVMEtXGBoost":
+        self.echelles = []
+        for m in self.modeles:
+            s = m.entrainer(X, y).predire(X)
+            self.echelles.append((float(s.mean()), max(float(s.std()), 1e-12)))
+        return self
+
+    def predire(self, X):
+        return sum((m.predire(X) - mu) / sd for m, (mu, sd) in zip(self.modeles, self.echelles)) / 2
+
+
 GRILLE_XGBOOST = [(prof, eta) for prof in (2, 3, 4, 6) for eta in (0.05, 0.1, 0.3)]
 MODELES = ("regle", "logistique", "arbre", "foret", "xgboost", "svm_lineaire", "svm_rbf", "svm_composite",
            "svm_composite_constantes", "svm_composite_plaintes", "svm_laplacien", "svm_polynomial",
-           "svm_hinge_carree", "lssvm", "svm_fourier")
+           "svm_hinge_carree", "lssvm", "svm_fourier", "svm_rbf_xgboost")
 A_PORTEE = {"svm_rbf", "svm_composite", "svm_composite_constantes", "svm_composite_plaintes", "svm_laplacien",
-            "svm_polynomial", "svm_hinge_carree", "lssvm", "svm_fourier"}      # modèles dont la grille règle la portée
+            "svm_polynomial", "svm_hinge_carree", "lssvm", "svm_fourier", "svm_rbf_xgboost"}      # modèles dont la grille règle la portée
 FAMILLE_SVM = {m for m in MODELES if m.startswith(("svm_", "lssvm"))}
 
 
@@ -309,6 +334,10 @@ def fabrique(nom: str, C: float, portee: float, C_positif: float, C_negatif: flo
     if nom == "svm_rbf":
         d = len(blocs["constantes"]) + len(blocs["autres"])
         return lambda: SVMNoyauClassifieur(NoyauRBF(portee / d), cp, cn, e)
+    if nom == "svm_rbf_xgboost":
+        d = len(blocs["constantes"]) + len(blocs["autres"])
+        return lambda: SVMEtXGBoost(SVMNoyauClassifieur(NoyauRBF(portee / d), cp, cn, e),
+                                    XGBoostClassification(3, 0.1, C_positif, C_negatif))
     d = len(blocs["constantes"]) + len(blocs["autres"])
     if nom in ("svm_composite", "svm_composite_constantes", "svm_composite_plaintes"):
         b1, b2 = blocs["constantes"], blocs["autres"]

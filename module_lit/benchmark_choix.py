@@ -23,6 +23,7 @@ Dimensions comparées
   D8  Optimisation                       descente de gradient, momentum, Adam ; Adam sans moyenne
                                          de Polyak, sans préconditionnement, sans décroissance de η
   D9  Combinaison                        meilleur modèle seul, moyenne simple, empilement appris
+                                         ; XGBoost seul, moyenne SVR + XGBoost, empilement avec XGBoost
   D10 Recherche d'hyperparamètres        défaut, grille, essaim particulaire  (option --recherche)
   D11 Chaque variable une à une          toutes les variables, puis la même sans chacune d'elles
   D14 Sélection par le lasso            toutes les variables ; lasso (λ par validation croisée) ;
@@ -413,6 +414,18 @@ def main() -> None:
                 d.ajouter("Niveau 4 seul (meilleur modèle unique)", y[masque], sous(p4), s34 / 2)
                 d.ajouter("Moyenne simple persistance + niv. 3 + niv. 4", y[masque], sous(moyenne), s34)
                 d.ajouter("Empilement appris (poids positifs)", y[masque], sous(empile), s34 + s5, retenu=True)
+                # XGBoost seul, puis associé au SVR : moyenne avec le niveau 4, et empilement qui le reçoit en plus.
+                hpx = HyperConcurrents(tau=a.tau)
+                if a.rapide:
+                    hpx = dataclasses.replace(hpx, etapes=80)
+                px, sx = chrono(lambda: evaluer(tab, decs, fabrique_concurrent("xgboost", hpx))["prevision"])
+                if all(t in px for t in taus):
+                    d.ajouter("XGBoost quantile seul", y[masque], sous({t: px[t] for t in taus}), sx)
+                    tri = torch.sort(torch.stack([(p4[t] + px[t]) / 2 for t in taus]), dim=0).values
+                    d.ajouter("Moyenne SVR niv. 4 + XGBoost", y[masque], sous({t: tri[i] for i, t in enumerate(taus)}), s34 / 2 + sx)
+                    (empx, mx), s6 = chrono(lambda: empiler_sequentiel({**bases, "xgboost": {t: px[t] for t in taus}}, y, plis, taus))
+                    if torch.equal(mx, masque):
+                        d.ajouter("Empilement persistance + niv. 3 + niv. 4 + XGBoost", y[masque], sous(empx), s34 + sx + s6)
                 publier(d)
 
         # ── D10 · Recherche d'hyperparamètres (option) ──────────────────────

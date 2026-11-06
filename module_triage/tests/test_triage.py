@@ -208,3 +208,11 @@ def test_xgboost_dans_la_chaine():
     res = evaluer(tab, decs, ConfigTriage(modele="xgboost"))
     assert resume(res["y"], res["p"], seuil=0.2, rapport_couts=4.0)["auc"] > 0.8
     assert all(c["C"] in (2, 3, 4, 6) for c in res["choix"])
+
+
+def test_svm_associe_a_xgboost():
+    tab = construire(_passages(4), OptionsVariables())
+    decs = decoupages_mensuels(tab.dates, pd.Timestamp("2026-05-01"), mois_min=2)
+    res = evaluer(tab, decs, ConfigTriage(modele="svm_rbf_xgboost", grille_C=(1.0,), grille_portee=(0.25,),
+                                          entrainement=Entrainement(iterations=400)))
+    assert resume(res["y"], res["p"], seuil=0.2, rapport_couts=4.0)["auc"] > 0.8
