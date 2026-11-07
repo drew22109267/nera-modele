@@ -348,8 +348,8 @@ def main() -> None:
             for nom, options in variantes:
                 try:
                     t_var = construire(occ, h, debut_min=DEBUT_COMMUN, **options)
-                except ValueError as e:
-                    print(f"  D5 {nom} ignorée : {e}")
+                except ValueError as erreur:      # pas « e » : Python l'effacerait, et D8 s'en sert
+                    print(f"  D5 {nom} ignorée : {erreur}")
                     continue
                 d_var = origines_glissantes(t_var, debut_val, DATE_VERROU, pas=a.pas)
                 prev, s = prevoir(fabrique(2, hp[2], t_var.blocs), t_var, d_var)
