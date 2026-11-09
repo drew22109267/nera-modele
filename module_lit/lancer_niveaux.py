@@ -59,6 +59,27 @@ def point(prevision):
     return prevision[0.5] if isinstance(prevision, dict) else prevision
 
 
+def quantile(prevision, tau: float):
+    """Prévision du quantile τ (décision) ; une prévision ponctuelle sert de quantile faute de mieux."""
+    return prevision[tau] if isinstance(prevision, dict) and tau in prevision else point(prevision)
+
+
+def tests_diebold_mariano(y, previsions: dict, tau: float, h: int, **colonnes) -> list[dict]:
+    """Chaque modèle contre la persistance et contre le précédent, perte pinball à τ, Holm sur l'ensemble."""
+    ordre, lignes = list(previsions), []
+    for i, nom in enumerate(ordre[1:], start=1):
+        for contre in sorted({"0 · persistance", ordre[i - 1]} - {nom}):
+            if contre not in previsions:
+                continue
+            dm = M.diebold_mariano(y, quantile(previsions[nom], tau), quantile(previsions[contre], tau),
+                                   h=h, perte="pinball", tau=tau)
+            lignes.append({**colonnes, "modele_A": nom, "modele_B": contre, "perte": f"pinball τ={tau}", **dm})
+    for l, pa in zip(lignes, M.holm([l["p_valeur"] for l in lignes])):
+        l["p_holm"] = pa
+        l["verdict_A"] = M.verdict(l, pa)
+    return lignes
+
+
 def empiler_sequentiel(previsions: dict[str, dict], y: torch.Tensor, plis: torch.Tensor, taus) -> tuple[dict, torch.Tensor]:
     """
     Niveau 5. Pour chaque pli k, le méta-modèle apprend sur les prévisions hors échantillon des plis
@@ -181,14 +202,8 @@ def main() -> None:
         print(tableau.to_string(), "\n")
         tableau.to_csv(sortie / f"ablation_{a.service}{suffixe}_h{h}.csv", sep=";", encoding="utf-8-sig")
 
-        # Tests de Diebold-Mariano : chaque niveau contre la persistance et contre le niveau précédent
-        ordre = list(previsions)
-        for i, nom in enumerate(ordre[1:], start=1):
-            for contre in {"0 · persistance", ordre[i - 1]}:
-                if contre == nom:
-                    continue
-                t = M.diebold_mariano(y, point(previsions[nom]), point(previsions[contre]), h=h)
-                tests.append({"horizon": h, "modele_A": nom, "modele_B": contre, **t})
+        # Tests de Diebold-Mariano (pinball à τ, Holm) : chaque niveau contre la persistance et contre le précédent
+        tests += tests_diebold_mariano(y, previsions, a.tau, h, horizon=h)
 
         with open(sortie / f"hyperparametres_{a.service}{suffixe}_h{h}.json", "w", encoding="utf-8") as f:
             json.dump({str(n): hp_n.vers_dict() | {"entrainement": vars(hp_n.entrainement)} for n, hp_n in retenus.items()},

@@ -7,11 +7,14 @@ Règle (écrite à l'avance, appliquée telle quelle) :
      problème : elle mesure le coût asymétrique d'une pénurie de lits et d'un lit vide. Les concurrents (forêt,
      boosting, réseaux) et les références du banc D1 sont classés à côté pour situer le SVM, mais la sélection
      porte sur la famille SVM, objet du mémoire.
-  2. Durées inconnues : pour CE modèle, la méthode dont la MAE contre la série retenue est la plus petite dans le
-     banc croisé P1 × modèles (moyenne sur les horizons) ; à défaut de banc croisé, la méthode retenue (« estimee »).
-  3. Avec --regle significatif, un modèle ou une méthode ne remplace le choix retenu que si le test de
-     Diebold-Mariano le dit « meilleur » (p < 0,05) ; avec --regle meilleur (défaut), la plus petite erreur gagne et
-     la significativité est seulement indiquée.
+  2. Durées inconnues : pour CE modèle, la méthode dont la perte pinball à τ contre la série retenue est la plus
+     petite dans le banc croisé P1 × modèles (moyenne sur les horizons) ; à défaut de banc croisé, la méthode
+     retenue (« estimee »).
+  3. Avec --regle significatif (DÉFAUT), un modèle ou une méthode ne remplace le choix retenu que si le test de
+     Diebold-Mariano (perte pinball à τ, p ajustée de Holm < 0,05) le dit « meilleur » sur au moins un horizon et
+     « moins bon » sur aucun. Avec --regle meilleur, la plus petite erreur gagne et la significativité est
+     seulement indiquée : à éviter, car parmi des dizaines de variantes évaluées sur les mêmes jours, la plus
+     petite erreur est en partie due au hasard (biais du gagnant), et le test final le révélerait trop tard.
 Toutes ces mesures viennent de la validation glissante AVANT le verrou : la sélection ne voit jamais le coffre.
 validation_finale.py relit selection_<SERVICE>.json et évalue le modèle choisi sur le coffre, une seule fois.
 
@@ -50,7 +53,7 @@ def colonne_pinball(t: pd.DataFrame) -> str:
 def main() -> None:
     p = argparse.ArgumentParser(description="Choisit le SVM et le traitement des durées inconnues d'après les bancs.")
     p.add_argument("--service", required=True)
-    p.add_argument("--regle", choices=["meilleur", "significatif"], default="meilleur")
+    p.add_argument("--regle", choices=["significatif", "meilleur"], default="significatif")
     p.add_argument("--dossier", default="resultats")
     option_comptage(p)
     a = p.parse_args()
@@ -86,7 +89,8 @@ def main() -> None:
     svm = classement[classement["famille"] == "svm"]
     nom_retenu = CATALOGUE[RETENU][0]
     choisi = svm.iloc[0]
-    if a.regle == "significatif" and "meilleur" not in choisi["significatif"]:
+    gagne = lambda verdicts: "meilleur" in verdicts and "moins bon" not in verdicts
+    if a.regle == "significatif" and not gagne(choisi["significatif"]):
         choisi = svm[svm["modèle"] == nom_retenu].iloc[0]
     cle = NOM_VERS_CLE.get(choisi["modèle"], RETENU)
 
@@ -97,12 +101,15 @@ def main() -> None:
         c = pd.concat([pd.read_csv(f, sep=";", encoding="utf-8-sig") for f in croises])
         c = c[c["cle_modele"] == cle]
         if len(c):
-            moy = c.groupby("cle_imputation").agg(MAE=("MAE retenue", "mean"),
+            colp = next(k for k in c.columns if k.startswith("pinball") and k.endswith("retenue"))
+            moy = c.groupby("cle_imputation").agg(pinball=(colp, "mean"),
                                                    verdict=("vs imputation retenue, même modèle", lambda s: ", ".join(sorted(set(map(str, s))))))
-            meilleur = moy["MAE"].idxmin()
-            if a.regle == "meilleur" or "meilleur" in moy.loc[meilleur, "verdict"]:
+            meilleur = moy["pinball"].idxmin()
+            if a.regle == "meilleur" or meilleur == "estimee" or gagne(moy.loc[meilleur, "verdict"]):
                 imputation = meilleur
-            detail_imp = f"MAE moyenne {moy.loc[meilleur, 'MAE']:.3f} ; contre « estimee » pour ce modèle : {moy.loc[meilleur, 'verdict']}"
+            detail_imp = (f"pinball moyenne {moy.loc[meilleur, 'pinball']:.4f} ({meilleur}) ; contre « estimee » pour ce "
+                          f"modèle : {moy.loc[meilleur, 'verdict']}"
+                          + ("" if imputation == meilleur else " : non significatif, méthode retenue gardée"))
 
     selection = {"service": a.service, "comptage": a.comptage, "regle": a.regle, "modele": cle, "nom_modele": choisi["modèle"],
                  "pinball_moyen": float(choisi["pinball_moyen"]), "significatif_vs_retenu": choisi["significatif"],

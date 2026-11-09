@@ -68,7 +68,7 @@ import triage  # noqa: F401  (rend le dossier module_lit importable)
 from svr.modeles import Entrainement
 from traitement import verrou
 from traitement.urgences import decrire, lire_passages
-from triage.mesures import mcnemar, resume, seuil_optimal
+from triage.mesures import comparer_couts, holm, mcnemar, mcnemar_specificite, resume, seuil_optimal
 from triage.modeles import FAMILLE_SVM, MODELES
 from triage.validation import COUTS, SELECTIONS, ConfigTriage, decoupage_final, decoupages_croises, decoupages_mensuels, evaluer
 from triage.imputation import IMPUTATIONS
@@ -118,10 +118,23 @@ class Banc:
             m = resume(y, (p >= t).to(p.dtype), 0.5, self.rapport)
             ligne.update({"sens_s90": m["sensibilite"], "spec_s90": m["specificite"], "alertes_s90": m["taux_alerte"]})
         if reference is not None and reference is not res and torch.equal(reference["indices"], res["indices"]):
-            t = mcnemar(res["y"], res["p"] >= self.seuil, reference["p"] >= self.seuil)
-            ligne.update({"mcnemar_b": t["b"], "mcnemar_c": t["c"], "mcnemar_p": t["p_valeur"]})
+            ligne.update(comparaisons(res, reference, self.seuil, self.rapport))
         self.choix[f"{banc} {variante}"] = res["choix"]
         return ligne
+
+
+def comparaisons(res: dict, ref: dict, seuil: float, rapport: float, suffixe: str = "") -> dict:
+    """A (res) contre B (ref), mêmes passages : McNemar au seuil s*, coût apparié au seuil s*, et spécificité au
+    seuil s₉₀ de chacun (critère de sélection). Voir triage/mesures.py."""
+    t = mcnemar(res["y"], res["p"] >= seuil, ref["p"] >= seuil)
+    c = comparer_couts(res["y"], res["p"] >= seuil, ref["p"] >= seuil, rapport)
+    out = {f"mcnemar_b{suffixe}": t["b"], f"mcnemar_c{suffixe}": t["c"], f"mcnemar_p{suffixe}": t["p_valeur"],
+           f"diff_cout{suffixe}": c["difference_cout"], f"diff_cout_ic95{suffixe}": f"[{c['ic95_bas']:.4f} ; {c['ic95_haut']:.4f}]",
+           f"cout_p{suffixe}": c["p_valeur"]}
+    if "seuil90" in res and "seuil90" in ref:
+        sp = mcnemar_specificite(res["y"], res["p"] >= res["seuil90"], ref["p"] >= ref["seuil90"])
+        out.update({f"spec_s90_b{suffixe}": sp["b"], f"spec_s90_c{suffixe}": sp["c"], f"spec_s90_p{suffixe}": sp["p_valeur"]})
+    return out
 
 
 def options_plaintes(nom: str, vocab: tuple[str, ...]) -> dict:
@@ -148,6 +161,10 @@ def selectionner(lignes: list[dict]) -> dict:
     Pourquoi pas le coût moyen au seuil s* (règle d'origine) : avec la moitié de graves (MEO comptée grave) et
     c₊/c₋ = 4, s* = 0,2 fait alerter presque TOUS les passages par tous les modèles ; leurs coûts ne diffèrent alors
     que de quelques millièmes, et le choix se ferait au hasard. Le changement est écrit dans le mémoire.
+    Significativité (ajout) : un candidat ne remplace le modèle principal que si sa spécificité au seuil s₉₀ est plus
+    grande ET que l'écart est significatif (McNemar sur les non-graves, p ajustée de Holm < 0,05 sur l'ensemble des
+    candidats comparés au principal). Sinon le modèle principal est gardé : parmi des dizaines de variantes jugées
+    sur les mêmes mois, la plus grande spécificité est en partie due au hasard.
     Tout vient de la validation mensuelle avant le verrou.
     """
     candidats = [l for l in lignes if l.get("svm") and l.get("imputation") != "suppression_lignes"
@@ -157,9 +174,17 @@ def selectionner(lignes: list[dict]) -> dict:
     def spec(l):
         v = l.get("spec_s90")
         return v if v == v and v is not None else -1.0
+    principal = next((l for l in lignes if l.get("banc") == "principal"), None)
+    testes = [l for l in candidats if l is not principal and l.get("spec_s90_p") is not None]
+    for l, pa in zip(testes, holm([l["spec_s90_p"] for l in testes])):
+        l["spec_s90_p_holm"] = pa
+    if principal is not None:
+        gagnants = [l for l in testes if spec(l) > spec(principal) and l["spec_s90_p_holm"] < 0.05]
+        candidats = gagnants or [principal]
     meilleur = min(candidats, key=lambda l: (-spec(l), -(l.get("auc") or 0), l["cout_moyen"]))
     return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "echelle", "selection", "transfert", "cout_moyen", "auc",
-                                         "sensibilite", "specificite", "sens_s90", "spec_s90", "alertes_s90", "mcnemar_p")}
+                                         "sensibilite", "specificite", "sens_s90", "spec_s90", "alertes_s90", "mcnemar_p",
+                                         "spec_s90_p", "spec_s90_p_holm", "diff_cout", "cout_p")}
 
 
 def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: ConfigTriage,
@@ -326,8 +351,7 @@ def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: Conf
             lignes[-1]["donnees"] = SOURCES[v]
             # Deuxième comparaison : contre le Cameroun seul dans la MÊME représentation (le transfert aide-t-il ?).
             if temoin is not None and r is not temoin and torch.equal(r["indices"], temoin["indices"]):
-                t = mcnemar(r["y"], r["p"] >= b.seuil, temoin["p"] >= b.seuil)
-                lignes[-1]["mcnemar_p_vs_cameroun_seul"] = t["p_valeur"]
+                lignes[-1].update(comparaisons(r, temoin, b.seuil, b.rapport, suffixe="_vs_cameroun_seul"))
             print(f"  T9 {v:<24} sensibilité {lignes[-1]['sensibilite']:.3f}, AUC {lignes[-1]['auc']:.3f}")
     elif "T9" in bancs:
         print("  T9 ignoré : source externe absente (lancez preparer_nhamcs.py, puis --source-externe).")
@@ -359,9 +383,8 @@ def raccorder(references: dict, tous: pd.DataFrame, opts: OptionsVariables, cfg:
     p_sep = torch.tensor(s["p"].to_numpy(), dtype=torch.float64)
     p_com = torch.tensor(c["p"].to_numpy(), dtype=torch.float64)
     lignes = [{"banc": "raccordement", "variante": "modèles séparés réunis (référence)", **resume(y, p_sep, seuil, rapport_couts)}]
-    t = mcnemar(y, p_com >= seuil, p_sep >= seuil)
     lignes.append({"banc": "raccordement", "variante": "modèle commun enfants + adultes", **resume(y, p_com, seuil, rapport_couts),
-                   "mcnemar_b": t["b"], "mcnemar_c": t["c"], "mcnemar_p": t["p_valeur"]})
+                   **comparaisons({"y": y, "p": p_com}, {"y": y, "p": p_sep}, seuil, rapport_couts)})
     for g in references:                                   # le détail par groupe, sur les mêmes passages
         m = torch.tensor((s["groupe"] == g).to_numpy())
         if m.sum() and len(torch.unique(y[m])) == 2:
@@ -535,7 +558,8 @@ def main() -> None:
         colonnes = ["banc", "variante"] + [c for c in ("donnees",) if c in df] + ["passages", "graves", "sensibilite",
                     "specificite", "sous_triage", "sur_triage", "vpp", "taux_alerte", "cout_moyen", "auc",
                     "spec_sens90", "spec_sens95", "brier"] + [c for c in ("sens_s90", "spec_s90", "alertes_s90") if c in df] + \
-                   [c for c in ("mcnemar_p", "mcnemar_p_vs_cameroun_seul") if c in df]
+                   [c for c in ("mcnemar_p", "diff_cout", "cout_p", "spec_s90_p", "spec_s90_p_holm",
+                                "mcnemar_p_vs_cameroun_seul", "diff_cout_vs_cameroun_seul", "cout_p_vs_cameroun_seul") if c in df]
         rapport.append(en_markdown(df[colonnes].round(3)))
     if len(references) == 2:
         try:
@@ -547,7 +571,7 @@ def main() -> None:
             rapport.append(en_markdown(df[["banc", "variante", "passages", "graves", "sensibilite", "specificite", "sous_triage",
                                            "sur_triage", "vpp", "taux_alerte", "cout_moyen", "auc",
                                            "spec_sens90", "spec_sens95", "brier"]
-                                          + [c for c in ("mcnemar_p",) if c in df]].round(3)))
+                                          + [c for c in ("mcnemar_p", "diff_cout", "cout_p") if c in df]].round(3)))
         except ValueError as e:
             print(f"\nRaccordement impossible : {e}")
     if tout:

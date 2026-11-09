@@ -140,7 +140,7 @@ def main() -> None:
     debut_val = DATE_VERROU - pd.DateOffset(months=6)
     rapport = [f"# Sensibilité de tous les paramètres — service {a.service}\n",
                "Un paramètre varie à la fois, tout le reste au réglage retenu (marqué « retenu »). Mêmes jours, même validation "
-               "glissante. Diebold-Mariano (perte absolue, HLN) contre la valeur retenue. Amplitude = (MAE max − MAE min) / MAE retenue.\n"]
+               "glissante. Diebold-Mariano (perte pinball au quantile τ, HLN, correction de Holm) contre la valeur retenue. Amplitude = (MAE max − MAE min) / MAE retenue.\n"]
     synthese = []
 
     for h in a.horizons:

@@ -335,17 +335,15 @@ def main() -> None:
             continue
         t = dim.tableau().drop(columns=["temps (s)"])
         # Deuxième comparaison : chaque charge transférée contre la charge du modèle de triage LOCAL (D12-3).
-        locale = next((k for k in dim.points if k.startswith("D12-3")), None)
+        locale = next((k for k in dim.quantiles if k.startswith("D12-3")), None)
         if locale is not None and len(dim.y) > 10:
-            pv, verdict = [], []
-            for nom in t.index:
-                if not nom.startswith("D12-T"):
-                    pv.append(None); verdict.append(""); continue
-                dm = M.diebold_mariano(dim.y, dim.points[nom], dim.points[locale], h=h)
-                pv.append(dm["p_valeur"])
-                verdict.append("identique" if dm["plus_precis"] == "indéterminé" else
-                               (("meilleur" if dm["plus_precis"] == "A" else "moins bon") if dm["significatif_5pc"] else "équivalent"))
-            t["DM p-valeur vs charge locale"], t["vs charge locale (D12-3)"] = pv, verdict
+            noms = [n for n in t.index if n.startswith("D12-T")]
+            tests = {n: M.diebold_mariano(dim.y, dim.quantiles[n], dim.quantiles[locale], h=h, perte="pinball", tau=dim.tau)
+                     for n in noms}
+            ajustees = dict(zip(noms, M.holm([tests[n]["p_valeur"] for n in noms])))
+            t["DM p vs charge locale"] = [tests[n]["p_valeur"] if n in tests else None for n in t.index]
+            t["p Holm vs charge locale"] = [ajustees.get(n) for n in t.index]
+            t["vs charge locale (D12-3)"] = [M.verdict(tests[n], ajustees[n]) if n in tests else "" for n in t.index]
         print(t.to_string())
         t.to_csv(resultats / f"benchmark_{lab}_D12_h{h}.csv", sep=";", encoding="utf-8-sig")
         rapport += [f"\n### Horizon J+{h} ({jours} jours évalués, {nb} origines)\n", en_markdown(t.reset_index()), "\n",

@@ -9,7 +9,7 @@ import triage  # noqa: F401
 from svr.modeles import Entrainement
 from svr.noyaux import NoyauRBF
 from traitement.urgences import classe_decision, lire_age, lire_glycemie, lire_passages, lire_ta
-from triage.mesures import mcnemar, resume, seuil_optimal
+from triage.mesures import comparer_couts, holm, mcnemar, mcnemar_specificite, resume, seuil_optimal
 from triage.modeles import RegressionLogistique, SVMNoyauClassifieur
 from triage.normes import ecarts, plage
 from triage.validation import ConfigTriage, decoupages_mensuels, evaluer
@@ -230,3 +230,27 @@ def test_seuil_s90_fixe_sur_la_calibration():
     lignes = [{"svm": True, "cout_moyen": 0.40, "auc": 0.70, "spec_s90": 0.10, "banc": "T2", "variante": "a"},
               {"svm": True, "cout_moyen": 0.45, "auc": 0.68, "spec_s90": 0.35, "banc": "T2", "variante": "b"}]
     assert selectionner(lignes)["variante"] == "b"
+
+
+def test_comparer_couts_pondere_les_graves_manques():
+    # 40 graves, 160 non graves. A manque 10 graves ; B donne 30 fausses alertes. McNemar : 10 contre 30 erreurs,
+    # B paraît pire ; au coût (c₊/c₋ = 4) : A coûte 40, B coûte 30 : c'est A le plus coûteux.
+    y = torch.cat([torch.ones(40, dtype=torch.float64), -torch.ones(160, dtype=torch.float64)])
+    a = torch.cat([torch.tensor([False] * 10 + [True] * 30), torch.zeros(160, dtype=torch.bool)])
+    b = torch.cat([torch.ones(40, dtype=torch.bool), torch.tensor([True] * 30 + [False] * 130)])
+    r = comparer_couts(y, a, b, 4.0, tirages=2000)
+    assert r["difference_cout"] == pytest.approx((40 - 30) / 200)
+    assert r["ic95_bas"] <= r["difference_cout"] <= r["ic95_haut"]
+    assert comparer_couts(y, a, a, 4.0)["p_valeur"] == 1.0
+
+
+def test_mcnemar_specificite_ne_regarde_que_les_non_graves():
+    y = torch.tensor([1.0, 1.0, -1.0, -1.0, -1.0])
+    a = torch.tensor([False, False, False, False, True])      # écarte 2 non-graves sur 3
+    b = torch.tensor([True, True, True, True, True])          # n'en écarte aucun
+    r = mcnemar_specificite(y, a, b)
+    assert (r["b"], r["c"]) == (2, 0)
+
+
+def test_holm_triage():
+    assert holm([0.02, 0.01]) == [pytest.approx(0.02), pytest.approx(0.02)]

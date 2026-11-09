@@ -18,7 +18,10 @@ Prévision quantile et intervalle :
 Test de Diebold-Mariano (comparer deux modèles, et non deux chiffres)
 ---------------------------------------------------------------------
 Deux modèles A et B, mêmes jours. Différence de perte jour par jour :
-    d_t = L(e_t^A) − L(e_t^B)     (L = valeur absolue ou carré de l'erreur)
+    d_t = L(e_t^A) − L(e_t^B)     (L = valeur absolue, carré de l'erreur, ou perte pinball ρ_τ)
+Pour des prévisions de QUANTILE, la perte comparée doit être celle du quantile décidé : d_t = ρ_τ(e_t^A) − ρ_τ(e_t^B)
+(perte="pinball", tau=τ). Comparer les médianes en valeur absolue ne dit rien du quantile τ = 0,8 sur lequel
+on décide le nombre de lits : c'est la perte pinball qui est testée dans tous les bancs.
 H₀ : E[d_t] = 0 (même précision). Statistique :
     DM = d̄ / √(V̂ / n),   V̂ = γ̂₀ + 2 Σ_{k=1}^{h−1} γ̂_k
 γ̂_k est l'autocovariance de d au décalage k : pour un horizon h, des prévisions faites à des
@@ -27,6 +30,13 @@ Correction de Harvey, Leybourne et Newbold (1997) pour petits échantillons :
     DM* = DM · √[(n + 1 − 2h + h(h − 1)/n) / n]
 p-valeur bilatérale par la loi normale : p = 2 · (1 − Φ(|DM*|)),  Φ(z) = ½ [1 + erf(z/√2)].
 DM* < 0 et p < 0,05 : A est significativement plus précis que B.
+
+Tests multiples : correction de Holm (1979)
+-------------------------------------------
+Un banc compare m variantes au choix retenu : m tests. À 5 % chacun, on attend 0,05·m « meilleur » par hasard.
+Holm : trier les p-valeurs p_(1) ≤ … ≤ p_(m) ; p ajustée p̃_(k) = max_{j ≤ k} min(1, (m − j + 1)·p_(j)).
+Une variante n'est déclarée meilleure ou moins bonne que si p̃ < 0,05 : la probabilité d'au moins une fausse
+découverte dans le banc reste ≤ 5 %, sans supposer les tests indépendants.
 """
 from __future__ import annotations
 
@@ -82,11 +92,24 @@ def phi(z: float) -> float:
     return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
 
 
-def diebold_mariano(y, prev_a, prev_b, h: int = 1, perte: str = "absolue") -> dict:
-    """Compare A et B. Renvoie DM* (corrigé HLN), la p-valeur et le modèle le plus précis."""
+def _perte(e: torch.Tensor, perte: str, tau: float | None) -> torch.Tensor:
+    if perte == "absolue":
+        return e.abs()
+    if perte == "carree":
+        return e ** 2
+    if perte == "pinball":
+        if tau is None:
+            raise ValueError("perte pinball : préciser tau.")
+        return torch.maximum(tau * e, (tau - 1.0) * e)
+    raise ValueError(f"perte inconnue : {perte}")
+
+
+def diebold_mariano(y, prev_a, prev_b, h: int = 1, perte: str = "absolue", tau: float | None = None) -> dict:
+    """Compare A et B. Renvoie DM* (corrigé HLN), la p-valeur et le modèle le plus précis.
+    perte : "absolue", "carree" ou "pinball" (avec tau : prévisions du quantile τ)."""
     y = _t(y)
     ea, eb = y - _t(prev_a), y - _t(prev_b)
-    d = (ea.abs() - eb.abs()) if perte == "absolue" else (ea ** 2 - eb ** 2)
+    d = _perte(ea, perte, tau) - _perte(eb, perte, tau)
     n = len(d)
     if n < 2 * h + 2:
         raise ValueError("Trop peu de jours pour le test de Diebold-Mariano.")
@@ -102,6 +125,27 @@ def diebold_mariano(y, prev_a, prev_b, h: int = 1, perte: str = "absolue") -> di
     p = 2.0 * (1.0 - phi(abs(dm_hln)))
     return {"dm": round(dm_hln, 3), "p_valeur": round(p, 4),
             "plus_precis": "A" if dm_hln < 0 else "B", "significatif_5pc": p < 0.05}
+
+
+def holm(p_valeurs) -> list:
+    """p-valeurs ajustées de Holm (None et NaN gardés tels quels, exclus du nombre de tests)."""
+    idx = [i for i, p in enumerate(p_valeurs) if p is not None and not math.isnan(p)]
+    m = len(idx)
+    ajustees = list(p_valeurs)
+    courant = 0.0
+    for rang, i in enumerate(sorted(idx, key=lambda i: p_valeurs[i])):
+        courant = max(courant, min(1.0, (m - rang) * p_valeurs[i]))
+        ajustees[i] = round(courant, 4)
+    return ajustees
+
+
+def verdict(dm: dict, p_ajustee) -> str:
+    """Verdict de A contre B au seuil de 5 %, sur la p-valeur ajustée."""
+    if dm["plus_precis"] == "indéterminé":
+        return "identique"
+    if p_ajustee is None or math.isnan(p_ajustee) or p_ajustee >= 0.05:
+        return "équivalent"
+    return "meilleur" if dm["plus_precis"] == "A" else "moins bon"
 
 
 def resume_ponctuel(y, yp) -> dict:

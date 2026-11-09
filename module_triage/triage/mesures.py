@@ -31,6 +31,21 @@ Si A et B se valent, chaque désaccord est « pile ou face » : b suit une loi b
     b + c ≥ 25 :  χ² = (|b − c| − 1)² / (b + c)   (correction de continuité de Yates), 1 degré de liberté ;
                   p = P(χ²₁ ≥ χ²) = 2 (1 − Φ(√χ²))   car un χ²₁ est le carré d'une loi normale centrée réduite ;
     b + c < 25 :  test exact,  p = min(1, 2 Σ_{k ≤ min(b, c)} C(b + c, k) / 2^{b+c}).
+Limite : McNemar compte un grave manqué et une fausse alerte comme UNE erreur chacun, alors que la décision
+suppose qu'un grave manqué coûte c₊/c₋ = 4 fausses alertes. Deux tests complètent donc McNemar :
+
+Test apparié sur le coût (comparer_couts)
+-----------------------------------------
+Pour chaque passage i, coût de A : c₊·1(grave, pas d'alerte) + c₋·1(non grave, alerte) ; idem pour B ;
+d_i = coût_A(i) − coût_B(i), moyenne d̄ = différence des coûts moyens. Sous H₀ (A et B interchangeables sur
+chaque passage), le signe de chaque d_i est « pile ou face » : test de permutation par changement de signes
+(R tirages), p = (1 + #{|d̄*| ≥ |d̄|}) / (1 + R). Intervalle à 95 % de d̄ par bootstrap des passages.
+
+Spécificité au seuil s₉₀ (mcnemar_specificite)
+----------------------------------------------
+Chaque modèle alerte au-dessus de SON seuil s₉₀ (fixé sur la calibration pour garder 90 % des graves). Sur les
+seuls NON-GRAVES : b = écarté par A et pas par B, c = l'inverse ; McNemar sur (b, c). C'est le test du critère
+de sélection du triage (spécificité à sensibilité ~90 %).
 """
 from __future__ import annotations
 
@@ -104,3 +119,39 @@ def seuil_optimal(rapport_couts: float) -> float:
     if rapport_couts <= 0:
         raise ValueError("Le rapport des coûts doit être strictement positif.")
     return 1.0 / (rapport_couts + 1.0)
+
+
+def comparer_couts(y, alerte_a, alerte_b, rapport_couts: float, tirages: int = 5000, graine: int = 0) -> dict:
+    """Différence de coût moyen A − B, test de permutation apparié et IC à 95 % par bootstrap (voir l'en-tête)."""
+    grave = torch.as_tensor(y, dtype=TYPE) > 0
+    a, b = torch.as_tensor(alerte_a).bool(), torch.as_tensor(alerte_b).bool()
+    cout = lambda al: rapport_couts * (grave & ~al).to(TYPE) + (~grave & al).to(TYPE)
+    d = cout(a) - cout(b)
+    n = len(d)
+    if n == 0 or bool((d == 0).all()):
+        return {"difference_cout": 0.0, "ic95_bas": 0.0, "ic95_haut": 0.0, "p_valeur": 1.0}
+    g = torch.Generator().manual_seed(graine)
+    d_barre = float(d.mean())
+    signes = torch.randint(0, 2, (tirages, n), generator=g, dtype=torch.int64).to(TYPE) * 2 - 1
+    extremes = int(((signes * d).mean(dim=1).abs() >= abs(d_barre) - 1e-12).sum())
+    boot = d[torch.randint(0, n, (tirages, n), generator=g)].mean(dim=1)
+    bas, haut = torch.quantile(boot, torch.tensor([0.025, 0.975], dtype=TYPE)).tolist()
+    return {"difference_cout": d_barre, "ic95_bas": bas, "ic95_haut": haut, "p_valeur": (1 + extremes) / (1 + tirages)}
+
+
+def mcnemar_specificite(y, alerte_a, alerte_b) -> dict:
+    """McNemar sur les non-graves seulement : A écarte-t-il plus de non-graves que B ? (voir l'en-tête)."""
+    non_grave = ~(torch.as_tensor(y, dtype=TYPE) > 0)
+    a, b = torch.as_tensor(alerte_a).bool()[non_grave], torch.as_tensor(alerte_b).bool()[non_grave]
+    # « juste » pour un non-grave = pas d'alerte : on réutilise mcnemar avec une cible toute « non grave ».
+    return mcnemar(-torch.ones(int(non_grave.sum()), dtype=TYPE), a, b)
+
+
+def holm(p_valeurs) -> list:
+    """p-valeurs ajustées de Holm (None et NaN gardés, exclus du nombre de tests)."""
+    idx = [i for i, p in enumerate(p_valeurs) if p is not None and p == p]
+    m, ajustees, courant = len(idx), list(p_valeurs), 0.0
+    for rang, i in enumerate(sorted(idx, key=lambda i: p_valeurs[i])):
+        courant = max(courant, min(1.0, (m - rang) * p_valeurs[i]))
+        ajustees[i] = courant
+    return ajustees

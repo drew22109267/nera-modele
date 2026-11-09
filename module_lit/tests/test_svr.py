@@ -190,6 +190,27 @@ def test_diebold_mariano_detecte_le_meilleur():
     assert r["plus_precis"] == "A" and r["significatif_5pc"]
 
 
+def test_diebold_mariano_pinball_juge_le_quantile_et_non_la_mediane():
+    # A prévoit la médiane exacte, B un quantile 0,8 juste au-dessus : en perte absolue A gagne,
+    # en perte pinball à τ = 0,8 (la quantité décidée) c'est B qui gagne.
+    g = torch.Generator().manual_seed(3)
+    y = 20 + torch.randn(400, generator=g, dtype=T) * 2
+    a, b = torch.full_like(y, 20.0), torch.full_like(y, 20.0 + 0.84 * 2)
+    assert M.diebold_mariano(y, a, b, h=1)["plus_precis"] == "A"
+    r = M.diebold_mariano(y, a, b, h=1, perte="pinball", tau=0.8)
+    assert r["plus_precis"] == "B" and r["significatif_5pc"]
+    with pytest.raises(ValueError):
+        M.diebold_mariano(y, a, b, perte="pinball")
+
+
+def test_holm_et_verdict():
+    assert M.holm([0.01, None, 0.04, 0.03]) == [pytest.approx(0.03), None, pytest.approx(0.06), pytest.approx(0.06)]
+    dm = {"plus_precis": "A"}
+    assert M.verdict(dm, 0.01) == "meilleur" and M.verdict(dm, 0.06) == "équivalent"
+    assert M.verdict({"plus_precis": "B"}, 0.01) == "moins bon"
+    assert M.verdict({"plus_precis": "indéterminé"}, float("nan")) == "identique"
+
+
 # ── Variables, validation sans fuite ─────────────────────────────────────
 
 def petite_serie(jours=300):

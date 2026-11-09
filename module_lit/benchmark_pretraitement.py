@@ -20,7 +20,8 @@ Changer le prétraitement change la série cible elle-même : comparer l'erreur 
 ne dit pas laquelle est juste (une série plus lisse est plus facile à prévoir sans être plus vraie). On mesure :
   1. l'erreur contre sa propre série (MAE, pinball, gain sur la persistance) : la variante reste-t-elle prévisible ?
   2. l'erreur contre la série RETENUE, sur les mêmes jours : la décision change-t-elle les prévisions ?
-     C'est sur cette mesure (même y pour toutes les variantes) que porte le test de Diebold-Mariano.
+     C'est sur cette mesure (même y pour toutes les variantes) que porte le test de Diebold-Mariano, avec la
+     perte pinball au quantile décisionnel τ (la quantité décidée) et la correction de Holm dans chaque banc.
 Une décision est sans conséquence si l'écart (2) n'est pas significatif ; sinon elle doit être justifiée par
 autre chose que l'erreur (vraisemblance clinique, loi de Little, comptages réels).
 
@@ -205,6 +206,8 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
     communs = sorted(set.intersection(*(set(v[1].index) for v in previsions.values())))
     y_ref = torch.tensor(occ_ref["presents"].reindex(communs).to_numpy(), dtype=TYPE)
     med = {k: torch.tensor(v[1].loc[communs, "q0.5"].to_numpy(), dtype=TYPE) for k, v in previsions.items()}
+    qcol_ = lambda t: f"q{a.tau}" if f"q{a.tau}" in t else "q0.5"
+    quant = {k: torch.tensor(v[1].loc[communs, qcol_(v[1])].to_numpy(), dtype=TYPE) for k, v in previsions.items()}
     paire_ref = (RETENU.inconnues, MODELE_RETENU)
     lignes = []
     for (imp, cle), (nom_imp, t, secondes) in previsions.items():
@@ -213,18 +216,24 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
         qcol = f"q{a.tau}" if f"q{a.tau}" in t else "q0.5"
         q = torch.tensor(t[qcol].to_numpy(), dtype=TYPE)
         l = {"imputation": nom_imp, "modèle": CATALOGUE[cle][0], "famille": CATALOGUE[cle][1], "cle_imputation": imp, "cle_modele": cle,
+             f"pinball τ={a.tau} retenue": round(M.pinball_moyenne(y_ref, quant[(imp, cle)], a.tau), 4),
              "MAE retenue": round(M.mae(y_ref, med[(imp, cle)]), 3), "MAE propre": round(M.mae(y, med[(imp, cle)]), 3),
              f"pinball τ={a.tau} propre": round(M.pinball_moyenne(y, q, a.tau), 4), "temps (s)": round(secondes, 1)}
         for nom_test, contre in (("vs paire retenue", paire_ref), ("vs imputation retenue, même modèle", (RETENU.inconnues, cle))):
-            if (imp, cle) == contre or contre not in med:
-                l[f"DM p {nom_test}"], l[nom_test] = None, "— référence"
+            if (imp, cle) == contre or contre not in quant:
+                l[f"DM p {nom_test}"], l["_dm " + nom_test] = None, None
                 continue
-            dm = M.diebold_mariano(y_ref, med[(imp, cle)], med[contre], h=h)
-            l[f"DM p {nom_test}"] = dm["p_valeur"]
-            l[nom_test] = ("identique" if dm["plus_precis"] == "indéterminé" else
-                           ("meilleur" if dm["plus_precis"] == "A" else "moins bon") if dm["significatif_5pc"] else "équivalent")
+            dm = M.diebold_mariano(y_ref, quant[(imp, cle)], quant[contre], h=h, perte="pinball", tau=a.tau)
+            l[f"DM p {nom_test}"], l["_dm " + nom_test] = dm["p_valeur"], dm
         lignes.append(l)
-    tab = pd.DataFrame(lignes).sort_values("MAE retenue").set_index(["imputation", "modèle"])
+    # Holm : une famille de tests par comparaison (contre la paire retenue ; contre l'imputation retenue, même modèle).
+    for nom_test in ("vs paire retenue", "vs imputation retenue, même modèle"):
+        ajustees = M.holm([l[f"DM p {nom_test}"] for l in lignes])
+        for l, pa in zip(lignes, ajustees):
+            dm = l.pop("_dm " + nom_test)
+            l[f"p Holm {nom_test}"] = pa
+            l[nom_test] = "— référence" if dm is None else M.verdict(dm, pa)
+    tab = pd.DataFrame(lignes).sort_values(f"pinball τ={a.tau} retenue").set_index(["imputation", "modèle"])
     tab.to_csv(sortie / f"pretraitement_{a.service}_P1xM_h{h}.csv", sep=";", encoding="utf-8-sig")
     print(tab.to_string())
     meilleur = tab.index[0]
@@ -281,25 +290,27 @@ def main() -> None:
                 med = torch.tensor(t["q0.5"].to_numpy(), dtype=TYPE)
                 q = torch.tensor(t[f"q{a.tau}"].to_numpy(), dtype=TYPE)
                 pers = torch.tensor(t["persistance"].to_numpy(), dtype=TYPE)
-                points[nom] = med
+                points[nom] = q                                        # quantile τ : objet du test
                 lignes.append({"variante": nom, "début série": f"{info['debut']:%d/%m/%Y}", "jours coupés en fin": info["coupe_fin"],
                                "présents moyens": round(float(occ["presents"].mean()), 2),
                                "TOM %": round(100 * float(occ["taux_occupation"].mean()), 1) if "taux_occupation" in occ else None,
                                "écart Little %": little,
                                "MAE propre": round(M.mae(y, med), 3), f"pinball τ={a.tau} propre": round(M.pinball_moyenne(y, q, a.tau), 4),
                                "gain / persistance %": round(100 * (1 - M.mae(y, med) / M.mae(y, pers)), 1),
-                               "MAE retenue": round(M.mae(y_ref, med), 3), "temps (s)": round(secondes, 1)})
+                               "MAE retenue": round(M.mae(y_ref, med), 3),
+                               f"pinball τ={a.tau} retenue": round(M.pinball_moyenne(y_ref, q, a.tau), 4),
+                               "temps (s)": round(secondes, 1)})
             tab = pd.DataFrame(lignes).set_index("variante")
             nom_ref = next(r[0] for r in res if r[1])
-            verdicts, pvals = [], []
+            tests, pvals = [], []
             for nom in tab.index:
                 if nom == nom_ref:
-                    verdicts.append("— choix retenu"); pvals.append(None); continue
-                dm = M.diebold_mariano(y_ref, points[nom], points[nom_ref], h=h)
-                pvals.append(dm["p_valeur"])
-                verdicts.append("identique" if dm["plus_precis"] == "indéterminé" else
-                                ("meilleur" if dm["plus_precis"] == "A" else "moins bon") if dm["significatif_5pc"] else "équivalent")
-            tab["DM p-valeur"], tab["vs choix retenu"] = pvals, verdicts
+                    tests.append(None); pvals.append(None); continue
+                dm = M.diebold_mariano(y_ref, points[nom], points[nom_ref], h=h, perte="pinball", tau=a.tau)
+                tests.append(dm); pvals.append(dm["p_valeur"])
+            ajustees = M.holm(pvals)
+            tab[f"DM p (pinball τ={a.tau})"], tab["p Holm"] = pvals, ajustees
+            tab["vs choix retenu"] = ["— choix retenu" if dm is None else M.verdict(dm, pa) for dm, pa in zip(tests, ajustees)]
             print(tab.to_string())
             tab.to_csv(sortie / f"pretraitement_{a.service}_{code}_h{h}.csv", sep=";", encoding="utf-8-sig")
             mieux = list(tab.index[tab["vs choix retenu"] == "meilleur"])

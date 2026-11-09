@@ -35,7 +35,7 @@ from pathlib import Path
 import pandas as pd
 import torch
 
-from lancer_niveaux import empiler_sequentiel, etiquette, mesures, option_comptage, point
+from lancer_niveaux import empiler_sequentiel, etiquette, mesures, option_comptage, tests_diebold_mariano
 from traitement.chargement import lire_export, periode_exploitable, preparer_sejours
 from traitement.occupation import reconstituer_occupation
 from traitement.verrou import DATE_VERROU
@@ -142,11 +142,7 @@ def main() -> None:
         par_mois = pd.DataFrame(par_mois).set_index(["mois", "niveau"])
         print(par_mois.to_string(), "\n")
         par_mois.to_csv(sortie / f"validation_finale_{nom}_h{h}_par_mois{suffixe}.csv", sep=";", encoding="utf-8-sig")
-        ordre = list(previsions)
-        for i, nom_a in enumerate(ordre[1:], start=1):
-            for contre in {"0 · persistance", ordre[i - 1]} - {nom_a}:
-                tests.append({"horizon": h, "reentrainement": a.reentrainement, "modele_A": nom_a, "modele_B": contre,
-                              **M.diebold_mariano(y, point(previsions[nom_a]), point(previsions[contre]), h=h)})
+        tests += tests_diebold_mariano(y, previsions, hp[3].tau, h, horizon=h, reentrainement=a.reentrainement)
 
     pd.DataFrame(tests).to_csv(sortie / f"validation_finale_{nom}_tests{suffixe}.csv", sep=";", encoding="utf-8-sig", index=False)
     print(f"Résultats écrits dans {sortie.resolve()}")

@@ -99,7 +99,7 @@ class Dimension:
 
     def __init__(self, code: str, titre: str, question: str, h: int, tau: float):
         self.code, self.titre, self.question, self.h, self.tau = code, titre, question, h, tau
-        self.lignes, self.points, self.y, self.retenu = [], {}, None, None
+        self.lignes, self.points, self.quantiles, self.y, self.retenu = [], {}, {}, None, None
 
     def ajouter(self, nom: str, y: torch.Tensor, prevision, secondes: float, retenu: bool = False, **extra) -> None:
         """Calcule les métriques d'une variante. Toutes les variantes doivent porter sur les mêmes jours y."""
@@ -118,34 +118,34 @@ class Dimension:
         ligne.update(extra)
         self.lignes.append(ligne)
         self.points[ligne["variante"]] = p
+        self.quantiles[ligne["variante"]] = q                          # quantile décisionnel τ : objet des tests
         if retenu:
             self.retenu = ligne["variante"]
 
     def tableau(self) -> pd.DataFrame:
-        """Ajoute le test de Diebold-Mariano de chaque variante contre le choix retenu."""
+        """Test de Diebold-Mariano de chaque variante contre le choix retenu, sur la perte pinball au quantile τ
+        (la quantité décidée), avec correction de Holm sur les variantes de la dimension."""
         t = pd.DataFrame(self.lignes).set_index("variante")
         if self.retenu is not None and len(self.y) > 10:
-            verdicts, pvals = [], []
-            for nom, p in self.points.items():
+            tests, pvals = [], []
+            for nom, q in self.quantiles.items():
                 if nom == self.retenu:
-                    verdicts.append("— choix retenu"); pvals.append(None); continue
-                dm = M.diebold_mariano(self.y, p, self.points[self.retenu], h=self.h)
-                pvals.append(dm["p_valeur"])
-                if dm["plus_precis"] == "indéterminé":
-                    verdicts.append("identique")                  # mêmes prévisions que le choix retenu
-                else:
-                    verdicts.append(("meilleur" if dm["plus_precis"] == "A" else "moins bon")
-                                    if dm["significatif_5pc"] else "équivalent")
-            t["DM p-valeur"], t["vs choix retenu"] = pvals, verdicts
+                    tests.append(None); pvals.append(None); continue
+                dm = M.diebold_mariano(self.y, q, self.quantiles[self.retenu], h=self.h, perte="pinball", tau=self.tau)
+                tests.append(dm); pvals.append(dm["p_valeur"])
+            ajustees = M.holm(pvals)
+            verdicts = ["— choix retenu" if dm is None else M.verdict(dm, pa) for dm, pa in zip(tests, ajustees)]
+            t[f"DM p (pinball τ={self.tau})"], t["p Holm"], t["vs choix retenu"] = pvals, ajustees, verdicts
         return t
 
     def conclusion(self, t: pd.DataFrame) -> str:
-        meilleur = t["MAE"].idxmin()
-        phrase = f"Plus petite MAE : **{meilleur}** ({t.loc[meilleur, 'MAE']})."
+        col = f"pinball τ={self.tau}"
+        meilleur = t[col].idxmin()
+        phrase = f"Plus petite perte pinball à τ = {self.tau} : **{meilleur}** ({t.loc[meilleur, col]})."
         if self.retenu is not None and "vs choix retenu" in t:
             mieux = list(t.index[t["vs choix retenu"] == "meilleur"])
-            phrase += (f" ⚠ Significativement meilleur que le choix retenu : {', '.join(mieux)} — le choix est à revoir."
-                       if mieux else f" Aucune variante ne bat significativement le choix retenu ({self.retenu}).")
+            phrase += (f" ⚠ Significativement meilleur que le choix retenu (Holm, 5 %) : {', '.join(mieux)} — le choix est à revoir."
+                       if mieux else f" Aucune variante ne bat significativement le choix retenu ({self.retenu}) après correction de Holm.")
         return phrase
 
 
