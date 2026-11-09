@@ -48,6 +48,7 @@ from traitement.verrou import DATE_VERROU
 from svr.caracteristiques import construire
 from svr.concurrents import HyperConcurrents, fabrique_concurrent
 from svr.niveaux import Hyperparametres, fabrique
+from svr.reprise import Reprise, empreinte
 from svr.reproductibilite import ecrire_environnement
 from svr.validation import evaluer, origines_glissantes
 from validation_finale import hyperparametres
@@ -131,12 +132,20 @@ def main() -> None:
     p.add_argument("--pas", type=int, default=28)
     p.add_argument("--familles", nargs="+", default=list(GRILLES), choices=list(GRILLES))
     p.add_argument("--rapide", action="store_true", help="800 itérations pour les SVR, modèles concurrents allégés")
+    p.add_argument("--recommencer", action="store_true", help="ignore les résultats déjà enregistrés (svr/reprise.py)")
     option_comptage(p)
     a = p.parse_args()
     a.service = etiquette(a.service, a.comptage)
     sortie = Path("resultats"); sortie.mkdir(exist_ok=True)
     ecrire_environnement(sortie / f"parametres_{a.service}_environnement.json", **vars(a))
     occ = lire_occupation(a.service)
+    # Reprise après coupure : chaque valeur essayée est enregistrée dès qu'elle est calculée (svr/reprise.py).
+    ici = Path(__file__).resolve().parent
+    options = {k: v for k, v in sorted(vars(a).items()) if k != "recommencer"}
+    reglages = [f for f in sorted(sortie.glob(f"hyperparametres_{a.service}_h*.json"))]
+    reprise = Reprise(sortie / "reprise" / f"parametres_{a.service}",
+                      empreinte(occ, options, *reglages, Path(__file__), ici / "svr", ici / "benchmark_choix.py",
+                                ici / "lancer_niveaux.py", ici / "validation_finale.py"), a.recommencer)
     debut_val = DATE_VERROU - pd.DateOffset(months=6)
     rapport = [f"# Sensibilité de tous les paramètres — service {a.service}\n",
                "Un paramètre varie à la fois, tout le reste au réglage retenu (marqué « retenu »). Mêmes jours, même validation "
@@ -182,7 +191,10 @@ def main() -> None:
                         else:
                             niveau = 4 if famille == "svr4" else 2
                             fab = fabrique(niveau, remplacer_hp(hps[niveau], param, v, ou), tab.blocs)
-                    r, s = chrono(lambda: evaluer(tab, decs, fab))
+                    cle = ("valeur", h, famille, param, repr(v))
+                    deja = reprise.existe(cle)
+                    r, s = reprise.calculer(cle, lambda: chrono(lambda: evaluer(tab, decs, fab)))
+                    print(f"   {nom} : {s:.0f} s" + (" (repris)" if deja else ""), flush=True)
                     d.ajouter(nom, r["y"], r["prevision"], s, retenu=(v == actuel))
                 t = d.tableau()
                 print(t.to_string())
@@ -204,6 +216,7 @@ def main() -> None:
     rapport.insert(2, "\n## Synthèse\n\n" + en_markdown(s.set_index("paramètre")) + "\n")
     (sortie / f"parametres_{a.service}.md").write_text("\n".join(rapport), encoding="utf-8")
     print(f"\nRapport : {(sortie / f'parametres_{a.service}.md').resolve()}")
+    print(reprise.bilan())
 
 
 if __name__ == "__main__":

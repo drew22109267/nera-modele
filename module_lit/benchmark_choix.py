@@ -81,6 +81,7 @@ from svr.concurrents import CONCURRENTS, HyperConcurrents, fabrique_concurrent
 from svr.modeles import Entrainement, IntervalleQuantile, Perte, SVRLineaire, SVRNoyau, SVRNoyauComposite
 from svr.niveaux import Hyperparametres, fabrique
 from svr.noyaux import NoyauComposite, NoyauRBF
+from svr.reprise import Reprise, empreinte
 from svr.reproductibilite import ecrire_environnement
 from svr.variantes import CATALOGUE, RETENU, fabrique_catalogue
 from svr.validation import Decoupage, decoupage_final, evaluer, origines_glissantes
@@ -214,6 +215,7 @@ def main() -> None:
                    help="dimensions à lancer (D1 … D9, D11, D13 et D14 par défaut ; D10 avec --recherche)")
     p.add_argument("--recherche", action="store_true", help="ajoute D10 (grille et essaim : long)")
     p.add_argument("--rapide", action="store_true", help="800 itérations au lieu de celles des hyperparamètres")
+    p.add_argument("--recommencer", action="store_true", help="ignore les dimensions déjà enregistrées (svr/reprise.py)")
     option_comptage(p)
     a = p.parse_args()
     a.service = etiquette(a.service, a.comptage)
@@ -226,6 +228,15 @@ def main() -> None:
                           Path("donnees") / "feries_supplementaires.csv")
     jours_vacances = vacances(Path("donnees") / "vacances_scolaires.csv")
     debut_val = pd.Timestamp(a.debut_validation) if a.debut_validation else DATE_VERROU - pd.DateOffset(months=6)
+    # Reprise après coupure : chaque dimension finie est enregistrée (son texte du rapport ; ses tableaux CSV et
+    # figures sont déjà écrits) ; relancé, le banc saute les dimensions faites (svr/reprise.py).
+    ici = Path(__file__).resolve().parent
+    options = {k: v for k, v in sorted(vars(a).items()) if k not in ("recommencer", "dimensions", "recherche")}
+    reglages = sorted(resultats.glob(f"hyperparametres_{a.service}_h*.json"))
+    donnees = [f for f in (Path("donnees") / "feries_supplementaires.csv", Path("donnees") / "vacances_scolaires.csv") if f.exists()]
+    reprise = Reprise(resultats / "reprise" / f"benchmark_{a.service}",
+                      empreinte(occ, options, *reglages, *donnees, Path(__file__), ici / "svr", ici / "lancer_niveaux.py"),
+                      a.recommencer)
     fin_entr = int((occ.index < debut_val).sum())             # indice du premier jour de validation dans la série
     rapport = [f"# Banc de comparaison des choix — service {a.service}\n",
                f"Validation glissante du {debut_val:%d/%m/%Y} au verrou ({DATE_VERROU:%d/%m/%Y}), une origine tous les "
@@ -250,6 +261,24 @@ def main() -> None:
         def prevoir(fab, tableau=tab, decoupages=decs):
             return chrono(lambda: evaluer(tableau, decoupages, fab)["prevision"])
 
+        debut = {}
+
+        def a_faire(code: str) -> bool:
+            """Faux si la dimension est déjà enregistrée : son texte est remis dans le rapport, on ne la refait pas."""
+            cle = ("dimension", h, code)
+            if reprise.existe(cle):
+                try:
+                    rapport.extend(reprise.lire(cle))
+                    print(f"\n── {code} (J+{h}) : déjà calculée, reprise", flush=True)
+                    return False
+                except Exception:
+                    pass
+            debut[code] = len(rapport)
+            return True
+
+        def fait(code: str) -> None:
+            reprise.ecrire(("dimension", h, code), rapport[debut[code]:])
+
         def publier(dim: Dimension) -> None:
             t = dim.tableau()
             print(f"\n── {dim.code} · {dim.titre}\n{t.to_string()}")
@@ -257,7 +286,7 @@ def main() -> None:
             rapport.extend([f"\n### {dim.code} · {dim.titre}\n", f"*{dim.question}*\n", en_markdown(t), "\n", dim.conclusion(t), "\n"])
 
         # ── D1 · Modèles classiques contre SVR ──────────────────────────────
-        if "D1" in dims:
+        if "D1" in dims and a_faire("D1"):
             d = Dimension("D1", "Modèles de référence, concurrents et SVR",
                           "Le SVR fait-il mieux que les méthodes statistiques usuelles et que les autres modèles d'apprentissage ?", h, a.tau)
             for nom, f in [("Persistance", lambda: R.persistance(tab.serie, orig, h)),
@@ -289,9 +318,10 @@ def main() -> None:
                 prev, s = prevoir(fabrique(niveau, hp[niveau], tab.blocs))
                 d.ajouter(nom, y, prev, s, retenu=(niveau == 4))
             publier(d)
+            fait("D1")
 
         # ── D2 · Noyau ──────────────────────────────────────────────────────
-        if "D2" in dims:
+        if "D2" in dims and a_faire("D2"):
             d = Dimension("D2", "Noyau", "Quel noyau décrit le mieux la dynamique ? (même perte ε-insensible, même C)", h, a.tau)
             eps = Perte("epsilon", hp[2].epsilon)
             for nom, fab, ret in [
@@ -302,9 +332,10 @@ def main() -> None:
                                            C=hp[2].C, perte=eps, entrainement=e), True)]:
                 prev, s = prevoir(fab); d.ajouter(nom, y, prev, s, retenu=ret)
             publier(d)
+            fait("D2")
 
         # ── D3 · Fonction de perte ──────────────────────────────────────────
-        if "D3" in dims:
+        if "D3" in dims and a_faire("D3"):
             d = Dimension("D3", "Fonction de perte", "Quelle perte pour un modèle linéaire identique ? (isole l'effet de la perte)", h, a.tau)
             prev, s = prevoir(lambda: RegressionRidge(1.0 / hp[1].C)); d.ajouter("Carrée (ridge, λ = 1/C)", y, prev, s)
             for eps_val in (0.0, 0.5, 1.0, 2.0):
@@ -312,9 +343,10 @@ def main() -> None:
                 d.ajouter(f"ε-insensible, ε = {eps_val:g} lit" + (" (= valeur absolue)" if eps_val == 0 else ""), y, prev, s,
                           retenu=(eps_val == hp[1].epsilon))
             publier(d)
+            fait("D3")
 
         # ── D4 · Quantile décisionnel τ et coûts ────────────────────────────
-        if "D4" in dims:
+        if "D4" in dims and a_faire("D4"):
             d = Dimension("D4", "Quantile décisionnel τ et coût des décisions",
                           "Quel τ minimise le coût réel selon le rapport pénurie / lit vide ? (τ optimal théorique = r/(1+r))", h, a.tau)
             for t_val in (0.5, 0.6, 0.7, 0.8, 0.9):
@@ -331,9 +363,10 @@ def main() -> None:
             rapport.extend([f"\n### D4 · {d.titre}\n", f"*{d.question}*\n", en_markdown(t), "\n",
                             f"τ le moins coûteux pour chaque rapport de coûts r = c_pénurie / c_lit vide : {meilleurs}. "
                             f"Le choix τ = {a.tau} correspond à r = {a.tau / (1 - a.tau):g}.\n"])
+            fait("D4")
 
         # ── D5 · Variables d'entrée ─────────────────────────────────────────
-        if "D5" in dims:
+        if "D5" in dims and a_faire("D5"):
             d = Dimension("D5", "Variables d'entrée", "Que rapporte chaque groupe de variables ? (même modèle RBF du niveau 2)", h, a.tau)
             variantes = [("7 retards seuls", dict(flux=False, calendrier=False)),
                          ("7 retards + flux", dict(calendrier=False)),
@@ -356,9 +389,10 @@ def main() -> None:
                 d.ajouter(nom, evaluer(t_var, d_var, lambda: _Identite())["y"], prev, s,
                           retenu=(nom.startswith("Complet :")), **{"variables": t_var.X.shape[1]})
             publier(d)
+            fait("D5")
 
         # ── D6 · Standardisation ────────────────────────────────────────────
-        if "D6" in dims:
+        if "D6" in dims and a_faire("D6"):
             d = Dimension("D6", "Prétraitement", "Quelle mise à l'échelle des variables ? (modèle RBF du niveau 2)", h, a.tau)
             for nom, variante, ret in [("z-score : (x − moyenne)/écart-type", tab, True),
                                        ("Robuste : (x − médiane)/(Q3 − Q1)", dataclasses.replace(tab, echelle="robuste"), False),
@@ -366,9 +400,10 @@ def main() -> None:
                                        ("Aucune mise à l'échelle", dataclasses.replace(tab, continues=[]), False)]:
                 prev, s = prevoir(fabrique(2, hp[2], tab.blocs), variante); d.ajouter(nom, y, prev, s, retenu=ret)
             publier(d)
+            fait("D6")
 
         # ── D7 · Fenêtre d'entraînement ─────────────────────────────────────
-        if "D7" in dims:
+        if "D7" in dims and a_faire("D7"):
             d = Dimension("D7", "Fenêtre d'entraînement",
                           "Faut-il tout le passé, ou seulement les derniers mois ? (mesure aussi le coût d'un historique court)", h, a.tau)
             prev, s = prevoir(fabrique(4, hp[4], tab.blocs)); d.ajouter("Croissante (tout le passé)", y, prev, s, retenu=True)
@@ -379,9 +414,10 @@ def main() -> None:
                 prev, s = prevoir(fabrique(4, hp[4], tab.blocs), tab, fenetres)
                 d.ajouter(f"Glissante : {jours} derniers jours", y, prev, s)
             publier(d)
+            fait("D7")
 
         # ── D8 · Optimisation (un seul découpage) ───────────────────────────
-        if "D8" in dims:
+        if "D8" in dims and a_faire("D8"):
             final = decoupage_final(tab, debut_val)
             std = Standardiseur(tab.continues).ajuster(tab.X[final.entrainement])
             Z_e, y_e = std.transformer(tab.X[final.entrainement]), tab.y[final.entrainement]
@@ -401,9 +437,10 @@ def main() -> None:
                           **{"J final": round(m.objectif_final, 2), "pas effectués": len(m.historique), "arrêt": m.arret,
                              "solution gardée": m.origine_solution})
             publier(d)
+            fait("D8")
 
         # ── D9 · Combinaison ────────────────────────────────────────────────
-        if "D9" in dims:
+        if "D9" in dims and a_faire("D9"):
             (p3, p4), s34 = chrono(lambda: (evaluer(tab, decs, fabrique(3, hp[3], tab.blocs))["prevision"],
                                             evaluer(tab, decs, fabrique(4, hp[4], tab.blocs))["prevision"]))
             taus = sorted(p3)
@@ -433,9 +470,10 @@ def main() -> None:
                     if torch.equal(mx, masque):
                         d.ajouter("Empilement persistance + niv. 3 + niv. 4 + XGBoost", y[masque], sous(empx), s34 + sx + s6)
                 publier(d)
+            fait("D9")
 
         # ── D10 · Recherche d'hyperparamètres (option) ──────────────────────
-        if "D10" in dims:
+        if "D10" in dims and a_faire("D10"):
             d = Dimension("D10", "Recherche d'hyperparamètres", "La recherche paie-t-elle son temps de calcul ? (niveau 2)", h, a.tau)
             prev, s = prevoir(fabrique(2, Hyperparametres(tau=a.tau), tab.blocs)); d.ajouter("Valeurs par défaut", y, prev, s)
             for methode in ("grille", "pso"):
@@ -444,9 +482,10 @@ def main() -> None:
                 d.ajouter("Grille" if methode == "grille" else "Essaim particulaire", y, prev, s + s_r,
                           retenu=(methode == "grille"), **{"C": round(hp_m.C, 3), "γ": round(hp_m.gamma, 4)})
             publier(d)
+            fait("D10")
 
         # ── D11 · Chaque variable une à une (ablation) ──────────────────────
-        if "D13" in dims:
+        if "D13" in dims and a_faire("D13"):
             d = Dimension("D13", "Variantes de SVM", "Quel SVM est le plus adapté à la série du service ? (mêmes jours, mêmes variables)", h, a.tau)
             for cle, (nom, famille, _) in CATALOGUE.items():
                 if famille != "svm":
@@ -454,8 +493,9 @@ def main() -> None:
                 prev, s = prevoir(fabrique_catalogue(cle, hp, tab.blocs))
                 d.ajouter(nom, y, prev, s, retenu=(cle == RETENU), cle=cle)
             publier(d)
+            fait("D13")
 
-        if "D11" in dims:
+        if "D11" in dims and a_faire("D11"):
             d = Dimension("D11", "Chaque variable, une à une",
                           "Que perd le modèle si on lui retire cette seule variable ? (modèle RBF du niveau 2, mêmes jours)", h, a.tau)
             prev, s = prevoir(fabrique(2, hp[2], tab.blocs))
@@ -464,8 +504,9 @@ def main() -> None:
                 prev, s = prevoir(lambda j=j: SansColonne(fabrique(2, hp[2], tab.blocs), j))
                 d.ajouter(f"Sans {nom}", y, prev, s)
             publier(d)
+            fait("D11")
 
-        if "D14" in dims:
+        if "D14" in dims and a_faire("D14"):
             # Le lasso est appris à chaque origine sur l'entraînement seul ; on compte combien de fois chaque
             # variable est gardée (stabilité de la sélection).
             d = Dimension("D14", "Sélection des variables par le lasso",
@@ -481,9 +522,11 @@ def main() -> None:
             pd.DataFrame({"variable": tab.noms, **{f"part gardée ({r})": v for r, v in frequences.items()}}).to_csv(
                 resultats / f"benchmark_{a.service}_D14_selection_h{h}.csv", sep=";", encoding="utf-8-sig", index=False)
             publier(d)
+            fait("D14")
 
     (resultats / f"benchmark_{a.service}.md").write_text("\n".join(rapport), encoding="utf-8")
     print(f"\nTableaux écrits dans {resultats.resolve()} (benchmark_{a.service}.md pour le mémoire)")
+    print(reprise.bilan())
 
 
 if __name__ == "__main__":

@@ -16,6 +16,10 @@
 #     ETAPES="10" bash lancer_tout.sh           # seulement certaines étapes (ici : les transferts)
 #     RAPIDE=1 bash lancer_tout.sh              # essai rapide (moins d'itérations)
 #
+# Après une coupure (courant, extinction) : relancer la MÊME commande. Le banc des choix (par dimension) et le
+# banc des paramètres (par valeur) reprennent là où ils s'étaient arrêtés (resultats/reprise/, svr/reprise.py) ;
+# rien n'est repris si les données, les options ou le code ont changé.
+#
 # Réglages (variables d'environnement, valeurs par défaut entre crochets) :
 #     SERVICES     services traités               ["PED MEDF"]
 #     SOURCE_PED   CSV de l'outil, pédiatrie      [MEMOIRE/saisie_ia/registre-ped-tous-les-mois.csv]

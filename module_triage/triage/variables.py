@@ -1,11 +1,13 @@
 r"""
 Tableau d'apprentissage du triage : une ligne par passage, des variables connues À L'ARRIVÉE, une cible.
 
-Cible (banc T1 pour la mise en observation)
---------------------------------------------
+Cible d'UN des deux modèles binaires du triage à trois niveaux (triage/ordinal.py)
+-----------------------------------------------------------------------------------
     y = +1  grave       (hospitalisé, référé, décédé, sortie contre avis médical)
     y = −1  non grave   (externe)
-    MEO     intermédiaire, selon l'option `meo` : 'grave', 'non_grave' ou 'exclue'.
+    MEO     niveau moyen : l'option `meo` dit de quel côté la mettre pour la question posée —
+            'non_grave' pour « grave ? » (modèle haut), 'grave' pour « grave ou moyen ? » (modèle bas) ;
+            'exclue' retire les MEO (n'est plus utilisée par les bancs).
 Les passages sans décision lisible n'ont pas de cible : ils sont retirés.
 
 Groupes de variables (banc T4, options cumulables)

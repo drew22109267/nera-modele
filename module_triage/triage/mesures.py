@@ -86,8 +86,12 @@ def specificite_a_sensibilite(y, p, cible: float) -> float:
 def mcnemar(y, alerte_a, alerte_b) -> dict:
     """Compare les décisions de A et B sur les mêmes passages (voir l'en-tête)."""
     grave = torch.as_tensor(y, dtype=TYPE) > 0
-    juste_a = torch.as_tensor(alerte_a).bool() == grave
-    juste_b = torch.as_tensor(alerte_b).bool() == grave
+    return mcnemar_justes(torch.as_tensor(alerte_a).bool() == grave, torch.as_tensor(alerte_b).bool() == grave)
+
+
+def mcnemar_justes(juste_a, juste_b) -> dict:
+    """McNemar à partir de « juste ou faux » pour chaque passage (sert aussi au triage à trois niveaux)."""
+    juste_a, juste_b = torch.as_tensor(juste_a).bool(), torch.as_tensor(juste_b).bool()
     b, c = int((juste_a & ~juste_b).sum()), int((~juste_a & juste_b).sum())
     if b + c == 0:
         return {"b": 0, "c": 0, "statistique": 0.0, "p_valeur": 1.0, "test": "aucun désaccord"}

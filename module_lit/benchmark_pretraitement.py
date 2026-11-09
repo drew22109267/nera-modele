@@ -61,6 +61,7 @@ from svr import metriques as M
 from svr import references as R
 from svr.caracteristiques import construire
 from svr.niveaux import Hyperparametres, fabrique
+from svr.reprise import Reprise, empreinte
 from svr.reproductibilite import ecrire_environnement
 from svr.validation import Decoupage, evaluer, origines_glissantes
 from svr.concurrents import HyperConcurrents
@@ -68,6 +69,7 @@ from svr.variantes import CATALOGUE, RETENU as MODELE_RETENU, fabrique_catalogue
 from validation_finale import hyperparametres
 
 TYPE = torch.float64
+reprise: Reprise | None = None          # réglée dans main() (reprise après coupure)
 
 
 @dataclass(frozen=True)
@@ -132,7 +134,12 @@ def construire_serie(df: pd.DataFrame, service: str, lits, cfg: Pretraitement) -
     if cfg.reports == "retirer":
         d, _ = retirer_reports_confirmes(df, reperer_reports(df, service))
     sejours, _ = preparer_sejours(d, service, DATE_VERROU, cfg.censure, cfg.inconnues)
-    per = periode_exploitable(sejours, cfg.seuil, rodage_au_debut=cfg.rodage_debut)
+    # Une décision change à la fois : la période exploitable (banc P5) se calcule avec la méthode des durées
+    # RETENUE. Sinon « exclure » (P1) laisserait les séjours inconnus compter comme manquants, la période
+    # rétrécirait jusqu'à presque rien, et P1 comparerait en réalité deux périodes différentes.
+    base = sejours if cfg.inconnues == RETENU.inconnues else \
+        preparer_sejours(d, service, DATE_VERROU, cfg.censure, RETENU.inconnues)[0]
+    per = periode_exploitable(base, cfg.seuil, rodage_au_debut=cfg.rodage_debut)
     occ = reconstituer_occupation(sejours, DATE_VERROU, lits=lits, debut=per["debut"], scenario=cfg.scenario, comptage=cfg.comptage)
     coupe = delai_inscription(d, service) if cfg.fin == "p95" else int(cfg.fin)
     if coupe:
@@ -198,10 +205,14 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
         cfg = dataclasses.replace(RETENU, **changement)
         occ, _, _ = construire_serie(df, a.service, a.lits, cfg)
         for cle in a.modeles:
-            debut = time.perf_counter()
-            previsions[(changement["inconnues"], cle)] = (nom_imp, prevoir(occ, h, hp, debut_val, a.pas, cfg.trous, cle, hpn, hpc),
-                                                          time.perf_counter() - debut)
-            print(f"   {nom_imp} × {CATALOGUE[cle][0]}")
+            def calcul(cle=cle, occ=occ, cfg=cfg):
+                debut = time.perf_counter()
+                return prevoir(occ, h, hp, debut_val, a.pas, cfg.trous, cle, hpn, hpc), time.perf_counter() - debut
+            cle_r = ("croise", h, repr(cfg), cle)
+            deja = reprise.existe(cle_r)
+            prev, secondes = reprise.calculer(cle_r, calcul)
+            previsions[(changement["inconnues"], cle)] = (nom_imp, prev, secondes)
+            print(f"   {nom_imp} × {CATALOGUE[cle][0]}" + (" (repris)" if deja else ""), flush=True)
     communs = sorted(set.intersection(*(set(v[1].index) for v in previsions.values())))
     y_ref = torch.tensor(occ_ref["presents"].reindex(communs).to_numpy(), dtype=TYPE)
     med = {k: torch.tensor(v[1].loc[communs, "q0.5"].to_numpy(), dtype=TYPE) for k, v in previsions.items()}
@@ -241,10 +252,22 @@ def main() -> None:
     p.add_argument("--rapide", action="store_true", help="800 itérations d'optimisation")
     p.add_argument("--croise", action="store_true", help="ajoute le banc croisé P1 × modèles (long)")
     p.add_argument("--modeles", nargs="+", default=list(CATALOGUE), help="modèles du banc croisé (tout le catalogue)")
+    p.add_argument("--recommencer", action="store_true", help="ignore les résultats déjà enregistrés (svr/reprise.py)")
     a = p.parse_args()
     sortie = Path("resultats"); sortie.mkdir(exist_ok=True)
     ecrire_environnement(sortie / f"pretraitement_{a.service}_environnement.json", **vars(a))
     df = lire_export(a.export)
+    # Reprise après coupure : chaque variante (et chaque paire du banc croisé) est enregistrée dès qu'elle est
+    # calculée (svr/reprise.py). La signature comprend le paquet `traitement` (reconstitution de l'occupation).
+    global reprise
+    import traitement
+    ici = Path(__file__).resolve().parent
+    options = {k: v for k, v in sorted(vars(a).items()) if k not in ("recommencer", "dimensions", "modeles", "croise")}
+    reglages = sorted(sortie.glob(f"hyperparametres_{a.service}_h*.json"))
+    reprise = Reprise(sortie / "reprise" / f"pretraitement_{a.service}",
+                      empreinte(df, options, *reglages, Path(__file__), ici / "svr", ici / "lancer_niveaux.py",
+                                ici / "validation_finale.py", ici / "benchmark_choix.py", Path(traitement.__file__).parent),
+                      a.recommencer)
     debut_val = DATE_VERROU - pd.DateOffset(months=6)
     rapport = [f"# Banc de comparaison du prétraitement — service {a.service}\n",
                "Une décision change à la fois ; « (retenu) » = choix retenu. MAE « propre » : contre la série de la variante ; "
@@ -264,14 +287,27 @@ def main() -> None:
             res = []
             for nom, changement in variantes:
                 cfg = dataclasses.replace(RETENU, **changement)
-                debut = time.perf_counter()
-                occ, sej, info = construire_serie(df, a.service, a.lits, cfg)
-                prev = prevoir(occ, h, hp, debut_val, a.pas, cfg.trous)
+
+                def calcul(cfg=cfg):
+                    debut = time.perf_counter()
+                    occ, sej, info = construire_serie(df, a.service, a.lits, cfg)
+                    prev = prevoir(occ, h, hp, debut_val, a.pas, cfg.trous)
+                    try:
+                        little = verifier_little(occ, sej, scenario=cfg.scenario, comptage=cfg.comptage)["ecart_pourcent"]
+                    except Exception:                               # période trop courte, etc.
+                        little = float("nan")
+                    return occ, prev, info, little, time.perf_counter() - debut
+                cle = ("variante", h, code, repr(cfg))
+                deja = reprise.existe(cle)
                 try:
-                    little = verifier_little(occ, sej, scenario=cfg.scenario, comptage=cfg.comptage)["ecart_pourcent"]
-                except Exception:                                   # période trop courte, etc.
-                    little = float("nan")
-                res.append((nom + (" (retenu)" if cfg == RETENU else ""), cfg == RETENU, occ, prev, info, little, time.perf_counter() - debut))
+                    occ, prev, info, little, secondes = reprise.calculer(cle, calcul)
+                except (ValueError, RuntimeError) as erreur:     # variante impossible : signalée, le banc continue
+                    print(f"   {nom} : impossible ({type(erreur).__name__} : {erreur})", flush=True)
+                    if cfg == RETENU:
+                        raise
+                    continue
+                print(f"   {nom} : {secondes:.0f} s" + (" (repris)" if deja else ""), flush=True)
+                res.append((nom + (" (retenu)" if cfg == RETENU else ""), cfg == RETENU, occ, prev, info, little, secondes))
             communs = sorted(set.intersection(*(set(r[3].index) for r in res)))
             y_ref = torch.tensor(occ_ref["presents"].reindex(communs).to_numpy(), dtype=TYPE)
             lignes, points = [], {}
@@ -310,6 +346,7 @@ def main() -> None:
             rapport += banc_croise(df, a, h, hp, occ_ref, debut_val, sortie)
     (sortie / f"pretraitement_{a.service}.md").write_text("\n".join(rapport), encoding="utf-8")
     print(f"\nRapport : {(sortie / f'pretraitement_{a.service}.md').resolve()}")
+    print(reprise.bilan())
 
 
 if __name__ == "__main__":

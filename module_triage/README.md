@@ -9,11 +9,19 @@ restent à lancer. Les mathématiques complètes et la justification de chaque c
 
 ## 1. La question
 
-À l'arrivée d'un patient aux urgences, est-il **grave** (il faudra l'hospitaliser, le référer, ou il risque de
-mourir) ou **non grave** (il rentrera chez lui) ? C'est un problème de **classification** : l'hyperplan sépare
-deux classes de patients, au lieu de passer au milieu des données comme dans le module lit (régression). La
-réponse prend la forme d'une **probabilité** P(grave), puis d'une **alerte** si cette probabilité dépasse un
-seuil fixé par les coûts.
+À l'arrivée d'un patient aux urgences, quelle **priorité** lui donner ? Trois niveaux, ordonnés :
+
+| Niveau | Décision écrite au registre | Couleur | Priorité |
+|---|---|---|---|
+| grave | hospitalisé, référé, décédé, sortie contre avis médical | rouge | 1 |
+| moyen | mise en observation (MEO) | jaune | 2 |
+| non grave | externe, retour à domicile | vert | 3 |
+
+C'est un problème de **classification ordinale** (`triage/ordinal.py`, Frank et Hall, 2001) : deux SVM binaires
+répondent aux deux questions emboîtées, « grave ? » et « grave ou moyen ? », chacun calibré par Platt ; les trois
+probabilités s'en déduisent (P(moyen) = P(grave ou moyen) − P(grave)). La priorité donnée est celle de **plus
+petit coût attendu**, avec une matrice des coûts qui pénalise le sous-triage r = c₊/c₋ fois plus que le
+sur-triage, par niveau d'écart.
 
 ## 2. Les données
 
@@ -52,18 +60,19 @@ comptée dans le rapport de lecture) :
 | Modèles | règle de seuils, logistique, arbre, forêt, SVM linéaire, SVM RBF, SVM composite, tous à coûts de classe | `triage/modeles.py` |
 | Validation | un découpage par mois ; dans l'entraînement : apprentissage, puis calibration (choix des réglages et Platt) | `triage/validation.py` |
 | Décision | alerte si P(grave) ≥ s* = c₋/(c₊ + c₋) | `triage/mesures.py` |
-| Mesures | sensibilité (prioritaire), sous-triage, sur-triage, spécificité, VPP, taux d'alerte, coût moyen, AUC, spécificité à 90 % et 95 % de sensibilité (lue sur la courbe ROC), Brier, log-loss, McNemar | `triage/mesures.py` |
+| Mesures | trois niveaux : graves en rouge (prioritaire), graves sous-triés, sous-triage, sur-triage, part de rouges / jaunes / verts, exactitude, kappa pondéré quadratique, coût moyen, AUC des deux questions, Brier ; spécificité à 90 % de sensibilité pour les graves ; McNemar sur « priorité juste » | `triage/ordinal.py`, `triage/mesures.py` |
 | Bancs | T1 à T7, chaque variante comparée à la référence par McNemar | `lancer_triage.py` |
 
 Modèle principal : SVM à noyau RBF, constantes en écart à la norme de l'âge, plaintes, contexte et
-indicatrices de valeurs manquantes, MEO comptée grave, coûts de classe équilibrés (C₊/C₋ = n₋/n₊),
-probabilité de Platt, seuil s* = 1/(1 + c₊/c₋) avec c₊/c₋ = 4 par défaut (un grave manqué coûte autant que
-quatre fausses alertes, le même rapport que le quantile τ = 0,8 du module lit). **Les bancs peuvent changer ce
+indicatrices de valeurs manquantes, trois niveaux (MEO = moyen), coûts de classe équilibrés (C₊/C₋ = n₋/n₊),
+probabilités de Platt, priorité de plus petit coût attendu avec r = c₊/c₋ = 4 par défaut (un niveau de
+sous-triage coûte autant que quatre niveaux de sur-triage, le même rapport que le quantile τ = 0,8 du module
+lit). Les rapports de coûts et la matrice sont à valider avec le service. **Les bancs peuvent changer ce
 choix** : c'est leur rôle.
 
 | Banc | Question | Variantes |
 |---|---|---|
-| T1 | place de la mise en observation (analyse de sensibilité) | grave (défaut, choix clinique fixé à l'avance), non grave, exclue ; la cible change d'une variante à l'autre : les variantes ne sont comparées (McNemar) que sur les passages hors MEO communs aux trois, où la cible est la même. La définition de la cible n'est jamais choisie d'après le score |
+| T1 | trois niveaux ou deux | trois niveaux (retenu : MEO = moyen, choix clinique fixé à l'avance) ; l'ancien triage à deux niveaux (rouge ou vert) avec la MEO comptée grave, ou comptée non grave, lu sur les mêmes passages et les mêmes probabilités ; McNemar sur « priorité juste » |
 | T2 | modèle | règle de seuils, logistique, arbre, forêt, SVM linéaire, RBF, composite |
 | T3 | coûts de classe | égaux, équilibrés (n₋/n₊), rapport du service (c₊/c₋) |
 | T4 | variables | constantes seules ; + plaintes ; + contexte ; + indicatrices de valeurs manquantes |

@@ -12,10 +12,15 @@ Chaque passage i reçoit une étiquette y_i ∈ {−1, +1} tirée de la décisio
 
 | Décision | Classe | Raison |
 |---|---|---|
-| Hospitalisé, référé, décédé | +1 (grave) | le patient avait besoin de soins hospitaliers |
-| Sortie contre avis médical (SCAM) | +1 | le médecin voulait le garder : il le jugeait grave |
-| Externe | −1 (non grave) | retour à domicile |
-| Mise en observation (MEO) | selon le banc T1 | cas intermédiaire : grave, non grave ou exclue |
+| Hospitalisé, référé, décédé | niveau 2 (grave, rouge, priorité 1) | le patient avait besoin de soins hospitaliers |
+| Sortie contre avis médical (SCAM) | niveau 2 | le médecin voulait le garder : il le jugeait grave |
+| Mise en observation (MEO) | niveau 1 (moyen, jaune, priorité 2) | inquiétude du médecin, sans hospitalisation |
+| Externe | niveau 0 (non grave, vert, priorité 3) | retour à domicile |
+
+Trois niveaux ordonnés, appris par deux SVM binaires emboîtés (« grave ? », « grave ou moyen ? ») et réunis par
+la classification ordinale de Frank et Hall (2001) : `triage/ordinal.py`. Le protocole (Document 11) prévoyait
+quatre catégories de priorité ; le registre n'en distingue que trois (hospitalisation ou référence, observation,
+retour à domicile), on ne peut pas en inventer une quatrième.
 
 **Limite à écrire dans le mémoire.** La cible est la décision du médecin, pas l'état réel du patient : le
 modèle apprend à reproduire les décisions du service. Un patient renvoyé à tort à domicile compte comme non
@@ -197,7 +202,7 @@ Exemple : b = 20, c = 10 donne χ² = 81/30 = 2,7 et p ≈ 0,10 : pas de différ
 | Unité | le passage | le jour | la décision se prend patient par patient | — |
 | Groupes | enfants et adultes séparés | un modèle commun | physiologie et normes différentes (protocole) | T6 |
 | Représentation | variables d'origine | ACP, AFDM, groupe k-means, origine + groupe | l'ACP garde les directions où les patients varient le plus, pas forcément celles qui séparent graves et non graves ; premier essai sur le registre réel : AUC 0,71 (origine) contre 0,61 (ACP) chez les enfants | T7 |
-| Cible MEO | grave | non grave, exclue | l'observation traduit une inquiétude du médecin | T1 |
+| Cible | trois niveaux (MEO = moyen) | deux niveaux, MEO comptée grave ou non grave | l'observation est une priorité intermédiaire ; garder l'ordre évite de confondre un moyen avec un grave ou un non grave | T1 |
 | Modèle | SVM RBF | règle, logistique, arbre, forêt, SVM linéaire, composite | relations non linéaires, coûts dans la perte | T2 |
 | Coûts de classe | équilibrés | égaux, rapport du service | classes souvent déséquilibrées | T3 |
 | Variables | constantes, plaintes, contexte, manquants | sous-ensembles | ne garder que ce qui aide | T4 |
