@@ -31,7 +31,7 @@ Prérequis : rapport_occupation.py (séries des trois scénarios) ; lancer_nivea
 attendue (hyperparamètres retenus — à défaut, valeurs par défaut, signalé à l'écran).
 
 Exemple :
-    ~/memoire-env/bin/python sensibilite.py --service PED --horizons 1 3 7
+    ~/memoire-env/bin/python sensibilite.py --service PED --horizons 1 7
 
 Sorties dans resultats/ :
     sensibilite_<SERVICE>.csv          une ligne par (horizon, niveau, scénario) : MAE, pinball, gains, métriques
@@ -65,7 +65,7 @@ def pertes(y: torch.Tensor, prevision, tau: float) -> dict[str, float]:
 def main() -> None:
     p = argparse.ArgumentParser(description="Sensibilité des résultats à la convention du nombre de jours.")
     p.add_argument("--service", required=True)
-    p.add_argument("--horizons", type=int, nargs="+", default=[1, 3, 7])
+    p.add_argument("--horizons", type=int, nargs="+", default=[1, 7])
     p.add_argument("--tau", type=float, default=0.8)
     p.add_argument("--debut-validation", help="première origine (défaut : 6 mois avant le verrou)")
     p.add_argument("--pas", type=int, default=14)

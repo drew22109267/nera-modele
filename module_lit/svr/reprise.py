@@ -48,7 +48,15 @@ class Reprise:
         resultat = r.calculer(cle, lambda: calcul_long())     # relu s'il existe, sinon calculé puis enregistré
     """
 
-    def __init__(self, dossier: Path, signature: str, recommencer: bool = False):
+    def __init__(self, dossier: Path, signature: str, recommencer: bool = False,
+                 adopter: bool = False, signature_donnees: str | None = None):
+        """
+        adopter : garder les résultats enregistrés même si le CODE a changé, à condition que les données et les
+        options soient les mêmes (signature_donnees). À n'utiliser que si la modification ne touche pas ce qui
+        est enregistré : par exemple un banc qui enregistre ses PRÉVISIONS et dont seuls les tests statistiques,
+        calculés après lecture, ont changé. Une ancienne marque sans partie « données » est acceptée avec un
+        avertissement (marques écrites avant cette option).
+        """
         self.dossier = Path(dossier)
         if recommencer and self.dossier.exists():
             shutil.rmtree(self.dossier)
@@ -57,10 +65,21 @@ class Reprise:
         self.repris = self.calcules = 0
         # Une autre signature dans le dossier : ancien calcul (données, options ou code différents), on l'efface.
         marque = self.dossier / "signature.txt"
-        if not marque.exists() or marque.read_text(encoding="utf-8").strip() != signature:
-            for f in self.dossier.glob("*.pt"):
-                f.unlink()
-            marque.write_text(signature, encoding="utf-8")
+        nouvelle = f"{signature}\n{signature_donnees or ''}"
+        lignes = marque.read_text(encoding="utf-8").split("\n") if marque.exists() else []
+        if not lignes or lignes[0].strip() != signature:
+            ancienne_donnees = lignes[1].strip() if len(lignes) > 1 else ""
+            garder = adopter and lignes and (not ancienne_donnees or ancienne_donnees == signature_donnees)
+            if garder:
+                print(f"  (reprise : code modifié, {len(list(self.dossier.glob('*.pt')))} résultat(s) gardé(s) "
+                      "sur demande ; données et options " + ("identiques)" if ancienne_donnees else "non vérifiables, ancienne marque)"),
+                      flush=True)
+            else:
+                for f in self.dossier.glob("*.pt"):
+                    f.unlink()
+            marque.write_text(nouvelle, encoding="utf-8")
+        elif len(lignes) < 2 and signature_donnees:
+            marque.write_text(nouvelle, encoding="utf-8")
 
     def _chemin(self, cle) -> Path:
         return self.dossier / f"{hashlib.sha1(repr(cle).encode()).hexdigest()[:20]}.pt"

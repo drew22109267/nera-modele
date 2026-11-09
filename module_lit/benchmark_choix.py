@@ -100,7 +100,7 @@ class Dimension:
 
     def __init__(self, code: str, titre: str, question: str, h: int, tau: float):
         self.code, self.titre, self.question, self.h, self.tau = code, titre, question, h, tau
-        self.lignes, self.points, self.y, self.retenu = [], {}, None, None
+        self.lignes, self.points, self.quantiles, self.y, self.retenu = [], {}, {}, None, None
 
     def ajouter(self, nom: str, y: torch.Tensor, prevision, secondes: float, retenu: bool = False, **extra) -> None:
         """Calcule les métriques d'une variante. Toutes les variantes doivent porter sur les mêmes jours y."""
@@ -119,25 +119,36 @@ class Dimension:
         ligne.update(extra)
         self.lignes.append(ligne)
         self.points[ligne["variante"]] = p
+        self.quantiles[ligne["variante"]] = q
         if retenu:
             self.retenu = ligne["variante"]
 
     def tableau(self) -> pd.DataFrame:
-        """Ajoute le test de Diebold-Mariano de chaque variante contre le choix retenu."""
+        """
+        Test de Diebold-Mariano de chaque variante contre le choix retenu, sur la perte PINBALL au quantile
+        décisionnel τ (la quantité décidée : le nombre de lits à prévoir), avec la correction de Holm sur
+        toutes les variantes de la dimension. La p-valeur sur la perte absolue (médiane) reste affichée.
+        """
         t = pd.DataFrame(self.lignes).set_index("variante")
         if self.retenu is not None and len(self.y) > 10:
-            verdicts, pvals = [], []
-            for nom, p in self.points.items():
+            sens, pvals, pvals_mae = [], [], []
+            for nom in self.points:
                 if nom == self.retenu:
-                    verdicts.append("— choix retenu"); pvals.append(None); continue
-                dm = M.diebold_mariano(self.y, p, self.points[self.retenu], h=self.h)
-                pvals.append(dm["p_valeur"])
-                if dm["plus_precis"] == "indéterminé":
-                    verdicts.append("identique")                  # mêmes prévisions que le choix retenu
+                    sens.append(None); pvals.append(None); pvals_mae.append(None); continue
+                dm = M.diebold_mariano(self.y, self.quantiles[nom], self.quantiles[self.retenu], h=self.h,
+                                       perte="pinball", tau=self.tau)
+                dm_mae = M.diebold_mariano(self.y, self.points[nom], self.points[self.retenu], h=self.h)
+                sens.append(dm["plus_precis"]); pvals.append(dm["p_valeur"]); pvals_mae.append(dm_mae["p_valeur"])
+            p_holm = M.holm(pvals)
+            verdicts = []
+            for s, ph in zip(sens, p_holm):
+                if s is None:
+                    verdicts.append("— choix retenu")
+                elif s == "indéterminé":
+                    verdicts.append("identique")              # mêmes prévisions que le choix retenu
                 else:
-                    verdicts.append(("meilleur" if dm["plus_precis"] == "A" else "moins bon")
-                                    if dm["significatif_5pc"] else "équivalent")
-            t["DM p-valeur"], t["vs choix retenu"] = pvals, verdicts
+                    verdicts.append(("meilleur" if s == "A" else "moins bon") if ph < 0.05 else "équivalent")
+            t[f"DM p (pinball τ={self.tau})"], t["p Holm"], t["DM p (MAE)"], t["vs choix retenu"] = pvals, p_holm, pvals_mae, verdicts
         return t
 
     def conclusion(self, t: pd.DataFrame) -> str:

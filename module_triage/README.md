@@ -61,7 +61,7 @@ comptée dans le rapport de lecture) :
 | Validation | un découpage par mois ; dans l'entraînement : apprentissage, puis calibration (choix des réglages et Platt) | `triage/validation.py` |
 | Décision | alerte si P(grave) ≥ s* = c₋/(c₊ + c₋) | `triage/mesures.py` |
 | Mesures | trois niveaux : graves en rouge (prioritaire), graves sous-triés, sous-triage, sur-triage, part de rouges / jaunes / verts, exactitude, kappa pondéré quadratique, coût moyen, AUC des deux questions, Brier ; spécificité à 90 % de sensibilité pour les graves ; McNemar sur « priorité juste » | `triage/ordinal.py`, `triage/mesures.py` |
-| Bancs | T1 à T7, chaque variante comparée à la référence par McNemar | `lancer_triage.py` |
+| Bancs | T1 à T15, chaque variante comparée à la référence par McNemar (« priorité juste ») et par un bootstrap apparié du coût moyen, rééchantillonné par jours (`bootstrap_cout`) ; réglages (AUC) et calibration de Platt sur deux moitiés distinctes de la calibration | `lancer_triage.py` |
 
 Modèle principal : SVM à noyau RBF, constantes en écart à la norme de l'âge, plaintes, contexte et
 indicatrices de valeurs manquantes, trois niveaux (MEO = moyen), coûts de classe équilibrés (C₊/C₋ = n₋/n₊),
@@ -80,7 +80,7 @@ choix** : c'est leur rôle.
 | T6 | enfants et adultes séparés ou ensemble | modèle du groupe, modèle commun jugé sur le groupe |
 | T7 | résumer les variables avant de classer | originales, ACP (80 % de variance), AFDM (indicatrices recodées (x − p)/√p), k-means (4 groupes), originales + k-means ; tout appris sur l'apprentissage seulement (`triage/representations.py`) |
 | T8 | valeurs manquantes | cas complets (passages incomplets retirés, référence comparée sur les mêmes passages), variables à plus de 50 % de manquants retirées, médiane, moyenne, médiane par tranche d'âge, k plus proches voisins, régressions enchaînées (ridge), loi normale par EM, ACP itérative ; tout appris sur l'apprentissage seulement (`triage/imputation.py`) |
-| T9 | transfert d'un SVM pré-entraîné | source : NHAMCS-ED (urgences des États-Unis, CDC, 2015-2022, environ 150 000 passages, même groupe d'âge) ; SVM sur caractéristiques de Fourier aléatoires (approximation du noyau RBF) ; variantes : Cameroun seul, source seule, source recalibrée, données réunies, augmentation (Daumé), régularisation biaisée, A-SVM, score de la source ; référence : le modèle principal (`triage/transfert.py`, `triage/nhamcs.py`) |
+| T9 | transfert d'un SVM pré-entraîné | source : NHAMCS-ED (urgences des États-Unis, CDC, 2015-2022, environ 144 000 passages aux constantes notées à plus de 90 %, même groupe d'âge) ; SVM sur caractéristiques de Fourier aléatoires (approximation du noyau RBF) ; variantes : Cameroun seul, source seule, source recalibrée, données réunies, augmentation (Daumé), régularisation biaisée, A-SVM, score de la source ; référence : le modèle principal (`triage/transfert.py`, `triage/nhamcs.py`) |
 | T10 | valeurs manquantes × modèles | chaque traitement de T8 avec chaque modèle de T2 |
 | T11 | plaintes × modèles | familles fixées à l'avance, sac de mots (mots écrits dans au moins 5 passages avant le verrou, tirés du texte seul), familles + mots, sans plaintes ; chacune avec chaque modèle de T2 |
 | T12 | passages d'âge illisible | avec ou sans les passages dont le groupe est déduit de la profession, comparés sur les passages d'âge écrit (McNemar) |

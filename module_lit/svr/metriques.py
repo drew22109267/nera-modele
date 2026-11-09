@@ -82,11 +82,22 @@ def phi(z: float) -> float:
     return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
 
 
-def diebold_mariano(y, prev_a, prev_b, h: int = 1, perte: str = "absolue") -> dict:
-    """Compare A et B. Renvoie DM* (corrigé HLN), la p-valeur et le modèle le plus précis."""
+def diebold_mariano(y, prev_a, prev_b, h: int = 1, perte: str = "absolue", tau: float | None = None) -> dict:
+    """
+    Compare A et B. Renvoie DM* (corrigé HLN), la p-valeur et le modèle le plus précis.
+    perte = "absolue", "carree" ou "pinball" (avec tau) : pour comparer des prévisions du quantile
+    décisionnel τ, la perte doit être la pinball à ce τ, celle que le modèle minimise et que la
+    sélection juge ; la perte absolue ne juge que la médiane.
+    """
     y = _t(y)
     ea, eb = y - _t(prev_a), y - _t(prev_b)
-    d = (ea.abs() - eb.abs()) if perte == "absolue" else (ea ** 2 - eb ** 2)
+    if perte == "pinball":
+        if tau is None:
+            raise ValueError("La perte pinball demande tau.")
+        rho = lambda r: torch.maximum(tau * r, (tau - 1.0) * r)
+        d = rho(ea) - rho(eb)
+    else:
+        d = (ea.abs() - eb.abs()) if perte == "absolue" else (ea ** 2 - eb ** 2)
     n = len(d)
     if n < 2 * h + 2:
         raise ValueError("Trop peu de jours pour le test de Diebold-Mariano.")
@@ -102,6 +113,24 @@ def diebold_mariano(y, prev_a, prev_b, h: int = 1, perte: str = "absolue") -> di
     p = 2.0 * (1.0 - phi(abs(dm_hln)))
     return {"dm": round(dm_hln, 3), "p_valeur": round(p, 4),
             "plus_precis": "A" if dm_hln < 0 else "B", "significatif_5pc": p < 0.05}
+
+
+def holm(pvaleurs: list) -> list:
+    """
+    Correction de Holm (1979) pour m tests faits ensemble (toutes les variantes d'un banc contre le
+    choix retenu). On range les p croissantes p_(1) ≤ … ≤ p_(m) ; p ajustée de rang j :
+        p̃_(j) = max_{i ≤ j} min(1, (m − i + 1) · p_(i)).
+    Une variante n'est « meilleure » ou « moins bonne » que si p̃ < 0,05 : avec 20 variantes à 5 %, on
+    n'attend plus un faux « meilleur » par hasard. Les valeurs absentes (None, NaN) restent absentes.
+    """
+    idx = [i for i, p in enumerate(pvaleurs) if p is not None and p == p]
+    m = len(idx)
+    ajust = list(pvaleurs)
+    courant = 0.0
+    for rang, i in enumerate(sorted(idx, key=lambda k: pvaleurs[k])):
+        courant = max(courant, min(1.0, (m - rang) * pvaleurs[i]))
+        ajust[i] = round(courant, 4)
+    return ajust
 
 
 def resume_ponctuel(y, yp) -> dict:

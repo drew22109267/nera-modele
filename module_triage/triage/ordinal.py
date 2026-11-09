@@ -42,9 +42,11 @@ Mesures (écrites à la main)
     AUC haut, AUC bas      les AUC des deux questions (grave contre le reste ; grave ou moyen contre non grave)
     Brier multiclasse      (1/n) Σ_passages Σ_niveaux (P_i − 1[vrai = i])²
 McNemar (deux modèles, mêmes passages) : un passage est « juste » si la priorité donnée est son niveau vrai.
+Bootstrap apparié du coût moyen, par jours (bootstrap_cout) : le test qui tient compte des coûts.
 """
 from __future__ import annotations
 
+import pandas as pd
 import torch
 
 from svr.classification import auc
@@ -169,3 +171,32 @@ def justes(y, pred_a, pred_b):
     """Juste = priorité donnée égale au niveau vrai ; renvoie (juste_a, juste_b) pour triage.mesures.mcnemar."""
     y = torch.as_tensor(y).long()
     return torch.as_tensor(pred_a).long() == y, torch.as_tensor(pred_b).long() == y
+
+
+def bootstrap_cout(y, pred_a, pred_b, r: float, jours, tirages: int = 2000, graine: int = 0) -> dict:
+    """
+    Test apparié sur le COÛT MOYEN (ce que le triage minimise), en complément de McNemar qui ne compte que
+    « juste / faux » et ignore qu'un grave mis en vert coûte plus qu'un non grave mis en jaune.
+    Pour chaque passage : d_k = c(y_k, a_k) − c(y_k, b_k) ; d̄ < 0 : A coûte moins que B.
+    Bootstrap PAR JOURS (les passages d'un même jour ne sont pas indépendants : même équipe, même affluence) :
+    on tire avec remise autant de jours qu'il y en a, on recalcule d̄* ; intervalle à 95 % = percentiles 2,5 et
+    97,5 ; p bilatérale = 2 · min(P(d̄* ≤ 0), P(d̄* ≥ 0)) (bornée à 1).
+    """
+    c = matrice_couts(r)
+    y = torch.as_tensor(y).long()
+    d = c[y, torch.as_tensor(pred_a).long()] - c[y, torch.as_tensor(pred_b).long()]
+    codes = torch.as_tensor(pd.Series(pd.DatetimeIndex(jours).normalize()).factorize()[0])
+    m = int(codes.max()) + 1 if len(codes) else 0
+    if m < 2:
+        return {"diff_cout": float(d.mean()) if len(d) else float("nan"), "ic_bas": float("nan"),
+                "ic_haut": float("nan"), "p_valeur": float("nan")}
+    somme = torch.zeros(m, dtype=TYPE).index_add_(0, codes, d.to(TYPE))
+    nombre = torch.zeros(m, dtype=TYPE).index_add_(0, codes, torch.ones_like(d, dtype=TYPE))
+    g = torch.Generator().manual_seed(graine)
+    tirage = torch.randint(0, m, (tirages, m), generator=g)
+    moyennes = somme[tirage].sum(1) / nombre[tirage].sum(1)
+    p = min(1.0, 2.0 * min(float((moyennes <= 0).to(TYPE).mean()), float((moyennes >= 0).to(TYPE).mean())))
+    if float(d.abs().sum()) == 0.0:
+        p = 1.0
+    return {"diff_cout": round(float(d.mean()), 4), "ic_bas": round(float(torch.quantile(moyennes, 0.025)), 4),
+            "ic_haut": round(float(torch.quantile(moyennes, 0.975)), 4), "p_valeur": round(p, 4)}

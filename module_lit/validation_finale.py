@@ -35,7 +35,7 @@ from pathlib import Path
 import pandas as pd
 import torch
 
-from lancer_niveaux import empiler_sequentiel, etiquette, mesures, option_comptage, point
+from lancer_niveaux import comparer, empiler_sequentiel, etiquette, mesures, option_comptage, point
 from traitement.chargement import lire_export, periode_exploitable, preparer_sejours
 from traitement.occupation import reconstituer_occupation
 from traitement.verrou import DATE_VERROU
@@ -68,7 +68,7 @@ def main() -> None:
     p.add_argument("--service", required=True)
     p.add_argument("--lits", type=int)
     p.add_argument("--extraction", required=True, help="date du relevé du registre (aaaa-mm-jj)")
-    p.add_argument("--horizons", type=int, nargs="+", default=[1, 3, 7])
+    p.add_argument("--horizons", type=int, nargs="+", default=[1, 7])
     p.add_argument("--confirmation", required=True)
     p.add_argument("--reentrainement", choices=["mensuel", "aucun"], default="mensuel",
                    help="mensuel : réentraîner au début de chaque mois du coffre ; aucun : un seul entraînement")
@@ -146,7 +146,7 @@ def main() -> None:
         for i, nom_a in enumerate(ordre[1:], start=1):
             for contre in {"0 · persistance", ordre[i - 1]} - {nom_a}:
                 tests.append({"horizon": h, "reentrainement": a.reentrainement, "modele_A": nom_a, "modele_B": contre,
-                              **M.diebold_mariano(y, point(previsions[nom_a]), point(previsions[contre]), h=h)})
+                              **comparer(y, previsions[nom_a], previsions[contre], h, hp[3].tau)})
 
     pd.DataFrame(tests).to_csv(sortie / f"validation_finale_{nom}_tests{suffixe}.csv", sep=";", encoding="utf-8-sig", index=False)
     print(f"Résultats écrits dans {sortie.resolve()}")

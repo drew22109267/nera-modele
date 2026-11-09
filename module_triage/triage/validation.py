@@ -12,9 +12,11 @@ Pendant le développement, rien n'est lu à partir de la date du verrou (traitem
 Dans chaque entraînement, trois rôles, dans l'ordre du temps
 ------------------------------------------------------------
     1. apprentissage  les premiers (1 − part_calibration) passages : le modèle y apprend ses paramètres ;
-    2. calibration    les derniers passages de l'entraînement (part_calibration, 25 % par défaut) :
-                        a. choix des réglages (C, portée du noyau) : celui de meilleure AUC ;
-                        b. calibration de Platt du score du modèle choisi : P(grave | f) = 1/(1 + e^{A f + B}) ;
+    2. calibration    les derniers passages de l'entraînement (part_calibration, 25 % par défaut), coupés en
+                      deux moitiés dans l'ordre du temps :
+                        a. 1re moitié : choix des réglages (C, portée du noyau) : celui de meilleure AUC ;
+                        b. 2e moitié : calibration de Platt du score du modèle choisi : P(grave | f) = 1/(1 + e^{A f + B}),
+                           et seuil s₉₀. Platt n'est donc pas appris sur les passages qui ont désigné le gagnant ;
     3. évaluation     le mois M, jamais vu : probabilité calibrée, alerte si P ≥ s*.
 Seuil à sensibilité fixée (lecture complémentaire) : sur la calibration, s₉₀ = le plus grand seuil qui alerte
 au moins 90 % des graves de la calibration ; il est appliqué tel quel au mois M (rien du mois M n'est vu). On lit
@@ -83,6 +85,7 @@ class ConfigTriage:
     grille_C: tuple = (0.1, 1.0, 10.0)
     grille_portee: tuple = (0.25, 0.5, 1.0, 2.0)
     part_calibration: float = 0.25
+    separer_platt: bool = True                       # réglages et Platt sur deux moitiés de la calibration
     representation: str = "originales"              # banc T7 (triage/representations.py)
     imputation: str = "mediane"                     # banc T8 (triage/imputation.py)
     echelle: str = "zscore"                         # banc T14 (triage/variables.py, ECHELLES)
@@ -177,6 +180,16 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
         if len(torch.unique(y_app)) < 2 or len(torch.unique(y_cal)) < 2:
             choix.append({"mois": f"{dec.mois:%Y-%m}", "ignore": "une seule classe à l'apprentissage ou à la calibration"})
             continue
+        # Calibration coupée en deux, dans l'ordre du temps : la première moitié choisit les réglages (AUC), la
+        # seconde apprend Platt et s₉₀. Sinon Platt serait appris sur les passages qui ont servi à choisir le
+        # réglage gagnant, dont l'AUC est optimiste (biais du gagnant). Une moitié sans les deux classes :
+        # repli sur toute la calibration pour les deux rôles (noté « calibration_partagee »).
+        moitie = len(cal) // 2
+        reg, pla = torch.arange(moitie), torch.arange(moitie, len(cal))
+        partagee = not config.separer_platt or moitie < 2 or \
+            len(torch.unique(y_cal[reg])) < 2 or len(torch.unique(y_cal[pla])) < 2
+        if partagee:
+            reg = pla = torch.arange(len(cal))
         prep = Preparateur(tab.continues, config.imputation, config.echelle).ajuster(tab.X[app])
         Xa0, Xc0, Xe0 = (prep.transformer(tab.X[i]) for i in (app, cal, dec.evaluation))
         cp, cn = rapport_classes(y_app, config.couts, config.rapport_couts)
@@ -205,12 +218,12 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
             for C, g in grille:
                 fab = fabrique(config.modele, C or 1.0, g or 1.0, cp, cn, blocs, config.entrainement)
                 s_cal, s_ev = _scores(config.modele, fab, Xa, y_app, [Xc, Xe], [tab.alertes[cal], tab.alertes[dec.evaluation]])
-                a = auc(s_cal, y_cal)
+                a = auc(s_cal[reg], y_cal[reg])
                 if meilleur is None or a > meilleur[0] + 1e-12:
                     meilleur = (a, C, g, s_cal, s_ev, rep_r, lasso)
         a, C, g, s_cal, s_ev, rep, lasso = meilleur
-        platt = CalibrationPlatt().ajuster(s_cal, y_cal)
-        p_graves = torch.sort(platt.probabilite(s_cal)[y_cal > 0]).values
+        platt = CalibrationPlatt().ajuster(s_cal[pla], y_cal[pla])
+        p_graves = torch.sort(platt.probabilite(s_cal[pla])[y_cal[pla] > 0]).values
         s90 = float(p_graves[int(math.floor(0.10 * len(p_graves)))])      # ≥ 90 % des graves de la calibration au-dessus
         seuils90.append(torch.full((len(dec.evaluation),), s90, dtype=TYPE))
         ps.append(platt.probabilite(s_ev))
@@ -219,6 +232,7 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
         idx_eval.append(dec.evaluation)
         choix.append({"mois": f"{dec.mois:%Y-%m}", "apprentissage": len(app), "calibration": len(cal),
                       "evaluation": len(dec.evaluation), "C": C, "portee": g, "C_plus_sur_C_moins": round(cp / cn, 3),
+                      "reglage": len(reg), "platt": len(pla), "calibration_partagee": partagee,
                       "auc_calibration": round(a, 4), "seuil_s90": round(s90, 4), "platt_A": round(platt.A, 4), "platt_B": round(platt.B, 4),
                       "representation": config.representation, "imputation": config.imputation, **rep.description(),
                       **({"lasso": lasso} if lasso else {})})

@@ -5,7 +5,7 @@ sur les données VERROUILLÉES (la période de test final n'est jamais lue ici).
 Entrée : resultats/occupation_<SERVICE>.csv, produit par rapport_occupation.py.
 
 Exemple :
-    ~/memoire-env/bin/python lancer_niveaux.py --service PED --horizons 1 3 7 --tau 0.8
+    ~/memoire-env/bin/python lancer_niveaux.py --service PED --horizons 1 7 --tau 0.8
     ~/memoire-env/bin/python lancer_niveaux.py --service PED --recherche pso      (plus long)
 
 Sorties dans resultats/ :
@@ -57,6 +57,21 @@ def mesures(y, prevision, tau: float) -> dict:
 
 def point(prevision):
     return prevision[0.5] if isinstance(prevision, dict) else prevision
+
+
+def quantile(prevision, tau: float):
+    """Prévision du quantile décisionnel τ ; un modèle ponctuel (persistance) n'a que sa valeur."""
+    return prevision.get(tau, prevision[0.5]) if isinstance(prevision, dict) else prevision
+
+
+def comparer(y, prev_a, prev_b, h: int, tau: float) -> dict:
+    """
+    Diebold-Mariano sur la perte pinball au quantile τ (la quantité décidée), plus la p-valeur sur la perte
+    absolue de la médiane, à titre descriptif.
+    """
+    t = M.diebold_mariano(y, quantile(prev_a, tau), quantile(prev_b, tau), h=h, perte="pinball", tau=tau)
+    t_mae = M.diebold_mariano(y, point(prev_a), point(prev_b), h=h)
+    return {**t, "perte": f"pinball τ={tau}", "p_valeur_mae": t_mae["p_valeur"]}
 
 
 def empiler_sequentiel(previsions: dict[str, dict], y: torch.Tensor, plis: torch.Tensor, taus) -> tuple[dict, torch.Tensor]:
@@ -118,7 +133,7 @@ def chercher(niveau: int, tab, decoupages, hp: Hyperparametres, methode: str) ->
 def main() -> None:
     p = argparse.ArgumentParser(description="Ablation du module lits (niveaux 0 à 5).")
     p.add_argument("--service", required=True)
-    p.add_argument("--horizons", type=int, nargs="+", default=[1, 3, 7])
+    p.add_argument("--horizons", type=int, nargs="+", default=[1, 7])
     p.add_argument("--tau", type=float, default=0.8, help="quantile décisionnel τ = c(pénurie)/(c(pénurie)+c(surcapacité))")
     p.add_argument("--debut-validation", help="première origine de la validation glissante (défaut : 6 mois avant le verrou)")
     p.add_argument("--pas", type=int, default=14, help="jours entre deux origines (14)")
@@ -187,7 +202,7 @@ def main() -> None:
             for contre in {"0 · persistance", ordre[i - 1]}:
                 if contre == nom:
                     continue
-                t = M.diebold_mariano(y, point(previsions[nom]), point(previsions[contre]), h=h)
+                t = comparer(y, previsions[nom], previsions[contre], h, a.tau)
                 tests.append({"horizon": h, "modele_A": nom, "modele_B": contre, **t})
 
         with open(sortie / f"hyperparametres_{a.service}{suffixe}_h{h}.json", "w", encoding="utf-8") as f:

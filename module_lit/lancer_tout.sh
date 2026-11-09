@@ -63,6 +63,7 @@ HORIZONS="${HORIZONS:-1 7}"
 ETAPES="${ETAPES:-0 1 2 3 4 5 6 7 8 9 10 11 12}"
 export PYTHONUNBUFFERED=1          # les journaux se remplissent au fur et à mesure (avancement visible)
 RAPIDE_OPT=""; [ "${RAPIDE:-0}" = "1" ] && RAPIDE_OPT="--rapide"
+GARDER_OPT=""; [ "${GARDER_REPRISE:-0}" = "1" ] && GARDER_OPT="--garder-reprise"   # étape 4 : garde les prévisions déjà calculées
 JOURNAL=resultats/journaux; mkdir -p "$JOURNAL" donnees
 EXPORT_TOUS=donnees/export_outil_PED_MEDF.csv   # séjours de tous les services réunis (transfert, modèle unique)
 
@@ -93,7 +94,7 @@ for S in $SERVICES; do
     etape 6 && lancer "sensibilite_${S}_$c" "$PY" sensibilite.py --service "$S" --horizons $HORIZONS --comptage "$c"
     etape 7 && lancer "figures_${S}_$c" "$PY" visualisations.py --service "$S" --comptage "$c" $RAPIDE_OPT
   done
-  etape 4 && lancer "banc_pretraitement_$S" "$PY" benchmark_pretraitement.py "$EXPORT" --service "$S" --lits "$L" --horizons $HORIZONS --croise $RAPIDE_OPT
+  etape 4 && lancer "banc_pretraitement_$S" "$PY" benchmark_pretraitement.py "$EXPORT" --service "$S" --lits "$L" --horizons $HORIZONS --croise $RAPIDE_OPT $GARDER_OPT
   etape 8 && lancer "survie_$S" "$PY" modele_survie.py "$EXPORT" --service "$S" --lits "$L" --causes
   etape 9 && lancer "export_resultats_$S" "$PY" exporter_resultats.py --service "$S"
 done

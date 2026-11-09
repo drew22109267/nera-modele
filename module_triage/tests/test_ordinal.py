@@ -61,3 +61,16 @@ def test_resume3_sous_et_sur_triage():
     assert math.isclose(m["sous_triage"], 0.25) and math.isclose(m["sur_triage"], 0.25)
     assert math.isclose(m["graves_en_rouge"], 0.5) and math.isclose(m["graves_sous_tries"], 0.5)
     assert math.isclose(m["cout_moyen"], (8 + 1) / 4)
+
+
+def test_bootstrap_cout_par_jours():
+    import pandas as pd
+    from triage.ordinal import bootstrap_cout
+    # 40 jours, 5 passages par jour, tous graves (niveau 2). A les met en rouge (coût 0), B en jaune (coût r = 4).
+    jours = pd.date_range("2025-01-01", periods=40).repeat(5)
+    y = torch.full((200,), 2)
+    r = bootstrap_cout(y, torch.full((200,), 2), torch.full((200,), 1), 4.0, jours, tirages=500)
+    assert r["diff_cout"] == -4.0 and r["ic_haut"] == -4.0 and r["p_valeur"] == 0.0
+    # mêmes décisions : aucune différence, p = 1
+    r = bootstrap_cout(y, torch.full((200,), 1), torch.full((200,), 1), 4.0, jours, tirages=200)
+    assert r["diff_cout"] == 0.0 and r["p_valeur"] == 1.0

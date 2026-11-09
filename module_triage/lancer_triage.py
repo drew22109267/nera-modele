@@ -76,7 +76,7 @@ from svr.reprise import Reprise, empreinte
 from traitement import verrou
 from traitement.urgences import decrire, lire_passages
 from triage.mesures import mcnemar_justes, resume, seuil_optimal, specificite_a_sensibilite
-from triage.ordinal import combiner, decider, decision_binaire, justes, resume3
+from triage.ordinal import bootstrap_cout, combiner, decider, decision_binaire, justes, resume3
 from triage.modeles import FAMILLE_SVM, MODELES
 from triage.validation import COUTS, SELECTIONS, ConfigTriage, decoupage_final, decoupages_croises, decoupages_mensuels, evaluer
 from triage.imputation import IMPUTATIONS
@@ -163,8 +163,12 @@ class Banc:
             m = resume(grave, (P[:, 2] >= t).to(P.dtype), 0.5, self.rapport)
             ligne.update({"sens_s90": m["sensibilite"], "spec_s90": m["specificite"], "alertes_s90": m["taux_alerte"]})
         if reference is not None and reference is not res and torch.equal(reference["indices"], res["indices"]):
-            t = mcnemar_justes(*justes(res["y"], decider(res["p"], self.rapport), decider(reference["p"], self.rapport)))
+            pa, pb = decider(res["p"], self.rapport), decider(reference["p"], self.rapport)
+            t = mcnemar_justes(*justes(res["y"], pa, pb))
             ligne.update({"mcnemar_b": t["b"], "mcnemar_c": t["c"], "mcnemar_p": t["p_valeur"]})
+            bc = bootstrap_cout(res["y"], pa, pb, self.rapport, res["dates"])    # coût moyen, par jours
+            ligne.update({"diff_cout": bc["diff_cout"], "diff_cout_ic95": f"[{bc['ic_bas']} ; {bc['ic_haut']}]",
+                          "bootstrap_cout_p": bc["p_valeur"]})
         self.choix[f"{banc} {variante}"] = res["choix"]
         return ligne
 
@@ -501,13 +505,13 @@ def main() -> None:
     p.add_argument("--extraction", help="test final : date du relevé du registre (aaaa-mm-jj)")
     p.add_argument("--confirmation", help="test final : phrase d'ouverture du coffre")
     p.add_argument("--recommencer", action="store_true", help="ignore les résultats déjà enregistrés (svr/reprise.py)")
-    p.add_argument("--fin-developpement", help="fin de la période de développement du triage (aaaa-mm-jj) : les bancs ne "
-                   "voient rien à partir de cette date, qui devient le coffre du triage (par défaut : le verrou commun). "
-                   "Le registre des urgences s'arrêtant le 25/01/2026, le mémoire utilise 2026-01-01 : janvier 2026 "
-                   "est mis de côté pour le test final.")
+    p.add_argument("--fin-developpement", default="2026-01-01",
+                   help="fin de la période de développement du triage (aaaa-mm-jj) : les bancs ne voient rien à partir "
+                   "de cette date, qui devient le coffre du triage. Par défaut 2026-01-01 : le registre des urgences "
+                   "s'arrêtant le 25/01/2026, janvier 2026 est mis de côté pour le test final.")
     a = p.parse_args()
 
-    fin_dev = pd.Timestamp(a.fin_developpement) if a.fin_developpement else verrou.DATE_VERROU
+    fin_dev = pd.Timestamp(a.fin_developpement)
     if fin_dev > verrou.DATE_VERROU:
         raise SystemExit("La fin du développement ne peut pas dépasser le verrou commun.")
     final = a.confirmation is not None

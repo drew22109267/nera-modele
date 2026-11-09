@@ -343,7 +343,10 @@ validation selon la taille de l'historique.
 
 ### 4.2 Test de Diebold-Mariano
 
-Deux modèles A et B sur les mêmes jours, d_t = L(e_t^A) − L(e_t^B) (valeur absolue ou carré).
+Deux modèles A et B sur les mêmes jours, d_t = L(e_t^A) − L(e_t^B). Dans les bancs, L est la perte
+pinball au quantile décisionnel τ = 0,8, ρ_τ(e) = max(τ e, (τ − 1) e) : c'est la quantité décidée (le
+nombre de lits à prévoir) et celle que le modèle minimise. La p-valeur sur la perte absolue (médiane)
+reste affichée à titre descriptif.
 Hypothèse nulle : E[d_t] = 0.
 
 ```
@@ -357,6 +360,12 @@ faites des jours voisins partagent des jours futurs. DM* < 0 et p < 0,05 : A est
 significativement plus précis que B. Sans p < 0,05, on écrit « meilleur en moyenne, mais pas
 significativement ».
 
+Une dimension compare souvent une dizaine de variantes au choix retenu : à 5 % chacune, on attendrait
+un faux « meilleur » par hasard. Les p-valeurs d'une même dimension sont donc corrigées par la méthode
+de Holm (1979) : rangées p_(1) ≤ … ≤ p_(m), p̃_(j) = max_{i ≤ j} min(1, (m − i + 1) p_(i)). Le verdict
+« meilleur » ou « moins bon » demande p̃ < 0,05. La sélection (`selection.py`, règle « significatif »
+par défaut) ne remplace le choix retenu que sur ce verdict.
+
 ### 4.3 Analyse de sensibilité à la convention des jours
 
 Mêmes origines et mêmes hyperparamètres sur les trois séries (basse, attendue, haute). Chaque
@@ -367,7 +376,7 @@ de signe en dépassant 3 points en valeur absolue.
 ### 4.4 Banc de comparaison des choix (D1 à D10)
 
 Chaque dimension change une seule chose ; chaque variante est comparée au choix retenu par
-Diebold-Mariano (meilleure, équivalente ou moins bonne).
+Diebold-Mariano sur la perte pinball τ avec correction de Holm (meilleure, équivalente ou moins bonne).
 
 | Dimension | Question | Variantes |
 |---|---|---|
@@ -557,7 +566,7 @@ Options : `--lits-fichier donnees/lits_PED.csv` (capacité variable, fichier `da
 ### Étape 2 : `lancer_niveaux.py`, ablation des niveaux 0 à 5
 
 ```bash
-~/memoire-env/bin/python lancer_niveaux.py --service PED --horizons 1 3 7 --tau 0.8 --recherche grille
+~/memoire-env/bin/python lancer_niveaux.py --service PED --horizons 1 7 --tau 0.8 --recherche grille
 ```
 
 Validation glissante sur les 6 mois avant le verrou, une origine tous les 14 jours. Options :
@@ -568,7 +577,7 @@ Validation glissante sur les 6 mois avant le verrou, une origine tous les 14 jou
 ### Étape 3 : `sensibilite.py`, robustesse à la convention des jours
 
 ```bash
-~/memoire-env/bin/python sensibilite.py --service PED --horizons 1 3 7
+~/memoire-env/bin/python sensibilite.py --service PED --horizons 1 7
 ```
 
 Écrit `sensibilite_PED.csv` et `sensibilite_PED_synthese.csv` (verdict robuste ou sensible).

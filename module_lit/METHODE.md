@@ -328,7 +328,7 @@ chaque paramètre** (`benchmark_parametres.py`).
 
 | Banc | Script | Ce qu'il compare |
 |---|---|---|
-| Prétraitement | `benchmark_pretraitement.py` | P1 à P7 : comment on passe des registres à la série |
+| Prétraitement | `benchmark_pretraitement.py` | P1 à P8 : comment on passe des registres à la série |
 | Choix de conception | `benchmark_choix.py` | D1 à D11 : modèles, noyau, perte, τ, variables, standardisation, fenêtre, optimisation, combinaison, recherche, chaque variable |
 | Paramètres | `benchmark_parametres.py` | chaque paramètre, un à la fois, autour de sa valeur retenue |
 | Convention des jours | `sensibilite.py` | les trois séries (basse, attendue, haute) : les conclusions changent-elles ? |

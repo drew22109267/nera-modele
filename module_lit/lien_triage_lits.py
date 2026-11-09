@@ -341,11 +341,15 @@ def main() -> None:
             for nom in t.index:
                 if not nom.startswith("D12-T"):
                     pv.append(None); verdict.append(""); continue
-                dm = M.diebold_mariano(dim.y, dim.points[nom], dim.points[locale], h=h)
+                dm = M.diebold_mariano(dim.y, dim.quantiles[nom], dim.quantiles[locale], h=h, perte="pinball", tau=dim.tau)
                 pv.append(dm["p_valeur"])
-                verdict.append("identique" if dm["plus_precis"] == "indéterminé" else
-                               (("meilleur" if dm["plus_precis"] == "A" else "moins bon") if dm["significatif_5pc"] else "équivalent"))
-            t["DM p-valeur vs charge locale"], t["vs charge locale (D12-3)"] = pv, verdict
+                verdict.append(dm["plus_precis"])
+            p_holm = M.holm(pv)
+            verdict = ["" if s == "" else "identique" if s == "indéterminé" else
+                       (("meilleur" if s == "A" else "moins bon") if ph < 0.05 else "équivalent")
+                       for s, ph in zip(verdict, p_holm)]
+            t[f"DM p (pinball τ={dim.tau}) vs charge locale"], t["p Holm vs charge locale"] = pv, p_holm
+            t["vs charge locale (D12-3)"] = verdict
         print(t.to_string())
         t.to_csv(resultats / f"benchmark_{lab}_D12_h{h}.csv", sep=";", encoding="utf-8-sig")
         rapport += [f"\n### Horizon J+{h} ({jours} jours évalués, {nb} origines)\n", en_markdown(t.reset_index()), "\n",

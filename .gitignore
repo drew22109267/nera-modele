@@ -19,3 +19,7 @@ __pycache__/
 .vscode/
 .idea/
 .claude/
+
+# Suivi de la suite des calculs (lancer_suite.sh)
+.suite/
+journal_suite.log
