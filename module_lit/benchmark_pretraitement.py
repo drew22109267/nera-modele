@@ -165,6 +165,21 @@ def exclure_trous(tab, decs: list[Decoupage], trous: set, retards: int = 7) -> l
     return [Decoupage(dc.entrainement[~touche[dc.entrainement]], dc.evaluation, dc.origine) for dc in decs]
 
 
+NON_TESTE = "non testé (trop peu de jours)"
+
+
+def _diebold_mariano(y, a, b, h: int, tau: float):
+    """Diebold-Mariano (pinball à τ), ou NON_TESTE s'il y a moins de 2h + 2 jours communs (le test refuse)."""
+    try:
+        return M.diebold_mariano(y, a, b, h=h, perte="pinball", tau=tau)
+    except ValueError:
+        return NON_TESTE
+
+
+def _verdict(dm, p_ajustee) -> str:
+    return NON_TESTE if dm == NON_TESTE else M.verdict(dm, p_ajustee)
+
+
 def prevoir(occ: pd.DataFrame, h: int, hp: Hyperparametres, debut_val, pas: int, trous: str,
             modele: str | None = None, hp_niveaux: dict | None = None, hpc: HyperConcurrents | None = None) -> pd.DataFrame:
     """Prévisions (niveau 4, ou un modèle du catalogue) et de la persistance, indexées par la date cible."""
@@ -200,8 +215,12 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
         occ, _, _ = construire_serie(df, a.service, a.lits, cfg)
         for cle in a.modeles:
             debut = time.perf_counter()
-            previsions[(changement["inconnues"], cle)] = (nom_imp, prevoir(occ, h, hp, debut_val, a.pas, cfg.trous, cle, hpn, hpc),
-                                                          time.perf_counter() - debut)
+            try:
+                t = prevoir(occ, h, hp, debut_val, a.pas, cfg.trous, cle, hpn, hpc)
+            except ValueError as e:                                     # série trop courte : écartée, signalée
+                print(f"   {nom_imp} × {CATALOGUE[cle][0]} : impossible à évaluer ({e})")
+                continue
+            previsions[(changement["inconnues"], cle)] = (nom_imp, t, time.perf_counter() - debut)
             print(f"   {nom_imp} × {CATALOGUE[cle][0]}")
     communs = sorted(set.intersection(*(set(v[1].index) for v in previsions.values())))
     y_ref = torch.tensor(occ_ref["presents"].reindex(communs).to_numpy(), dtype=TYPE)
@@ -223,8 +242,8 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
             if (imp, cle) == contre or contre not in quant:
                 l[f"DM p {nom_test}"], l["_dm " + nom_test] = None, None
                 continue
-            dm = M.diebold_mariano(y_ref, quant[(imp, cle)], quant[contre], h=h, perte="pinball", tau=a.tau)
-            l[f"DM p {nom_test}"], l["_dm " + nom_test] = dm["p_valeur"], dm
+            dm = _diebold_mariano(y_ref, quant[(imp, cle)], quant[contre], h, a.tau)
+            l[f"DM p {nom_test}"], l["_dm " + nom_test] = (None if dm == NON_TESTE else dm["p_valeur"]), dm
         lignes.append(l)
     # Holm : une famille de tests par comparaison (contre la paire retenue ; contre l'imputation retenue, même modèle).
     for nom_test in ("vs paire retenue", "vs imputation retenue, même modèle"):
@@ -232,7 +251,7 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
         for l, pa in zip(lignes, ajustees):
             dm = l.pop("_dm " + nom_test)
             l[f"p Holm {nom_test}"] = pa
-            l[nom_test] = "— référence" if dm is None else M.verdict(dm, pa)
+            l[nom_test] = "— référence" if dm is None else _verdict(dm, pa)
     tab = pd.DataFrame(lignes).sort_values(f"pinball τ={a.tau} retenue").set_index(["imputation", "modèle"])
     tab.to_csv(sortie / f"pretraitement_{a.service}_P1xM_h{h}.csv", sep=";", encoding="utf-8-sig")
     print(tab.to_string())
@@ -270,12 +289,19 @@ def main() -> None:
         for code in a.dimensions:
             titre, variantes = DIMENSIONS[code]
             print(f"\n── {code} · {titre} (J+{h})")
-            res = []
+            res, impossibles = [], []
             for nom, changement in variantes:
                 cfg = dataclasses.replace(RETENU, **changement)
                 debut = time.perf_counter()
                 occ, sej, info = construire_serie(df, a.service, a.lits, cfg)
-                prev = prevoir(occ, h, hp, debut_val, a.pas, cfg.trous)
+                try:
+                    prev = prevoir(occ, h, hp, debut_val, a.pas, cfg.trous)
+                except ValueError as e:                             # série trop courte : la variante ne se compare pas
+                    if cfg == RETENU:
+                        raise
+                    print(f"   {nom} : impossible à évaluer ({e})")
+                    impossibles.append(f"{nom} ({e})")
+                    continue
                 try:
                     little = verifier_little(occ, sej, scenario=cfg.scenario, comptage=cfg.comptage)["ecart_pourcent"]
                 except Exception:                                   # période trop courte, etc.
@@ -306,15 +332,17 @@ def main() -> None:
             for nom in tab.index:
                 if nom == nom_ref:
                     tests.append(None); pvals.append(None); continue
-                dm = M.diebold_mariano(y_ref, points[nom], points[nom_ref], h=h, perte="pinball", tau=a.tau)
-                tests.append(dm); pvals.append(dm["p_valeur"])
+                dm = _diebold_mariano(y_ref, points[nom], points[nom_ref], h, a.tau)
+                tests.append(dm); pvals.append(None if dm == NON_TESTE else dm["p_valeur"])
             ajustees = M.holm(pvals)
             tab[f"DM p (pinball τ={a.tau})"], tab["p Holm"] = pvals, ajustees
-            tab["vs choix retenu"] = ["— choix retenu" if dm is None else M.verdict(dm, pa) for dm, pa in zip(tests, ajustees)]
+            tab["vs choix retenu"] = ["— choix retenu" if dm is None else _verdict(dm, pa) for dm, pa in zip(tests, ajustees)]
             print(tab.to_string())
             tab.to_csv(sortie / f"pretraitement_{a.service}_{code}_h{h}.csv", sep=";", encoding="utf-8-sig")
             mieux = list(tab.index[tab["vs choix retenu"] == "meilleur"])
-            rapport += [f"\n### {code} · {titre}\n", f"{len(communs)} jours évalués.\n", en_markdown(tab), "\n",
+            rapport += [f"\n### {code} · {titre}\n", f"{len(communs)} jours évalués.\n",
+                        *([f"Variantes impossibles à évaluer (série trop courte) : {', '.join(impossibles)}.\n"] if impossibles else []),
+                        en_markdown(tab), "\n",
                         (f"Significativement meilleur que le choix retenu : {', '.join(mieux)} — à revoir." if mieux
                          else f"Aucune variante ne fait significativement mieux que le choix retenu ({nom_ref})."), "\n"]
         if a.croise:
