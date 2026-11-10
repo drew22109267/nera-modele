@@ -273,8 +273,11 @@ def evaluer(tab: TableauTriage, decoupages: list[Decoupage], config: ConfigTriag
     if n > 1:
         _TACHE = (tab, decoupages, config, complet)
         try:
+            # Les mois au plus grand apprentissage, les plus longs, partent les premiers ; ordre rétabli ensuite.
+            ordre = sorted(range(len(decoupages)), key=lambda k: -len(decoupages[k].entrainement))
             with ProcessPoolExecutor(n, mp_context=get_context("fork")) as ex:
-                par_mois = list(ex.map(_mois_herite, range(len(decoupages))))
+                futurs = {k: ex.submit(_mois_herite, k) for k in ordre}
+                par_mois = [futurs[k].result() for k in range(len(decoupages))]
         finally:
             _TACHE = None
     else:

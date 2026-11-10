@@ -127,8 +127,11 @@ def evaluer(tab: Tableau, decoupages: list[Decoupage], fabrique, processus: int 
     if n > 1:
         _TACHE = (tab, decoupages, fabrique)
         try:
+            # Les plis au plus grand apprentissage, les plus longs, partent les premiers ; ordre rétabli ensuite.
+            ordre = sorted(range(len(decoupages)), key=lambda k: -len(decoupages[k].entrainement))
             with ProcessPoolExecutor(n, mp_context=get_context("fork")) as ex:
-                prev = list(ex.map(_pli_herite, range(len(decoupages))))
+                futurs = {k: ex.submit(_pli_herite, k) for k in ordre}
+                prev = [futurs[k].result() for k in range(len(decoupages))]
         finally:
             _TACHE = None
     else:

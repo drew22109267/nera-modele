@@ -98,6 +98,12 @@ def _motifs(M: torch.Tensor):
         yield motifs[k], torch.nonzero(inverse == k).flatten()
 
 
+def _groupes(M: torch.Tensor) -> list[tuple]:
+    """Motifs de M avec leurs indices (lignes, colonnes observées, colonnes vides), calculés une fois par masque."""
+    return [(lignes, motif.nonzero().flatten(), (~motif).nonzero().flatten(), bool(motif.any()), bool((~motif).any()))
+            for motif, lignes in _motifs(M)]
+
+
 class Imputeur:
     """Apprend un traitement des valeurs manquantes sur l'apprentissage, puis complète n'importe quel tableau."""
 
@@ -244,8 +250,9 @@ class Imputeur:
         M = ~torch.isnan(Z)
         mu = torch.zeros(p, dtype=TYPE)
         sigma = torch.eye(p, dtype=TYPE)
+        groupes = _groupes(M)                     # une fois : le masque ne change pas pendant l'EM
         for _ in range(tours):
-            Zc, C = self._esperance(Z, M, mu, sigma)
+            Zc, C = self._esperance(Z, M, mu, sigma, groupes)
             mu_n = Zc.mean(dim=0)
             D = Zc - mu_n
             sigma_n = (D.T @ D + C) / n + lam * torch.eye(p, dtype=TYPE)
@@ -256,27 +263,23 @@ class Imputeur:
         self.mu, self.sigma = mu, sigma
 
     @staticmethod
-    def _esperance(Z, M, mu, sigma):
-        """Étape E : complète chaque ligne par E[z_m | z_o] ; renvoie aussi Σ_i C_i (covariance conditionnelle)."""
+    def _esperance(Z, M, mu, sigma, groupes=None):
+        """Étape E : complète chaque ligne par E[z_m | z_o] ; renvoie aussi Σ_i C_i (covariance conditionnelle).
+        `groupes` : motifs du masque déjà calculés (_groupes), mêmes opérations dans le même ordre."""
         Zc = torch.where(M, Z, torch.zeros_like(Z))
         C = torch.zeros_like(sigma)
-        for motif, lignes in _motifs(M):
-            o, m = motif, ~motif
-            if not m.any():
+        for lignes, io, im, a_obs, a_vide in (groupes if groupes is not None else _groupes(M)):
+            if not a_vide:
                 continue
-            if not o.any():
+            if not a_obs:
                 Zc[lignes] = mu.expand(len(lignes), -1).clone()
-                C[m.nonzero().flatten()[:, None], m.nonzero().flatten()] += len(lignes) * sigma[m][:, m]
+                C[im[:, None], im] += len(lignes) * sigma[im][:, im]
                 continue
-            S_oo, S_mo = sigma[o][:, o], sigma[m][:, o]
+            S_oo, S_mo = sigma[io][:, io], sigma[im][:, io]
             K = torch.linalg.solve(S_oo, S_mo.T).T                        # Σ_mo Σ_oo⁻¹
-            zo = Zc[lignes][:, o]
-            Zm = mu[m] + (zo - mu[o]) @ K.T
-            bloc = Zc[lignes]
-            bloc[:, m] = Zm
-            Zc[lignes] = bloc
-            Cm = sigma[m][:, m] - K @ S_mo.T
-            im = m.nonzero().flatten()
+            zo = Zc[lignes][:, io]
+            Zc[lignes[:, None], im] = mu[im] + (zo - mu[io]) @ K.T
+            Cm = sigma[im][:, im] - K @ S_mo.T
             C[im[:, None], im] += len(lignes) * Cm
         return Zc, C
 
@@ -296,6 +299,9 @@ class Imputeur:
             Zf[~M] = R[~M]
             if len(avant) == 0 or float((Zf[~M] - avant).abs().max()) < tol:
                 break
+        # Le rang ne peut pas dépasser le nombre d'axes de la SVD, min(lignes, colonnes) : un mois d'apprentissage
+        # de moins de passages que de variables donnait V à 10 axes et retrecir à 11 (arrêt du banc T8, adultes).
+        self.rang = min(self.rang, Vt.shape[0])
         self.V = Vt[:self.rang].T                                         # p × k
         self.retrecir = torch.ones(self.rang, dtype=TYPE)
 
