@@ -247,8 +247,8 @@ def main() -> None:
         y, orig = ref["y"], ref["origines"]
         rapport.append(f"\n## Horizon J+{h} — {len(y)} jours évalués, {len(decs)} origines\n")
 
-        def prevoir(fab, tableau=tab, decoupages=decs):
-            return chrono(lambda: evaluer(tableau, decoupages, fab)["prevision"])
+        def prevoir(fab, tableau=tab, decoupages=decs, processus=None):
+            return chrono(lambda: evaluer(tableau, decoupages, fab, processus)["prevision"])
 
         def publier(dim: Dimension) -> None:
             t = dim.tableau()
@@ -475,7 +475,8 @@ def main() -> None:
             frequences = {}
             for regle, nom in (("lasso", "Lasso, λ de plus petite erreur"), ("lasso_1se", "Lasso à un écart-type (λ_1se)")):
                 journal = []
-                prev, s = prevoir(lambda r=regle, jr=journal: AvecLasso(fabrique(2, hp[2], tab.blocs), r, jr))
+                # En série : AvecLasso note sa sélection dans `journal`, qu'un processus séparé ne rendrait pas.
+                prev, s = prevoir(lambda r=regle, jr=journal: AvecLasso(fabrique(2, hp[2], tab.blocs), r, jr), processus=1)
                 d.ajouter(nom, y, prev, s, **{"variables": round(sum(len(x.colonnes) for x in journal) / len(journal), 1)})
                 frequences[regle] = [sum(j in x.colonnes for x in journal) / len(journal) for j in range(len(tab.noms))]
             pd.DataFrame({"variable": tab.noms, **{f"part gardée ({r})": v for r, v in frequences.items()}}).to_csv(
