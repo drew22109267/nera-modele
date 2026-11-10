@@ -97,15 +97,25 @@ def empiler_sequentiel(previsions: dict[str, dict], y: torch.Tensor, plis: torch
     return {t: trie[i] for i, t in enumerate(taus)}, masque
 
 
-def chercher(niveau: int, tab, decoupages, hp: Hyperparametres, methode: str) -> Hyperparametres:
-    """Hyperparamètres du niveau par grille ou PSO ; score = pinball au τ décisionnel (ou MAE)."""
-    def objectif(config: dict) -> float:
-        h2 = copy.deepcopy(hp)
+class ObjectifNiveau:
+    """Score d'une configuration du niveau (pinball au τ décisionnel, ou MAE) : objet de module, pour que la
+    recherche puisse envoyer les essais à plusieurs processus (svr.recherche.evaluer_configs)."""
+
+    def __init__(self, niveau: int, tab, decoupages, hp: Hyperparametres):
+        self.niveau, self.tab, self.decoupages, self.hp = niveau, tab, decoupages, hp
+
+    def __call__(self, config: dict) -> float:
+        h2 = copy.deepcopy(self.hp)
         for k, v in config.items():
             setattr(h2, k, v)
-        r = evaluer(tab, decoupages, fabrique(niveau, h2, tab.blocs))
+        r = evaluer(self.tab, self.decoupages, fabrique(self.niveau, h2, self.tab.blocs))
         p = r["prevision"]
         return M.pinball_moyenne(r["y"], p[h2.tau], h2.tau) if isinstance(p, dict) else M.mae(r["y"], p)
+
+
+def chercher(niveau: int, tab, decoupages, hp: Hyperparametres, methode: str) -> Hyperparametres:
+    """Hyperparamètres du niveau par grille ou PSO ; score = pinball au τ décisionnel (ou MAE)."""
+    objectif = ObjectifNiveau(niveau, tab, decoupages, hp)
 
     nom_eps = "epsilon_quantile" if niveau in (3, 4) else "epsilon"
     if methode == "grille":

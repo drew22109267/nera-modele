@@ -86,7 +86,8 @@ git clone https://github.com/drew22109267/nera-modele.git
 python3 -m venv ~/memoire-env
 ~/memoire-env/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
 ~/memoire-env/bin/pip install pandas matplotlib pytest jupyterlab
-~/memoire-env/bin/pip install -e outil-saisi            # le paquet « traitement » (données)
+~/memoire-env/bin/pip install -e "outil-saisi[verification]"   # paquet « traitement » + juges de l'étape 0
+sudo apt install nodejs                                         # étape 0 : exécute le JavaScript de l'outil
 ```
 
 (Avec `uv` : `uv pip install --python ~/memoire-env/bin/python -e outil-saisi`.)
