@@ -23,3 +23,8 @@ __pycache__/
 # Suivi de la suite des calculs (lancer_suite.sh)
 .suite/
 journal_suite.log
+
+# Variables locales : jamais suivies (seul .env.example serait publié)
+.env
+.env.*
+!.env.example
