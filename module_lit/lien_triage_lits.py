@@ -172,16 +172,16 @@ def correlation(x: pd.Series, y: pd.Series, k: int, bootstrap: int, graine: int)
     t = torch.tensor([v for v in tirages if v == v], dtype=TYPE)
     bas, haut = (float(torch.quantile(t, 0.025)), float(torch.quantile(t, 0.975))) if len(t) else (float("nan"),) * 2
     # Décalage circulaire sur la série complète (trous compris), puis mêmes jours valides que ci-dessus.
-    xa, ya = x.to_numpy(), yk.to_numpy()
+    xa = torch.tensor(x.to_numpy(dtype=float, na_value=float("nan")), dtype=TYPE)
+    ya = torch.tensor(yk.to_numpy(dtype=float, na_value=float("nan")), dtype=TYPE)
     N = len(xa)
     extremes = total = 0
     for s in range(7, N - 6):
-        xd = pd.Series(xa).shift(s).to_numpy()
-        xd[:s] = xa[N - s:]                               # rotation : la fin revient au début
-        m = ~(pd.isna(xd) | pd.isna(ya))
-        if m.sum() < 20:
+        xd = torch.roll(xa, s)                            # rotation : la fin revient au début
+        m = ~(torch.isnan(xd) | torch.isnan(ya))
+        if int(m.sum()) < 20:
             continue
-        rs = spearman(torch.tensor(xd[m].astype(float), dtype=TYPE), torch.tensor(ya[m].astype(float), dtype=TYPE))
+        rs = spearman(xd[m], ya[m])
         total += 1
         extremes += abs(rs) >= abs(r) - 1e-12
     p = (1 + extremes) / (1 + total) if total else float("nan")
