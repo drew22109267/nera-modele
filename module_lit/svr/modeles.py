@@ -61,6 +61,8 @@ vérifie que ce choix tient sur des jours jamais vus ; à défaut, on fixe β pa
 """
 from __future__ import annotations
 
+import math
+
 from collections import deque
 from dataclasses import dataclass, field
 
@@ -257,9 +259,10 @@ class SVRNoyau(ModeleSVR):
         return self.K @ self.parametres["alpha"] + self.parametres["b"]
 
     def objectif_et_gradients(self, y):
-        a, f = self.parametres["alpha"], self._f_entrainement()
+        a = self.parametres["alpha"]
+        Ka = self.K @ a                                            # un seul produit K α par pas (f et J)
+        f = Ka + self.parametres["b"]
         valeurs, g = self.perte(y, f)
-        Ka = self.K @ a
         J = 0.5 * float(a @ Ka) + self.C * float(valeurs.sum())   # ½ αᵀKα + C Σ L
         direction = a + self.C * g
         grad_alpha = direction if self.entrainement.preconditionne else self.K @ direction   # K(α + C g)
@@ -287,7 +290,8 @@ class SVRNoyauComposite(SVRNoyau):
 
     @property
     def beta(self) -> float:
-        return float(sigmoide(self.parametres["theta"]))
+        t = float(self.parametres["theta"][0])                   # σ(θ) d'un nombre : sans tenseur
+        return 1.0 / (1.0 + math.exp(-t)) if t >= 0 else math.exp(t) / (1.0 + math.exp(t))
 
     def _initialiser(self, X, y):
         self.X = X
@@ -305,12 +309,19 @@ class SVRNoyauComposite(SVRNoyau):
         pass
 
     def objectif_et_gradients(self, y):
-        J, gradients, f = super().objectif_et_gradients(y)
+        # K = β K₁ + (1 − β) K₂ n'est jamais formée : K α = β K₁α + (1 − β) K₂α, et D α = K₁α − K₂α en découle.
         a, beta = self.parametres["alpha"], self.beta
-        _, g = self.perte(y, f)
-        Da = (self.K1 - self.K2) @ a                               # D α
+        K1a, K2a = self.K1 @ a, self.K2 @ a
+        Ka = beta * K1a + (1.0 - beta) * K2a
+        f = Ka + self.parametres["b"]
+        valeurs, g = self.perte(y, f)
+        J = 0.5 * float(a @ Ka) + self.C * float(valeurs.sum())   # ½ αᵀKα + C Σ L
+        direction = a + self.C * g
+        grad_alpha = direction if self.entrainement.preconditionne else             beta * (self.K1 @ direction) + (1.0 - beta) * (self.K2 @ direction)                  # K(α + C g)
+        Da = K1a - K2a                                             # D α, D = K₁ − K₂
         grad_theta = beta * (1 - beta) * (0.5 * float(a @ Da) + self.C * float(g @ Da))
-        gradients["theta"] = torch.tensor([grad_theta if self.apprendre_beta else 0.0], dtype=TYPE)
+        gradients = {"alpha": grad_alpha, "b": (self.C * g.sum()).reshape(1),
+                     "theta": torch.tensor([grad_theta if self.apprendre_beta else 0.0], dtype=TYPE)}
         return J, gradients, f
 
     def gradient_exact(self, y):

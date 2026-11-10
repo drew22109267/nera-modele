@@ -25,18 +25,53 @@ from __future__ import annotations
 
 import itertools
 import math
+import os
+import pickle
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
+from multiprocessing import get_context
 
 import torch
 
 
-def recherche_grille(espace: dict[str, list], objectif) -> dict:
-    """Essaie chaque combinaison. Renvoie la meilleure et le tableau de tous les essais."""
+def nombre_processus() -> int:
+    """Processus pour les recherches : NERA_PROCESSUS, sinon tous les cœurs."""
+    return max(1, int(os.environ.get("NERA_PROCESSUS", os.cpu_count() or 1)))
+
+
+def _appeler(args):
+    objectif, config = args
+    torch.set_num_threads(1)                    # un fil par processus : les essais tournent côte à côte
+    os.environ["NERA_PROCESSUS"] = "1"          # pas de nouveaux processus à l'intérieur d'un essai
+    return objectif(config)
+
+
+def _transmissible(objet) -> bool:
+    try:
+        pickle.dumps(objet)
+        return True
+    except Exception:                           # fonction locale, lambda… : on reste en série
+        return False
+
+
+def evaluer_configs(objectif, configs: list[dict], processus: int | None = None) -> list[float]:
+    """
+    Score de chaque configuration, dans l'ordre. Les essais sont indépendants : avec plusieurs processus,
+    ils tournent en parallèle (même résultat qu'en série). `objectif` doit alors pouvoir être transmis à un
+    autre processus (fonction ou objet défini au niveau d'un module, pas une fonction locale) ; sinon, série.
+    """
+    processus = nombre_processus() if processus is None else max(1, int(processus))
+    if processus > 1 and len(configs) > 1 and _transmissible(objectif):
+        with ProcessPoolExecutor(min(processus, len(configs)), mp_context=get_context("spawn")) as ex:
+            return list(ex.map(_appeler, [(objectif, c) for c in configs]))
+    return [objectif(c) for c in configs]
+
+
+def recherche_grille(espace: dict[str, list], objectif, processus: int | None = None) -> dict:
+    """Essaie chaque combinaison (en parallèle si possible). Renvoie la meilleure et le tableau de tous les essais."""
     noms = list(espace)
-    essais = []
-    for valeurs in itertools.product(*(espace[n] for n in noms)):
-        config = dict(zip(noms, valeurs))
-        essais.append({**config, "score": objectif(config)})
+    configs = [dict(zip(noms, valeurs)) for valeurs in itertools.product(*(espace[n] for n in noms))]
+    essais = [{**c, "score": s} for c, s in zip(configs, evaluer_configs(objectif, configs, processus))]
     meilleur = min(essais, key=lambda e: e["score"])
     return {"meilleur": meilleur, "essais": essais}
 
@@ -58,7 +93,8 @@ class Dimension:
 
 
 def essaim_particulaire(espace: dict[str, Dimension], objectif, particules: int = 12, iterations: int = 20,
-                        omega: float = 0.7, c1: float = 1.5, c2: float = 1.5, graine: int = 0) -> dict:
+                        omega: float = 0.7, c1: float = 1.5, c2: float = 1.5, graine: int = 0,
+                        processus: int | None = None) -> dict:
     """PSO dans le cube [0, 1]^d, chaque coordonnée étant convertie par sa Dimension."""
     gen = torch.Generator().manual_seed(graine)
     noms, d = list(espace), len(espace)
@@ -68,7 +104,8 @@ def essaim_particulaire(espace: dict[str, Dimension], objectif, particules: int 
 
     x = torch.rand(particules, d, generator=gen, dtype=torch.float64)
     v = (torch.rand(particules, d, generator=gen, dtype=torch.float64) - 0.5) * 0.2
-    scores = torch.tensor([objectif(config(x[i])) for i in range(particules)], dtype=torch.float64)
+    scores = torch.tensor(evaluer_configs(objectif, [config(x[i]) for i in range(particules)], processus),
+                          dtype=torch.float64)
     p, p_score = x.clone(), scores.clone()
     g_index = int(torch.argmin(p_score))
     g, g_score = p[g_index].clone(), float(p_score[g_index])
@@ -79,8 +116,9 @@ def essaim_particulaire(espace: dict[str, Dimension], objectif, particules: int 
         r2 = torch.rand(particules, d, generator=gen, dtype=torch.float64)
         v = omega * v + c1 * r1 * (p - x) + c2 * r2 * (g - x)
         x = torch.clamp(x + v, 0.0, 1.0)
-        for i in range(particules):
-            s = objectif(config(x[i]))
+        # Les particules d'une itération sont indépendantes (g ne sert qu'à l'itération suivante) : évaluées
+        # ensemble, puis mises à jour dans l'ordre, comme en série.
+        for i, s in enumerate(evaluer_configs(objectif, [config(x[i]) for i in range(particules)], processus)):
             if s < p_score[i]:
                 p[i], p_score[i] = x[i].clone(), s
                 if s < g_score:

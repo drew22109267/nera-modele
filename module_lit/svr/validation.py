@@ -19,7 +19,10 @@ l'origine O que si sa cible est déjà connue :  t + h ≤ O.
 """
 from __future__ import annotations
 
+import os
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
+from multiprocessing import get_all_start_methods, get_context
 
 import pandas as pd
 import torch
@@ -83,20 +86,56 @@ def origines_glissantes(tab: Tableau, debut: str | pd.Timestamp, fin: str | pd.T
     return decoupages
 
 
-def evaluer(tab: Tableau, decoupages: list[Decoupage], fabrique) -> dict:
+_TACHE = None                     # (tableau, découpages, fabrique) hérités par les processus « fork » de evaluer
+
+
+def _un_pli(tab: Tableau, dec: Decoupage, fabrique):
+    std = Standardiseur(tab.continues, tab.echelle).ajuster(tab.X[dec.entrainement])
+    modele = fabrique().entrainer(std.transformer(tab.X[dec.entrainement]), tab.y[dec.entrainement])
+    return modele.predire(std.transformer(tab.X[dec.evaluation]))
+
+
+def _pli_herite(i: int):
+    tab, decoupages, fabrique = _TACHE
+    os.environ["NERA_PROCESSUS"] = "1"             # pas de nouveaux processus à l'intérieur d'un pli
+    return _un_pli(tab, decoupages[i], fabrique)
+
+
+def _processus_plis(n_plis: int, processus: int | None) -> int:
+    """
+    Processus pour les plis : NERA_PROCESSUS (sinon tous les cœurs), seulement si « fork » existe (Linux, WSL) et
+    si torch calcule sur un seul fil (OMP_NUM_THREADS=1) : un fork après des fils OpenMP peut se bloquer. Les
+    plis ne partagent rien (chaque modèle a ses propres graines) : même résultat qu'en série.
+    """
+    if processus is None:
+        processus = int(os.environ.get("NERA_PROCESSUS", os.cpu_count() or 1))
+    if processus <= 1 or n_plis <= 1 or "fork" not in get_all_start_methods() or torch.get_num_threads() != 1:
+        return 1
+    return min(processus, n_plis)
+
+
+def evaluer(tab: Tableau, decoupages: list[Decoupage], fabrique, processus: int | None = None) -> dict:
     """
     Pour chaque découpage : standardise, entraîne `fabrique()` sur l'entraînement, prédit l'évaluation.
     Le modèle renvoie soit un tenseur (prévision ponctuelle), soit un dict {τ: tenseur} (quantiles).
     Renvoie les prévisions concaténées, alignées sur les vraies valeurs et les dates.
+    Les plis sont indépendants : ils sont entraînés en parallèle quand c'est possible (voir _processus_plis),
+    et rangés dans l'ordre des découpages.
     """
-    y_vrai, prev, dates, origines = [], [], [], []
-    for dec in decoupages:
-        std = Standardiseur(tab.continues, tab.echelle).ajuster(tab.X[dec.entrainement])
-        modele = fabrique().entrainer(std.transformer(tab.X[dec.entrainement]), tab.y[dec.entrainement])
-        prev.append(modele.predire(std.transformer(tab.X[dec.evaluation])))
-        y_vrai.append(tab.y[dec.evaluation])
-        dates.extend(tab.dates_cible[dec.evaluation.numpy()])
-        origines.append(tab.origines[dec.evaluation])
+    global _TACHE
+    n = _processus_plis(len(decoupages), processus)
+    if n > 1:
+        _TACHE = (tab, decoupages, fabrique)
+        try:
+            with ProcessPoolExecutor(n, mp_context=get_context("fork")) as ex:
+                prev = list(ex.map(_pli_herite, range(len(decoupages))))
+        finally:
+            _TACHE = None
+    else:
+        prev = [_un_pli(tab, dec, fabrique) for dec in decoupages]
+    y_vrai = [tab.y[dec.evaluation] for dec in decoupages]
+    dates = [d for dec in decoupages for d in tab.dates_cible[dec.evaluation.numpy()]]
+    origines = [tab.origines[dec.evaluation] for dec in decoupages]
     if isinstance(prev[0], dict):
         prev = {tau: torch.cat([p[tau] for p in prev]) for tau in prev[0]}
     else:

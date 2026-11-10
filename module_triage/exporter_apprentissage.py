@@ -33,9 +33,9 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import math
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import torch
 
@@ -65,10 +65,10 @@ def proba_affichee(nom: str, s: torch.Tensor) -> torch.Tensor:
 
 def exporter_groupe(part: pd.DataFrame, groupe: str, sortie: Path, iterations: int) -> None:
     tab = construire(part, OptionsVariables())
-    ordre = np.argsort(tab.dates.asi8, kind="stable")
+    ordre = torch.sort(torch.tensor(tab.dates.asi8), stable=True).indices
     n = len(ordre)
     n_app = int(0.75 * n)
-    app, ev = torch.as_tensor(ordre[:n_app]), torch.as_tensor(ordre[n_app:])
+    app, ev = ordre[:n_app], ordre[n_app:]
     y_app, y_ev = tab.y[app], tab.y[ev]
     prep = Preparateur(tab.continues, "mediane").ajuster(tab.X[app])
     Xa, Xe = prep.transformer(tab.X[app]), prep.transformer(tab.X[ev])
@@ -125,7 +125,7 @@ def exporter_groupe(part: pd.DataFrame, groupe: str, sortie: Path, iterations: i
     # Film : le SVM RBF du plan arrêté après t pas, pour t de 1 à la fin (même départ α = 0, b = 0 : chaque
     # image est l'état réel de l'optimisation au pas t). Score de la grille, score des passages, J et AUC.
     film = []
-    for t in sorted({int(round(v)) for v in np.geomspace(1, iterations, 24)}):
+    for t in sorted({int(round(v)) for v in torch.logspace(0, math.log10(iterations), 24, dtype=torch.float64).tolist()}):
         mt = fabrique("svm_rbf", 1.0, 1.0, cp, cn, blocs2, Entrainement(iterations=t, moyenne_polyak=0.0))().entrainer(Ua, y_app)
         s_a, s_e = mt.predire(Ua), mt.predire(Ue)
         film.append({"t": t, "J": round(float(mt.historique[-1]), 4), "grille": grille("svm_rbf", mt),
@@ -156,8 +156,7 @@ def exporter_groupe(part: pd.DataFrame, groupe: str, sortie: Path, iterations: i
         complexite[nom] = {"reglage": reglage, "points": pts}
         meilleur = min(pts, key=lambda p: p["erreur_evaluation"])
         print(f"  complexité · {nom:13s} meilleur réglage {meilleur['valeur']} (erreur d'évaluation {meilleur['erreur_evaluation']:.3f})")
-    rng = np.random.default_rng(20261103)
-    melange = torch.as_tensor(rng.permutation(app.numpy()))
+    melange = app[torch.randperm(len(app), generator=torch.Generator().manual_seed(20261103))]
     taille = []
     for f in (0.1, 0.2, 0.35, 0.5, 0.75, 1.0):
         I = melange[:max(30, int(f * len(melange)))]

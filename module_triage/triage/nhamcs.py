@@ -35,7 +35,6 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from traitement.urgences import AGE_ADULTE, PLAINTES, PLAUSIBLE
@@ -129,8 +128,8 @@ def lire_annee(fichier: Path) -> pd.DataFrame:
     ok = sys_.notna() & dia.notna() & (sys_ > dia)
     p["ta_sys"], p["ta_dia"] = sys_.where(ok), dia.where(ok)
     p["spo2"] = _plausible(_num(r["POPCT"]), "spo2")
-    p["glycemie"] = np.nan
-    p["poids"] = np.nan
+    p["glycemie"] = float("nan")
+    p["poids"] = float("nan")
 
     codes = r[[c for c in ("RFV1", "RFV2", "RFV3", "RFV4", "RFV5") if c in r]].apply(pd.to_numeric, errors="coerce")
     for f in PLAINTES:
@@ -141,7 +140,7 @@ def lire_annee(fichier: Path) -> pd.DataFrame:
     heure = pd.to_numeric(r["ARRTIME"], errors="coerce") // 100
     week_end = r["VDAYR"].isin([1, 7])                    # 1 = dimanche, 7 = samedi
     nuit = (heure >= 18) | (heure < 8)
-    p["moment"] = np.where(nuit, "garde", np.where(week_end, "permanence", "jour"))
+    p["moment"] = pd.Series("jour", index=r.index).mask(week_end, "permanence").mask(nuit, "garde")
     p.loc[heure.isna(), "moment"] = None
     premier = pd.to_datetime(dict(year=annee, month=r["VMONTH"].clip(1, 12), day=1))
     decalage = ((r["VDAYR"] - 1) - ((premier.dt.dayofweek + 1) % 7)) % 7     # VDAYR : 1 = dimanche
@@ -151,10 +150,11 @@ def lire_annee(fichier: Path) -> pd.DataFrame:
         return (pd.to_numeric(r[c], errors="coerce") == 1) if c in r else pd.Series(False, index=r.index)
     grave = pd.concat([drapeau(c) for c in GRAVE], axis=1).any(axis=1)
     sans = pd.concat([drapeau(c) for c in SANS_CIBLE], axis=1).any(axis=1)
-    p["classe"] = np.where(grave, "grave", np.where(drapeau("OBSDIS"), "intermediaire", "non_grave"))
+    p["classe"] = pd.Series("non_grave", index=r.index).mask(drapeau("OBSDIS"), "intermediaire").mask(grave, "grave")
     p.loc[sans & ~grave, "classe"] = None
     p["decision"] = p["classe"]
-    p["groupe"] = np.where(p["nourrisson"] == 1, "enfant", np.where(age < AGE_ADULTE, "enfant", np.where(age.notna(), "adulte", None)))
+    p["groupe"] = (pd.Series(None, index=r.index, dtype=object).mask(age.notna(), "adulte")
+                   .mask(age < AGE_ADULTE, "enfant").mask(p["nourrisson"] == 1, "enfant"))
     p["annee"] = annee
     p["source"] = "NHAMCS"
     return p
