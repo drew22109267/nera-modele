@@ -171,6 +171,26 @@ def exclure_trous(tab, decs: list[Decoupage], trous: set, retards: int = 7) -> l
     return [Decoupage(dc.entrainement[~touche[dc.entrainement]], dc.evaluation, dc.origine) for dc in decs]
 
 
+NON_TESTE = "non testé (trop peu de jours)"
+
+
+def _diebold_mariano(y, a, b, h: int, tau: float):
+    """Diebold-Mariano (pinball à τ), ou NON_TESTE s'il y a moins de 2h + 2 jours communs (le test refuse)."""
+    try:
+        return M.diebold_mariano(y, a, b, h=h, perte="pinball", tau=tau)
+    except ValueError:
+        return NON_TESTE
+
+
+def _verdict(sens: str, p_ajustee) -> str:
+    """Verdict d'une variante (sens = « A », « B », « indéterminé » ou NON_TESTE) sur sa p ajustée de Holm."""
+    if sens == NON_TESTE:
+        return NON_TESTE
+    if sens == "indéterminé":
+        return "identique"                                          # mêmes prévisions que la référence
+    return ("meilleur" if sens == "A" else "moins bon") if p_ajustee is not None and p_ajustee < 0.05 else "équivalent"
+
+
 def prevoir(occ: pd.DataFrame, h: int, hp: Hyperparametres, debut_val, pas: int, trous: str,
             modele: str | None = None, hp_niveaux: dict | None = None, hpc: HyperConcurrents | None = None) -> pd.DataFrame:
     """Prévisions (niveau 4, ou un modèle du catalogue) et de la persistance, indexées par la date cible."""
@@ -210,7 +230,11 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
                 return prevoir(occ, h, hp, debut_val, a.pas, cfg.trous, cle, hpn, hpc), time.perf_counter() - debut
             cle_r = ("croise", h, repr(cfg), cle)
             deja = reprise.existe(cle_r)
-            prev, secondes = reprise.calculer(cle_r, calcul)
+            try:
+                prev, secondes = reprise.calculer(cle_r, calcul)
+            except ValueError as e:                                     # série trop courte : écartée, signalée
+                print(f"   {nom_imp} × {CATALOGUE[cle][0]} : impossible à évaluer ({e})", flush=True)
+                continue
             previsions[(changement["inconnues"], cle)] = (nom_imp, prev, secondes)
             print(f"   {nom_imp} × {CATALOGUE[cle][0]}" + (" (repris)" if deja else ""), flush=True)
     communs = sorted(set.intersection(*(set(v[1].index) for v in previsions.values())))
@@ -233,17 +257,16 @@ def banc_croise(df, a, h: int, hp: Hyperparametres, occ_ref: pd.DataFrame, debut
                 l[f"DM p {nom_test}"] = None
                 tests[nom_test].append(None)
                 continue
-            dm = M.diebold_mariano(y_ref, qt[(imp, cle)], qt[contre], h=h, perte="pinball", tau=a.tau)
-            l[f"DM p {nom_test}"] = dm["p_valeur"]
-            tests[nom_test].append(dm["plus_precis"])
+            dm = _diebold_mariano(y_ref, qt[(imp, cle)], qt[contre], h, a.tau)
+            l[f"DM p {nom_test}"] = None if dm == NON_TESTE else dm["p_valeur"]
+            tests[nom_test].append(NON_TESTE if dm == NON_TESTE else dm["plus_precis"])
         lignes.append(l)
     # Correction de Holm par famille de tests (toutes les paires d'un même test).
     for nom_test, sens in tests.items():
         p_holm = M.holm([l[f"DM p {nom_test}"] for l in lignes])
         for l, s, ph in zip(lignes, sens, p_holm):
             l[f"p Holm {nom_test}"] = ph
-            l[nom_test] = ("— référence" if s is None else "identique" if s == "indéterminé" else
-                           (("meilleur" if s == "A" else "moins bon") if ph < 0.05 else "équivalent"))
+            l[nom_test] = "— référence" if s is None else _verdict(s, ph)
     tab = pd.DataFrame(lignes).sort_values(f"pinball τ={a.tau} retenue").set_index(["imputation", "modèle"])
     tab.to_csv(sortie / f"pretraitement_{a.service}_P1xM_h{h}.csv", sep=";", encoding="utf-8-sig")
     print(tab.to_string())
@@ -298,7 +321,7 @@ def main() -> None:
         for code in a.dimensions:
             titre, variantes = DIMENSIONS[code]
             print(f"\n── {code} · {titre} (J+{h})")
-            res = []
+            res, impossibles = [], []
             for nom, changement in variantes:
                 cfg = dataclasses.replace(RETENU, **changement)
 
@@ -319,6 +342,7 @@ def main() -> None:
                     print(f"   {nom} : impossible ({type(erreur).__name__} : {erreur})", flush=True)
                     if cfg == RETENU:
                         raise
+                    impossibles.append(f"{nom} ({erreur})")
                     continue
                 print(f"   {nom} : {secondes:.0f} s" + (" (repris)" if deja else ""), flush=True)
                 res.append((nom + (" (retenu)" if cfg == RETENU else ""), cfg == RETENU, occ, prev, info, little, secondes))
@@ -348,20 +372,24 @@ def main() -> None:
             for nom in tab.index:
                 if nom == nom_ref:
                     sens.append(None); pvals.append(None); pvals_mae.append(None); continue
-                dm = M.diebold_mariano(y_ref, quantiles[nom], quantiles[nom_ref], h=h, perte="pinball", tau=a.tau)
-                dm_mae = M.diebold_mariano(y_ref, points[nom], points[nom_ref], h=h)
-                sens.append(dm["plus_precis"]); pvals.append(dm["p_valeur"]); pvals_mae.append(dm_mae["p_valeur"])
+                dm = _diebold_mariano(y_ref, quantiles[nom], quantiles[nom_ref], h, a.tau)
+                try:
+                    p_mae = M.diebold_mariano(y_ref, points[nom], points[nom_ref], h=h)["p_valeur"]
+                except ValueError:                                  # moins de 2h + 2 jours communs
+                    p_mae = None
+                sens.append(NON_TESTE if dm == NON_TESTE else dm["plus_precis"])
+                pvals.append(None if dm == NON_TESTE else dm["p_valeur"]); pvals_mae.append(p_mae)
             p_holm = M.holm(pvals)
-            verdicts = [("— choix retenu" if s is None else "identique" if s == "indéterminé" else
-                         (("meilleur" if s == "A" else "moins bon") if ph < 0.05 else "équivalent"))
-                        for s, ph in zip(sens, p_holm)]
+            verdicts = ["— choix retenu" if s is None else _verdict(s, ph) for s, ph in zip(sens, p_holm)]
             tab[f"pinball τ={a.tau} retenue"] = [round(M.pinball_moyenne(y_ref, quantiles[n], a.tau), 4) for n in tab.index]
             tab[f"DM p (pinball τ={a.tau})"], tab["p Holm"], tab["DM p (MAE)"] = pvals, p_holm, pvals_mae
             tab["vs choix retenu"] = verdicts
             print(tab.to_string())
             tab.to_csv(sortie / f"pretraitement_{a.service}_{code}_h{h}.csv", sep=";", encoding="utf-8-sig")
             mieux = list(tab.index[tab["vs choix retenu"] == "meilleur"])
-            rapport += [f"\n### {code} · {titre}\n", f"{len(communs)} jours évalués.\n", en_markdown(tab), "\n",
+            rapport += [f"\n### {code} · {titre}\n", f"{len(communs)} jours évalués.\n",
+                        *([f"Variantes impossibles à évaluer (série trop courte) : {', '.join(impossibles)}.\n"] if impossibles else []),
+                        en_markdown(tab), "\n",
                         (f"Significativement meilleur que le choix retenu : {', '.join(mieux)} — à revoir." if mieux
                          else f"Aucune variante ne fait significativement mieux que le choix retenu ({nom_ref})."), "\n"]
         if a.croise:

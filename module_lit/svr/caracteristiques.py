@@ -83,9 +83,10 @@ def construire(occupation: pd.DataFrame, h: int, retards: int = JOURS_RETARD, fl
     sor = torch.tensor(occupation[colonnes_sorties].sum(axis=1).to_numpy(), dtype=TYPE)
     jours = occupation.index
     # Première origine : il faut `retards` jours d'historique, et 7 jours pour les flux.
-    origines = torch.arange(max(retards - 1, 6 if flux else 0, debut_min), len(jours) - h)
-    if len(origines) == 0:
+    premiere = max(retards - 1, 6 if flux else 0, debut_min)
+    if premiere >= len(jours) - h:                   # avant torch.arange, qui refuse une borne basse > borne haute
         raise ValueError("Série trop courte pour cet horizon.")
+    origines = torch.arange(premiere, len(jours) - h)
 
     noms = [f"occ_j-{k}" for k in range(retards)]
     if flux:
