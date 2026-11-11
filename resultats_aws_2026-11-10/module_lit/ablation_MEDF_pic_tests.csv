@@ -1,0 +1,23 @@
+﻿horizon;modele_A;modele_B;perte;dm;p_valeur;plus_precis;significatif_5pc;p_holm;verdict_A
+1;0 · saisonnière;0 · persistance;pinball τ=0.8;4.891;0.0;B;True;0.0;moins bon
+1;0 · moyenne mobile 7 j;0 · persistance;pinball τ=0.8;4.406;0.0;B;True;0.0;moins bon
+1;0 · moyenne mobile 7 j;0 · saisonnière;pinball τ=0.8;-2.242;0.025;A;True;0.096;équivalent
+1;1 · SVR linéaire;0 · moyenne mobile 7 j;pinball τ=0.8;-3.497;0.0005;A;True;0.004;meilleur
+1;1 · SVR linéaire;0 · persistance;pinball τ=0.8;2.257;0.024;B;True;0.096;équivalent
+1;2 · SVR RBF;0 · persistance;pinball τ=0.8;2.861;0.0042;B;True;0.0294;moins bon
+1;2 · SVR RBF;1 · SVR linéaire;pinball τ=0.8;1.562;0.1183;B;False;0.2366;équivalent
+1;3 · SVR quantile RBF;0 · persistance;pinball τ=0.8;-2.57;0.0102;A;True;0.051;équivalent
+1;3 · SVR quantile RBF;2 · SVR RBF;pinball τ=0.8;-5.777;0.0;A;True;0.0;meilleur
+1;4 · SVR quantile composite;0 · persistance;pinball τ=0.8;-2.708;0.0068;A;True;0.0408;meilleur
+1;4 · SVR quantile composite;3 · SVR quantile RBF;pinball τ=0.8;-0.305;0.7604;A;False;0.7604;équivalent
+7;0 · saisonnière;0 · persistance;pinball τ=0.8;-0.896;0.37;A;False;1.0;équivalent
+7;0 · moyenne mobile 7 j;0 · persistance;pinball τ=0.8;-0.509;0.6111;A;False;1.0;équivalent
+7;0 · moyenne mobile 7 j;0 · saisonnière;pinball τ=0.8;0.607;0.5438;B;False;1.0;équivalent
+7;1 · SVR linéaire;0 · moyenne mobile 7 j;pinball τ=0.8;1.815;0.0695;B;False;0.4865;équivalent
+7;1 · SVR linéaire;0 · persistance;pinball τ=0.8;1.321;0.1866;B;False;0.933;équivalent
+7;2 · SVR RBF;0 · persistance;pinball τ=0.8;0.556;0.5781;B;False;1.0;équivalent
+7;2 · SVR RBF;1 · SVR linéaire;pinball τ=0.8;-2.223;0.0262;A;True;0.2096;équivalent
+7;3 · SVR quantile RBF;0 · persistance;pinball τ=0.8;-2.484;0.013;A;True;0.13;équivalent
+7;3 · SVR quantile RBF;2 · SVR RBF;pinball τ=0.8;-3.393;0.0007;A;True;0.0077;meilleur
+7;4 · SVR quantile composite;0 · persistance;pinball τ=0.8;-2.412;0.0159;A;True;0.1431;équivalent
+7;4 · SVR quantile composite;3 · SVR quantile RBF;pinball τ=0.8;1.503;0.1329;B;False;0.7974;équivalent

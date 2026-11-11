@@ -1,0 +1,12 @@
+{
+ "service": "MEDF",
+ "comptage": "pic",
+ "regle": "significatif",
+ "modele": "lssvr_rbf",
+ "nom_modele": "LS-SVR (moindres carrés), noyau RBF, quantiles LOO",
+ "pinball_moyen": 0.6677,
+ "significatif_vs_retenu": "meilleur, équivalent",
+ "imputation": "estimee",
+ "detail_imputation": "pinball moyenne 0.6222 (knn) ; contre « estimee » pour ce modèle : non testé (trop peu de jours), équivalent : non significatif, méthode retenue gardée",
+ "meilleur_toutes_familles": "SARIMA(2,0,0)(1,0,0)7 (ordre choisi sur l'apprentissage)"
+}

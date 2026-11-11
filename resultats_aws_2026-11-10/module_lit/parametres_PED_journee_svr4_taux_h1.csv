@@ -1,0 +1,7 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+taux = 0,005;1.792;2.282;-0.077;0.6625;89.1;12.9;0.3631;1.0;équivalent
+taux = 0,01;1.792;2.282;-0.077;0.6617;89.1;11.1;0.815;1.0;équivalent
+taux = 0,02;1.792;2.283;-0.077;0.6622;89.1;7.4;0.3638;1.0;équivalent
+taux = 0,05 (retenu);1.793;2.283;-0.079;0.6614;89.1;8.6;;;— choix retenu
+taux = 0,1;1.791;2.281;-0.081;0.661;89.1;10.8;0.2604;1.0;équivalent
+taux = 0,2;1.79;2.28;-0.085;0.6607;89.1;13.3;0.2776;1.0;équivalent

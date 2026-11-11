@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+Carrée (ridge, λ = 1/C);1.766;2.236;-0.426;1.0109;0.1;0.0002;0.0006;moins bon
+ε-insensible, ε = 0 lit (= valeur absolue);1.744;2.235;-0.461;1.0104;0.8;0.0088;0.0176;moins bon
+ε-insensible, ε = 0.5 lit;1.766;2.243;-0.369;0.994;0.7;0.0256;0.0256;moins bon
+ε-insensible, ε = 1 lit (retenu);1.762;2.225;-0.28;0.9647;0.7;;;— choix retenu
+ε-insensible, ε = 2 lit;1.786;2.253;-0.472;1.0343;1.2;0.0;0.0;moins bon

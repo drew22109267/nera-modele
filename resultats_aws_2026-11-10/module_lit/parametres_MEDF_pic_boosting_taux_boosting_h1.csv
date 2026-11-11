@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+taux_boosting = 0,01;1.429;1.817;-0.412;0.531;86.3;9.0;0.2437;0.3468;équivalent
+taux_boosting = 0,05 (retenu);1.34;1.759;-0.323;0.5542;71.0;9.1;;;— choix retenu
+taux_boosting = 0,1;1.357;1.781;-0.379;0.5794;67.2;9.1;0.0679;0.2037;équivalent
+taux_boosting = 0,2;1.468;1.877;-0.368;0.5797;65.0;8.9;0.1734;0.3468;équivalent

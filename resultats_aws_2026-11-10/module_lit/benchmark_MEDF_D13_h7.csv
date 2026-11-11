@@ -1,0 +1,8 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);cle;couverture 90 %;DM p (pinball τ=0.8);p Holm;vs choix retenu
+SVR linéaire (niveau 1);2.938;3.526;-1.162;1.8176;0.7;svr_lineaire;;0.0001;0.0006;moins bon
+SVR RBF (niveau 2);2.682;3.188;-1.044;1.6544;1.3;svr_rbf;;0.0001;0.0006;moins bon
+SVR quantile RBF (niveau 3);2.744;3.281;-0.978;0.9401;2.2;svr_q_rbf;88.7;0.538;1.0;équivalent
+SVR quantile composite (niveau 4, retenu) (retenu);2.719;3.246;-0.904;0.9447;4.4;svr_q_composite;87.6;;;— choix retenu
+SVR quantile, noyau laplacien;2.707;3.24;-0.978;0.9274;2.7;svr_q_laplacien;88.1;0.189;0.756;équivalent
+SVR quantile, noyau polynomial (degré 2);2.789;3.333;-1.026;0.954;3.7;svr_q_polynomial;87.6;0.6129;1.0;équivalent
+LS-SVR (moindres carrés), noyau RBF, quantiles LOO;2.659;3.23;-1.254;0.935;0.1;lssvr_rbf;88.1;0.7618;1.0;équivalent

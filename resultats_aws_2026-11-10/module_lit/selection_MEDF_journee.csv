@@ -1,0 +1,29 @@
+﻿famille;modèle;pinball_moyen;MAE_moyenne;horizons;significatif
+autre (D1);SARIMA(2,0,0)(1,0,0)7 (ordre choisi sur l'apprentissage);0.8125500000000001;2.4175;2;équivalent
+autre (D1);AR(p) par AIC;0.827;2.4314999999999998;2;équivalent
+svm;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;0.8402;2.3805;2;meilleur, équivalent
+svm;SVR quantile RBF (niveau 3);0.87245;2.561;2;meilleur, équivalent
+svm;SVR quantile, noyau polynomial (degré 2);0.8834500000000001;2.4219999999999997;2;meilleur, équivalent
+svm;SVR quantile, noyau laplacien;0.88805;2.6654999999999998;2;équivalent
+autre (D1);A · forêt aléatoire quantile;0.89175;2.5295;2;équivalent
+autre (D1);Lissage saisonnier sans tendance;0.8986;2.5185;2;équivalent
+autre (D1);Holt-Winters additif amorti;0.9058999999999999;2.521;2;équivalent
+svm;SVR quantile composite (niveau 4, retenu);0.9107500000000001;2.535;2;— choix retenu
+autre (D1);SVR quantile composite (niveau 4);0.9107500000000001;2.535;2;— choix retenu
+autre (D1);Holt linéaire;0.9352;2.5919999999999996;2;équivalent
+autre (D1);Lissage exponentiel simple;0.9352;2.5919999999999996;2;équivalent
+autre (D1);Méthode Thêta;0.9352;2.593;2;équivalent
+autre (D1);Holt amorti;0.9378;2.5965;2;équivalent
+autre (D1);Holt-Winters multiplicatif amorti;0.94065;2.602;2;équivalent
+autre (D1);Moyenne historique;0.979;3.2815;2;moins bon, équivalent
+autre (D1);C · perceptron multicouche quantile;0.97975;2.858;2;équivalent
+autre (D1);E · XGBoost quantile (second ordre);1.00885;2.5845;2;équivalent
+autre (D1);D · LSTM quantile;1.0615999999999999;3.0564999999999998;2;moins bon, équivalent
+autre (D1);B · gradient boosting quantile;1.0989;2.591;2;équivalent
+autre (D1);Holt-Winters additif, grille fixée avant la validation;1.1344;2.2915;2;équivalent
+autre (D1);Persistance;1.30225;2.602;2;moins bon, équivalent
+autre (D1);Saisonnière hebdomadaire;1.3201;2.678;2;moins bon, équivalent
+autre (D1);Moyenne mobile 7 j;1.36285;2.7535;2;moins bon, équivalent
+svm;SVR RBF (niveau 2);1.5109;2.435;2;moins bon
+svm;SVR linéaire (niveau 1);1.6252;2.609;2;moins bon
+autre (D1);Régression ridge (λ = 1);1.6686;2.6470000000000002;2;moins bon

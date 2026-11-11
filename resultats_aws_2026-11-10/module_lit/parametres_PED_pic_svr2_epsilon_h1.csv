@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+epsilon = 0;1.257;1.755;-0.047;0.6429;1.8;0.1494;0.2988;équivalent
+epsilon = 0,25;1.256;1.738;-0.05;0.6426;1.8;0.0273;0.0819;équivalent
+epsilon = 0,5 (retenu);1.256;1.724;-0.008;0.6302;1.9;;;— choix retenu
+epsilon = 1;1.295;1.733;0.001;0.6474;1.3;0.0152;0.0608;équivalent
+epsilon = 2;1.357;1.781;0.093;0.6509;1.7;0.2509;0.2988;équivalent

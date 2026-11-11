@@ -1,0 +1,7 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+Niveau 4 seul (meilleur modèle unique);1.728;2.219;-0.132;0.6464;89.7;7.6;0.804;1.0;équivalent
+Moyenne simple persistance + niv. 3 + niv. 4;1.776;2.306;-0.101;0.7053;75.5;15.2;0.0743;0.2972;équivalent
+Empilement appris (poids positifs) (retenu);1.743;2.237;-0.276;0.6515;83.9;26.4;;;— choix retenu
+XGBoost quantile seul;1.8;2.34;-0.032;0.7212;90.3;14.5;0.034;0.17;équivalent
+Moyenne SVR niv. 4 + XGBoost;1.729;2.248;-0.082;0.6643;92.3;22.1;0.5837;1.0;équivalent
+Empilement persistance + niv. 3 + niv. 4 + XGBoost;1.748;2.248;-0.252;0.6515;83.2;40.6;0.9954;1.0;équivalent

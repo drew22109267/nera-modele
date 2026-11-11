@@ -1,0 +1,12 @@
+{
+ "service": "PED",
+ "comptage": "journee",
+ "regle": "significatif",
+ "modele": "svr_q_composite",
+ "nom_modele": "SVR quantile composite (niveau 4, retenu)",
+ "pinball_moyen": 0.8581,
+ "significatif_vs_retenu": "— choix retenu",
+ "imputation": "estimee",
+ "detail_imputation": "pinball moyenne 0.7981 (acp_iterative) ; contre « estimee » pour ce modèle : équivalent : non significatif, méthode retenue gardée",
+ "meilleur_toutes_familles": "LS-SVR (moindres carrés), noyau RBF, quantiles LOO"
+}

@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+sous_echantillon = 0,5;1.937;2.447;-0.336;0.725;69.4;7.9;0.289;0.578;équivalent
+sous_echantillon = 0,8 (retenu);1.904;2.407;-0.341;0.7442;74.3;8.9;;;— choix retenu
+sous_echantillon = 1;1.853;2.369;-0.315;0.7454;78.7;9.7;0.9471;0.9471;équivalent

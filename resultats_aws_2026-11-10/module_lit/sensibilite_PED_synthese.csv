@@ -1,0 +1,3 @@
+﻿horizon;meilleur_MAE_basse;meilleur_MAE_attendue;meilleur_MAE_haute;meme_meilleur_MAE;signes_instables_MAE;equivalents_persistance_MAE;meilleur_pinball_basse;meilleur_pinball_attendue;meilleur_pinball_haute;meme_meilleur_pinball;signes_instables_pinball;equivalents_persistance_pinball;robuste
+1;1 · SVR linéaire;2 · SVR RBF;4 · SVR quantile composite;False;;;3 · SVR quantile RBF;3 · SVR quantile RBF;3 · SVR quantile RBF;True;;;False
+7;4 · SVR quantile composite;4 · SVR quantile composite;4 · SVR quantile composite;True;;;3 · SVR quantile RBF;3 · SVR quantile RBF;4 · SVR quantile composite;False;;;False

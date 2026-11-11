@@ -1,0 +1,11 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);variables;DM p (pinball τ=0.8);p Holm;vs choix retenu
+7 retards seuls;2.869;3.543;0.125;1.3969;0.3;7;0.4839;1.0;équivalent
+7 retards + flux;2.861;3.495;0.087;1.4042;0.4;10;0.0378;0.3024;équivalent
+7 retards + calendrier (jour, mois);2.76;3.387;-0.015;1.3846;0.3;16;0.018;0.162;équivalent
+Complet : retards + flux + calendrier (retenu);2.763;3.371;0.048;1.3671;0.3;19;;;— choix retenu
+Complet + jours fériés camerounais;2.758;3.365;0.048;1.3649;0.4;21;0.4975;1.0;équivalent
+Complet + vacances scolaires;2.763;3.372;0.04;1.3693;0.3;20;0.6273;1.0;équivalent
+Complet + fériés + vacances scolaires;2.759;3.367;0.039;1.3678;0.4;22;0.8683;1.0;équivalent
+3 retards + flux + calendrier;2.729;3.334;-0.053;1.3803;0.3;15;0.4564;1.0;équivalent
+14 retards + flux + calendrier;2.743;3.35;0.052;1.3561;0.3;26;0.7071;1.0;équivalent
+Complet + diagnostics d'entrée des présents;2.738;3.353;0.053;1.3531;0.4;30;0.6848;1.0;équivalent

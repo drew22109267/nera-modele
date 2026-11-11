@@ -1,0 +1,20 @@
+﻿variable;part gardée (lasso);part gardée (lasso_1se)
+occ_j-0;1.0;1.0
+occ_j-1;1.0;0.0
+occ_j-2;0.0;0.0
+occ_j-3;0.7142857142857143;0.0
+occ_j-4;1.0;0.0
+occ_j-5;0.5714285714285714;1.0
+occ_j-6;1.0;1.0
+adm_3j;1.0;1.0
+adm_7j;1.0;1.0
+sorties_7j;1.0;1.0
+cible_jour_0;1.0;1.0
+cible_jour_1;1.0;0.0
+cible_jour_2;1.0;0.0
+cible_jour_3;1.0;0.0
+cible_jour_4;1.0;0.0
+cible_jour_5;1.0;1.0
+cible_jour_6;0.0;0.0
+mois_sin;1.0;0.0
+mois_cos;1.0;0.0

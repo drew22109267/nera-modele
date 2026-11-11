@@ -1,0 +1,7 @@
+════ Service PED (18 lits)
+════ Service MEDF (17 lits)
+── 06:04 banc_pretraitement_PED
+── 06:04 banc_pretraitement_MEDF
+   terminé (resultats/journaux/banc_pretraitement_MEDF.log)
+   terminé (resultats/journaux/banc_pretraitement_PED.log)
+── 06:53 fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/

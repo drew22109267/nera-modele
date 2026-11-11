@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+lambda_ = 0;1.666;1.991;-0.916;0.5563;84.7;1.0;0.1494;0.5976;équivalent
+lambda_ = 0,0001;1.644;1.982;-0.859;0.5403;85.8;1.0;0.237;0.5976;équivalent
+lambda_ = 0,001 (retenu);1.675;2.004;-0.91;0.5466;84.7;1.1;;;— choix retenu
+lambda_ = 0,01;1.547;1.874;-0.73;0.57;75.4;1.2;0.1534;0.5976;équivalent
+lambda_ = 0,1;1.514;1.856;-0.76;0.5268;85.2;3.2;0.5317;0.5976;équivalent

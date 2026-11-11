@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+arbres = 25;3.206;3.921;-0.188;1.1086;93.8;1.8;0.3858;1.0;équivalent
+arbres = 50;3.212;3.89;-0.204;1.1089;92.7;3.6;0.464;1.0;équivalent
+arbres = 100;3.276;3.919;-0.259;1.1118;93.8;7.1;0.3372;1.0;équivalent
+arbres = 300 (retenu);3.244;3.915;-0.259;1.1275;93.2;21.2;;;— choix retenu
+arbres = 500;3.249;3.914;-0.247;1.1258;93.8;35.5;0.8061;1.0;équivalent

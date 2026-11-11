@@ -1,0 +1,553 @@
+# Banc de comparaison du prétraitement — service PED
+
+Une décision change à la fois ; « (retenu) » = choix retenu. MAE « propre » : contre la série de la variante ; MAE « retenue » : contre la série du choix retenu, mêmes jours pour toutes les variantes. Diebold-Mariano (perte absolue, correction HLN) sur la MAE « retenue ».
+
+
+## Horizon J+1
+
+
+### P1 · Durées inconnues
+
+179 jours évalués.
+
+Variantes impossibles à évaluer (série trop courte) : Exclure les séjours sans durée (Série trop courte pour cet horizon.).
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Médiane du service | 15/07/2024 | 4 | 8.62 | 47.9 | -1.6 | 1.864 | 0.7111 | 7.7 | 1.868 | 0.6861 | 9.9 | 0.7259 | 1.0 | équivalent |
+| Moyenne du service | 15/07/2024 | 4 | 8.62 | 47.9 | -1.6 | 1.864 | 0.7111 | 7.7 | 1.868 | 0.6861 | 9.6 | 0.7259 | 1.0 | équivalent |
+| Médiane de la tranche d'âge | 15/07/2024 | 4 | 8.62 | 47.9 | -1.6 | 1.864 | 0.7111 | 7.7 | 1.868 | 0.6861 | 9.5 | 0.7259 | 1.0 | équivalent |
+| Estimée : prix, puis issue, puis médiane (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 12.9 |  |  | — choix retenu |
+| k plus proches voisins (prix, âge, sexe, issue, mois) | 15/07/2024 | 4 | 8.48 | 47.1 | -3.2 | 1.835 | 0.6973 | 7.7 | 1.855 | 0.6883 | 12.3 | 0.5879 | 1.0 | équivalent |
+| Régressions enchaînées (ridge, principe de MICE) | 15/07/2024 | 4 | 8.46 | 47.0 | -3.4 | 1.875 | 0.6994 | 7.2 | 1.883 | 0.6852 | 16.7 | 0.7376 | 1.0 | équivalent |
+| Loi normale multivariée par EM | 15/07/2024 | 4 | 8.46 | 47.0 | -3.4 | 1.861 | 0.6941 | 7.3 | 1.873 | 0.6838 | 15.2 | 0.9077 | 1.0 | équivalent |
+| ACP itérative (rang faible) | 15/07/2024 | 4 | 8.68 | 48.2 | -0.9 | 1.943 | 0.6964 | 2.2 | 1.928 | 0.6683 | 18.3 | 0.4357 | 1.0 | équivalent |
+| SoftImpute (norme nucléaire) | 15/07/2024 | 4 | 8.48 | 47.1 | -3.2 | 1.877 | 0.7001 | 7.6 | 1.856 | 0.6776 | 14.6 | 0.4611 | 1.0 | équivalent |
+| XGBoost (avec le diagnostic) | 15/07/2024 | 4 | 8.26 | 45.9 | -5.8 | 1.888 | 0.6887 | 4.5 | 1.889 | 0.6819 | 38.3 | 0.9036 | 1.0 | équivalent |
+| Hybride : prix, sinon XGBoost | 15/07/2024 | 4 | 8.26 | 45.9 | -5.8 | 1.882 | 0.6833 | 5.3 | 1.887 | 0.683 | 38.6 | 0.9897 | 1.0 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Estimée : prix, puis issue, puis médiane (retenu)).
+
+
+
+### P2 · Fenêtre de censure (encore hospitalisé)
+
+179 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 14 jours | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 12.9 |  |  | identique |
+| 30 jours | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 13.2 |  |  | identique |
+| p95 des durées connues (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 13.2 |  |  | — choix retenu |
+| 60 jours | 15/07/2024 | 4 | 8.7 | 48.3 | -2.8 | 1.998 | 0.7524 | 0.8 | 2.079 | 0.7378 | 15.1 | 0.0097 | 0.0097 | moins bon |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (p95 des durées connues (retenu)).
+
+
+
+### P3 · Convention du nombre de jours
+
+179 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Attendue (nuit incertaine = 1 − p) (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 13.0 |  |  | — choix retenu |
+| Tout inclusif (borne basse) | 15/07/2024 | 4 | 7.94 | 44.1 | -6.8 | 1.866 | 0.6667 | 5.9 | 1.929 | 0.6982 | 12.8 | 0.4043 | 0.4078 | équivalent |
+| Tout en nuits (borne haute) | 15/07/2024 | 4 | 9.02 | 50.1 | 2.4 | 1.989 | 0.7117 | 6.8 | 1.995 | 0.7062 | 11.5 | 0.2039 | 0.4078 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Attendue (nuit incertaine = 1 − p) (retenu)).
+
+
+
+### P4 · Patients « Ancien » reportés
+
+179 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Garder toutes les lignes (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 11.4 |  |  | — choix retenu |
+| Fusionner les reports confirmés | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 11.4 |  |  | identique |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Garder toutes les lignes (retenu)).
+
+
+
+### P5 · Période exploitable
+
+179 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Durées connues ≥ 80 % | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 11.9 |  |  | identique |
+| Durées connues ≥ 90 % (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 11.6 |  |  | — choix retenu |
+| Durées connues ≥ 95 % | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 11.7 |  |  | identique |
+| ≥ 90 %, sans rodage au début (premier mois = début réel du registre) | 01/07/2024 | 4 | 8.41 | 46.7 | -3.2 | 1.87 | 0.687 | 7.4 | 1.87 | 0.687 | 13.8 | 0.1886 | 0.1886 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Durées connues ≥ 90 % (retenu)).
+
+
+
+### P6 · Fin de série (délai d'inscription)
+
+176 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Aucune coupe | 15/07/2024 | 0 | 8.44 | 46.9 | -3.4 | 1.831 | 0.6771 | 9.6 | 1.831 | 0.6771 | 11.7 |  |  | identique |
+| 7 derniers jours retirés | 15/07/2024 | 7 | 8.49 | 47.2 | -3.6 | 1.831 | 0.6771 | 9.6 | 1.831 | 0.6771 | 13.6 |  |  | identique |
+| p95 du délai d'inscription (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.831 | 0.6771 | 9.6 | 1.831 | 0.6771 | 12.1 |  |  | — choix retenu |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (p95 du délai d'inscription (retenu)).
+
+
+
+### P7 · Trous de saisie (≥ 4 jours sans admission)
+
+179 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Gardés tels quels (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 13.7 |  |  | — choix retenu |
+| Lignes d'apprentissage qui les touchent exclues | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.853 | 0.6839 | 8.3 | 1.853 | 0.6839 | 12.6 | 0.7725 | 0.7725 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Gardés tels quels (retenu)).
+
+
+
+### P8 · Méthode de comptage des présents
+
+179 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Recensement de minuit (nuits passées) (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 1.855 | 0.6831 | 8.2 | 1.855 | 0.6831 | 13.9 |  |  | — choix retenu |
+| Présence dans la journée (jour de sortie compris) | 15/07/2024 | 4 | 11.17 | 62.0 | -2.6 | 1.831 | 0.6725 | 21.5 | 3.043 | 0.94 | 14.7 | 0.0 | 0.0 | moins bon |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Recensement de minuit (nuits passées) (retenu)).
+
+
+
+### P1 × modèles (J+1) : chaque méthode des durées inconnues avec chaque modèle
+
+179 jours évalués ; tri par MAE contre la série retenue.
+
+| variante | imputation | modèle | famille | cle_imputation | cle_modele | pinball τ=0.8 retenue | MAE retenue | MAE propre | pinball τ=0.8 propre | temps (s) | DM p vs paire retenue | DM p vs imputation retenue, même modèle | p Holm vs paire retenue | vs paire retenue | p Holm vs imputation retenue, même modèle | vs imputation retenue, même modèle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | Loi normale multivariée par EM | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | em | lssvr_rbf | 0.6459 | 1.849 | 1.844 | 0.6605 | 0.3 | 0.0926 | 0.1239 | 1.0 | équivalent | 1.0 | équivalent |
+| 1 | SoftImpute (norme nucléaire) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | softimpute | lssvr_rbf | 0.6463 | 1.848 | 1.867 | 0.6665 | 0.2 | 0.0978 | 0.3789 | 1.0 | équivalent | 1.0 | équivalent |
+| 2 | Régressions enchaînées (ridge, principe de MICE) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | regression | lssvr_rbf | 0.6473 | 1.858 | 1.851 | 0.6646 | 0.3 | 0.101 | 0.0846 | 1.0 | équivalent | 1.0 | équivalent |
+| 3 | k plus proches voisins (prix, âge, sexe, issue, mois) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | knn | lssvr_rbf | 0.6482 | 1.858 | 1.876 | 0.6656 | 0.3 | 0.1024 | 0.6335 | 1.0 | équivalent | 1.0 | équivalent |
+| 4 | Estimée : prix, puis issue, puis médiane | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | estimee | lssvr_rbf | 0.6527 | 1.84 | 1.84 | 0.6527 | 0.3 | 0.1536 |  | 1.0 | équivalent |  | — référence |
+| 5 | Médiane de la tranche d'âge | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | mediane_age | lssvr_rbf | 0.6538 | 1.858 | 1.854 | 0.673 | 0.3 | 0.2165 | 0.9117 | 1.0 | équivalent | 1.0 | équivalent |
+| 6 | Médiane du service | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | mediane | lssvr_rbf | 0.6538 | 1.858 | 1.854 | 0.673 | 0.3 | 0.2165 | 0.9117 | 1.0 | équivalent | 1.0 | équivalent |
+| 7 | Moyenne du service | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | moyenne | lssvr_rbf | 0.6538 | 1.858 | 1.854 | 0.673 | 0.3 | 0.2165 | 0.9117 | 1.0 | équivalent | 1.0 | équivalent |
+| 8 | Régressions enchaînées (ridge, principe de MICE) | C · perceptron multicouche quantile | concurrent | regression | mlp | 0.6554 | 1.868 | 1.894 | 0.6729 | 1.5 | 0.226 | 0.4783 | 1.0 | équivalent | 1.0 | équivalent |
+| 9 | ACP itérative (rang faible) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | acp_iterative | lssvr_rbf | 0.6605 | 1.874 | 1.921 | 0.6906 | 0.3 | 0.3534 | 0.6546 | 1.0 | équivalent | 1.0 | équivalent |
+| 10 | ACP itérative (rang faible) | C · perceptron multicouche quantile | concurrent | acp_iterative | mlp | 0.661 | 1.945 | 1.993 | 0.7064 | 1.3 | 0.3517 | 0.9663 | 1.0 | équivalent | 1.0 | équivalent |
+| 11 | Loi normale multivariée par EM | C · perceptron multicouche quantile | concurrent | em | mlp | 0.6613 | 1.887 | 1.92 | 0.6806 | 1.5 | 0.3218 | 0.9702 | 1.0 | équivalent | 1.0 | équivalent |
+| 12 | Estimée : prix, puis issue, puis médiane | C · perceptron multicouche quantile | concurrent | estimee | mlp | 0.6618 | 1.887 | 1.887 | 0.6618 | 1.5 | 0.3145 |  | 1.0 | équivalent |  | — référence |
+| 13 | ACP itérative (rang faible) | SVR quantile RBF (niveau 3) | svm | acp_iterative | svr_q_rbf | 0.6623 | 1.954 | 1.933 | 0.6887 | 5.6 | 0.3436 | 0.5586 | 1.0 | équivalent | 1.0 | équivalent |
+| 14 | k plus proches voisins (prix, âge, sexe, issue, mois) | C · perceptron multicouche quantile | concurrent | knn | mlp | 0.6636 | 1.86 | 1.875 | 0.6732 | 1.5 | 0.3571 | 0.883 | 1.0 | équivalent | 1.0 | équivalent |
+| 15 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile, noyau polynomial (degré 2) | svm | regression | svr_q_polynomial | 0.6636 | 1.851 | 1.844 | 0.6827 | 8.7 | 0.3652 | 0.0052 | 1.0 | équivalent | 0.598 | équivalent |
+| 16 | SoftImpute (norme nucléaire) | SVR quantile RBF (niveau 3) | svm | softimpute | svr_q_rbf | 0.6646 | 1.867 | 1.88 | 0.6866 | 5.2 | 0.2454 | 0.2122 | 1.0 | équivalent | 1.0 | équivalent |
+| 17 | Hybride : prix, sinon XGBoost | SVR quantile, noyau polynomial (degré 2) | svm | hybride | svr_q_polynomial | 0.6649 | 1.905 | 1.886 | 0.6863 | 7.0 | 0.4338 | 0.2693 | 1.0 | équivalent | 1.0 | équivalent |
+| 18 | SoftImpute (norme nucléaire) | C · perceptron multicouche quantile | concurrent | softimpute | mlp | 0.6654 | 1.84 | 1.881 | 0.6823 | 1.3 | 0.4074 | 0.7477 | 1.0 | équivalent | 1.0 | équivalent |
+| 19 | XGBoost (avec le diagnostic) | SVR quantile, noyau polynomial (degré 2) | svm | xgboost | svr_q_polynomial | 0.6665 | 1.898 | 1.888 | 0.6879 | 7.1 | 0.4834 | 0.2958 | 1.0 | équivalent | 1.0 | équivalent |
+| 20 | Loi normale multivariée par EM | SVR quantile, noyau polynomial (degré 2) | svm | em | svr_q_polynomial | 0.6683 | 1.846 | 1.839 | 0.6803 | 8.6 | 0.5016 | 0.0559 | 1.0 | équivalent | 1.0 | équivalent |
+| 21 | ACP itérative (rang faible) | SVR quantile composite (niveau 4, retenu) | svm | acp_iterative | svr_q_composite | 0.6683 | 1.928 | 1.943 | 0.6964 | 12.4 | 0.4357 | 0.4357 | 1.0 | équivalent | 1.0 | équivalent |
+| 22 | XGBoost (avec le diagnostic) | SVR quantile RBF (niveau 3) | svm | xgboost | svr_q_rbf | 0.6684 | 1.918 | 1.899 | 0.6805 | 4.7 | 0.3541 | 0.6915 | 1.0 | équivalent | 1.0 | équivalent |
+| 23 | XGBoost (avec le diagnostic) | D · LSTM quantile | concurrent | xgboost | lstm | 0.6702 | 1.9 | 1.882 | 0.6958 | 11.7 | 0.5826 | 0.4097 | 1.0 | équivalent | 1.0 | équivalent |
+| 24 | Loi normale multivariée par EM | SVR quantile RBF (niveau 3) | svm | em | svr_q_rbf | 0.6707 | 1.903 | 1.889 | 0.6826 | 5.4 | 0.4134 | 0.6947 | 1.0 | équivalent | 1.0 | équivalent |
+| 25 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile RBF (niveau 3) | svm | regression | svr_q_rbf | 0.6716 | 1.9 | 1.89 | 0.6889 | 5.8 | 0.4404 | 0.8238 | 1.0 | équivalent | 1.0 | équivalent |
+| 26 | SoftImpute (norme nucléaire) | SVR quantile, noyau polynomial (degré 2) | svm | softimpute | svr_q_polynomial | 0.6719 | 1.828 | 1.839 | 0.7001 | 7.0 | 0.6152 | 0.2976 | 1.0 | équivalent | 1.0 | équivalent |
+| 27 | Loi normale multivariée par EM | D · LSTM quantile | concurrent | em | lstm | 0.672 | 1.897 | 1.903 | 0.6816 | 14.4 | 0.6186 | 0.193 | 1.0 | équivalent | 1.0 | équivalent |
+| 28 | Hybride : prix, sinon XGBoost | SVR quantile RBF (niveau 3) | svm | hybride | svr_q_rbf | 0.6722 | 1.91 | 1.888 | 0.6772 | 5.8 | 0.4727 | 0.9695 | 1.0 | équivalent | 1.0 | équivalent |
+| 29 | Médiane du service | SVR quantile RBF (niveau 3) | svm | mediane | svr_q_rbf | 0.6722 | 1.88 | 1.869 | 0.6945 | 6.0 | 0.5081 | 0.9516 | 1.0 | équivalent | 1.0 | équivalent |
+| 30 | Médiane de la tranche d'âge | SVR quantile RBF (niveau 3) | svm | mediane_age | svr_q_rbf | 0.6722 | 1.88 | 1.869 | 0.6945 | 6.3 | 0.5081 | 0.9516 | 1.0 | équivalent | 1.0 | équivalent |
+| 31 | Moyenne du service | SVR quantile RBF (niveau 3) | svm | moyenne | svr_q_rbf | 0.6722 | 1.88 | 1.869 | 0.6945 | 6.3 | 0.5081 | 0.9516 | 1.0 | équivalent | 1.0 | équivalent |
+| 32 | Estimée : prix, puis issue, puis médiane | SVR quantile RBF (niveau 3) | svm | estimee | svr_q_rbf | 0.6726 | 1.883 | 1.883 | 0.6726 | 6.4 | 0.4364 |  | 1.0 | équivalent |  | — référence |
+| 33 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile RBF (niveau 3) | svm | knn | svr_q_rbf | 0.6727 | 1.891 | 1.879 | 0.6826 | 5.6 | 0.4977 | 0.9973 | 1.0 | équivalent | 1.0 | équivalent |
+| 34 | ACP itérative (rang faible) | SVR quantile, noyau laplacien | svm | acp_iterative | svr_q_laplacien | 0.6727 | 2.003 | 2.023 | 0.7218 | 5.7 | 0.6722 | 0.0881 | 1.0 | équivalent | 1.0 | équivalent |
+| 35 | XGBoost (avec le diagnostic) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | xgboost | lssvr_rbf | 0.6732 | 1.913 | 1.88 | 0.686 | 0.2 | 0.6953 | 0.1876 | 1.0 | équivalent | 1.0 | équivalent |
+| 36 | Hybride : prix, sinon XGBoost | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | hybride | lssvr_rbf | 0.6754 | 1.92 | 1.885 | 0.6853 | 0.2 | 0.7606 | 0.1581 | 1.0 | équivalent | 1.0 | équivalent |
+| 37 | ACP itérative (rang faible) | SVR quantile, noyau polynomial (degré 2) | svm | acp_iterative | svr_q_polynomial | 0.6757 | 1.922 | 1.946 | 0.7009 | 8.0 | 0.7624 | 0.7569 | 1.0 | équivalent | 1.0 | équivalent |
+| 38 | SoftImpute (norme nucléaire) | D · LSTM quantile | concurrent | softimpute | lstm | 0.6775 | 1.837 | 1.871 | 0.6977 | 12.2 | 0.7987 | 0.6387 | 1.0 | équivalent | 1.0 | équivalent |
+| 39 | SoftImpute (norme nucléaire) | SVR quantile composite (niveau 4, retenu) | svm | softimpute | svr_q_composite | 0.6776 | 1.856 | 1.877 | 0.7001 | 11.2 | 0.4611 | 0.4611 | 1.0 | équivalent | 1.0 | équivalent |
+| 40 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile, noyau polynomial (degré 2) | svm | knn | svr_q_polynomial | 0.6779 | 1.848 | 1.834 | 0.6965 | 8.5 | 0.7954 | 0.741 | 1.0 | équivalent | 1.0 | équivalent |
+| 41 | ACP itérative (rang faible) | D · LSTM quantile | concurrent | acp_iterative | lstm | 0.6784 | 1.947 | 1.904 | 0.679 | 12.4 | 0.8627 | 0.8776 | 1.0 | équivalent | 1.0 | équivalent |
+| 42 | Hybride : prix, sinon XGBoost | D · LSTM quantile | concurrent | hybride | lstm | 0.6808 | 1.901 | 1.885 | 0.699 | 12.6 | 0.9195 | 0.9651 | 1.0 | équivalent | 1.0 | équivalent |
+| 43 | Estimée : prix, puis issue, puis médiane | D · LSTM quantile | concurrent | estimee | lstm | 0.6814 | 1.855 | 1.855 | 0.6814 | 14.1 | 0.9375 |  | 1.0 | équivalent |  | — référence |
+| 44 | Estimée : prix, puis issue, puis médiane | SVR quantile, noyau polynomial (degré 2) | svm | estimee | svr_q_polynomial | 0.6814 | 1.848 | 1.848 | 0.6814 | 7.9 | 0.9362 |  | 1.0 | équivalent |  | — référence |
+| 45 | Régressions enchaînées (ridge, principe de MICE) | D · LSTM quantile | concurrent | regression | lstm | 0.6815 | 1.895 | 1.906 | 0.6992 | 14.5 | 0.9431 | 0.9787 | 1.0 | équivalent | 1.0 | équivalent |
+| 46 | XGBoost (avec le diagnostic) | SVR quantile composite (niveau 4, retenu) | svm | xgboost | svr_q_composite | 0.6819 | 1.889 | 1.888 | 0.6887 | 9.3 | 0.9036 | 0.9036 | 1.0 | équivalent | 1.0 | équivalent |
+| 47 | Moyenne du service | D · LSTM quantile | concurrent | moyenne | lstm | 0.6826 | 1.843 | 1.856 | 0.6977 | 14.5 | 0.9839 | 0.9066 | 1.0 | équivalent | 1.0 | équivalent |
+| 48 | Médiane du service | D · LSTM quantile | concurrent | mediane | lstm | 0.6826 | 1.843 | 1.856 | 0.6977 | 14.7 | 0.9839 | 0.9066 | 1.0 | équivalent | 1.0 | équivalent |
+| 49 | Médiane de la tranche d'âge | D · LSTM quantile | concurrent | mediane_age | lstm | 0.6826 | 1.843 | 1.856 | 0.6977 | 14.5 | 0.9839 | 0.9066 | 1.0 | équivalent | 1.0 | équivalent |
+| 50 | Hybride : prix, sinon XGBoost | SVR quantile composite (niveau 4, retenu) | svm | hybride | svr_q_composite | 0.683 | 1.887 | 1.882 | 0.6833 | 10.8 | 0.9897 | 0.9897 | 1.0 | équivalent | 1.0 | équivalent |
+| 51 | Estimée : prix, puis issue, puis médiane | SVR quantile composite (niveau 4, retenu) | svm | estimee | svr_q_composite | 0.6831 | 1.855 | 1.855 | 0.6831 | 12.5 |  |  |  | — référence |  | — référence |
+| 52 | Moyenne du service | SVR quantile, noyau polynomial (degré 2) | svm | moyenne | svr_q_polynomial | 0.6836 | 1.848 | 1.837 | 0.7141 | 8.8 | 0.983 | 0.8358 | 1.0 | équivalent | 1.0 | équivalent |
+| 53 | Médiane de la tranche d'âge | SVR quantile, noyau polynomial (degré 2) | svm | mediane_age | svr_q_polynomial | 0.6836 | 1.848 | 1.837 | 0.7141 | 8.3 | 0.983 | 0.8358 | 1.0 | équivalent | 1.0 | équivalent |
+| 54 | Médiane du service | SVR quantile, noyau polynomial (degré 2) | svm | mediane | svr_q_polynomial | 0.6836 | 1.848 | 1.837 | 0.7141 | 8.2 | 0.983 | 0.8358 | 1.0 | équivalent | 1.0 | équivalent |
+| 55 | Loi normale multivariée par EM | SVR quantile composite (niveau 4, retenu) | svm | em | svr_q_composite | 0.6838 | 1.873 | 1.861 | 0.6941 | 11.6 | 0.9077 | 0.9077 | 1.0 | équivalent | 1.0 | équivalent |
+| 56 | k plus proches voisins (prix, âge, sexe, issue, mois) | D · LSTM quantile | concurrent | knn | lstm | 0.6842 | 1.849 | 1.842 | 0.6967 | 13.7 | 0.9621 | 0.7722 | 1.0 | équivalent | 1.0 | équivalent |
+| 57 | Médiane du service | C · perceptron multicouche quantile | concurrent | mediane | mlp | 0.6847 | 1.904 | 1.921 | 0.6992 | 1.6 | 0.944 | 0.1333 | 1.0 | équivalent | 1.0 | équivalent |
+| 58 | Moyenne du service | C · perceptron multicouche quantile | concurrent | moyenne | mlp | 0.6847 | 1.904 | 1.921 | 0.6992 | 1.5 | 0.944 | 0.1333 | 1.0 | équivalent | 1.0 | équivalent |
+| 59 | Médiane de la tranche d'âge | C · perceptron multicouche quantile | concurrent | mediane_age | mlp | 0.6847 | 1.904 | 1.921 | 0.6992 | 1.5 | 0.944 | 0.1333 | 1.0 | équivalent | 1.0 | équivalent |
+| 60 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile composite (niveau 4, retenu) | svm | regression | svr_q_composite | 0.6852 | 1.883 | 1.875 | 0.6994 | 13.9 | 0.7376 | 0.7376 | 1.0 | équivalent | 1.0 | équivalent |
+| 61 | Médiane du service | SVR quantile composite (niveau 4, retenu) | svm | mediane | svr_q_composite | 0.6861 | 1.868 | 1.864 | 0.7111 | 10.8 | 0.7259 | 0.7259 | 1.0 | équivalent | 1.0 | équivalent |
+| 62 | Moyenne du service | SVR quantile composite (niveau 4, retenu) | svm | moyenne | svr_q_composite | 0.6861 | 1.868 | 1.864 | 0.7111 | 10.5 | 0.7259 | 0.7259 | 1.0 | équivalent | 1.0 | équivalent |
+| 63 | Médiane de la tranche d'âge | SVR quantile composite (niveau 4, retenu) | svm | mediane_age | svr_q_composite | 0.6861 | 1.868 | 1.864 | 0.7111 | 9.7 | 0.7259 | 0.7259 | 1.0 | équivalent | 1.0 | équivalent |
+| 64 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile composite (niveau 4, retenu) | svm | knn | svr_q_composite | 0.6883 | 1.855 | 1.835 | 0.6973 | 15.0 | 0.5879 | 0.5879 | 1.0 | équivalent | 1.0 | équivalent |
+| 65 | XGBoost (avec le diagnostic) | C · perceptron multicouche quantile | concurrent | xgboost | mlp | 0.6897 | 1.932 | 1.935 | 0.6897 | 1.3 | 0.8151 | 0.1573 | 1.0 | équivalent | 1.0 | équivalent |
+| 66 | Hybride : prix, sinon XGBoost | A · forêt aléatoire quantile | concurrent | hybride | foret | 0.6947 | 2.034 | 1.978 | 0.7014 | 22.7 | 0.7106 | 0.3241 | 1.0 | équivalent | 1.0 | équivalent |
+| 67 | SoftImpute (norme nucléaire) | SVR quantile, noyau laplacien | svm | softimpute | svr_q_laplacien | 0.6959 | 1.956 | 1.986 | 0.7125 | 5.7 | 0.5568 | 0.2567 | 1.0 | équivalent | 1.0 | équivalent |
+| 68 | XGBoost (avec le diagnostic) | A · forêt aléatoire quantile | concurrent | xgboost | foret | 0.6968 | 2.063 | 1.987 | 0.6934 | 22.1 | 0.6619 | 0.4313 | 1.0 | équivalent | 1.0 | équivalent |
+| 69 | ACP itérative (rang faible) | A · forêt aléatoire quantile | concurrent | acp_iterative | foret | 0.6972 | 1.976 | 1.992 | 0.7095 | 23.2 | 0.6471 | 0.619 | 1.0 | équivalent | 1.0 | équivalent |
+| 70 | Loi normale multivariée par EM | SVR quantile, noyau laplacien | svm | em | svr_q_laplacien | 0.6982 | 1.972 | 1.967 | 0.7056 | 5.7 | 0.4635 | 0.3082 | 1.0 | équivalent | 1.0 | équivalent |
+| 71 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile, noyau laplacien | svm | regression | svr_q_laplacien | 0.6984 | 1.97 | 1.963 | 0.7089 | 5.5 | 0.456 | 0.3727 | 1.0 | équivalent | 1.0 | équivalent |
+| 72 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile, noyau laplacien | svm | knn | svr_q_laplacien | 0.6994 | 1.982 | 1.974 | 0.7042 | 6.9 | 0.3916 | 0.6454 | 1.0 | équivalent | 1.0 | équivalent |
+| 73 | ACP itérative (rang faible) | E · XGBoost quantile (second ordre) | concurrent | acp_iterative | xgboost | 0.6995 | 2.016 | 2.038 | 0.778 | 14.1 | 0.5049 | 0.1939 | 1.0 | équivalent | 1.0 | équivalent |
+| 74 | Hybride : prix, sinon XGBoost | C · perceptron multicouche quantile | concurrent | hybride | mlp | 0.701 | 1.932 | 1.924 | 0.6952 | 1.3 | 0.5434 | 0.0706 | 1.0 | équivalent | 1.0 | équivalent |
+| 75 | Médiane de la tranche d'âge | SVR quantile, noyau laplacien | svm | mediane_age | svr_q_laplacien | 0.7022 | 1.97 | 1.973 | 0.7244 | 7.0 | 0.3818 | 0.9316 | 1.0 | équivalent | 1.0 | équivalent |
+| 76 | Médiane du service | SVR quantile, noyau laplacien | svm | mediane | svr_q_laplacien | 0.7022 | 1.97 | 1.973 | 0.7244 | 7.5 | 0.3818 | 0.9316 | 1.0 | équivalent | 1.0 | équivalent |
+| 77 | Moyenne du service | SVR quantile, noyau laplacien | svm | moyenne | svr_q_laplacien | 0.7022 | 1.97 | 1.973 | 0.7244 | 7.6 | 0.3818 | 0.9316 | 1.0 | équivalent | 1.0 | équivalent |
+| 78 | Estimée : prix, puis issue, puis médiane | SVR quantile, noyau laplacien | svm | estimee | svr_q_laplacien | 0.7028 | 1.961 | 1.961 | 0.7028 | 5.8 | 0.3023 |  | 1.0 | équivalent |  | — référence |
+| 79 | Médiane de la tranche d'âge | A · forêt aléatoire quantile | concurrent | mediane_age | foret | 0.708 | 1.973 | 1.959 | 0.7252 | 23.9 | 0.4081 | 0.8844 | 1.0 | équivalent | 1.0 | équivalent |
+| 80 | Moyenne du service | A · forêt aléatoire quantile | concurrent | moyenne | foret | 0.708 | 1.973 | 1.959 | 0.7252 | 24.5 | 0.4081 | 0.8844 | 1.0 | équivalent | 1.0 | équivalent |
+| 81 | Médiane du service | A · forêt aléatoire quantile | concurrent | mediane | foret | 0.708 | 1.973 | 1.959 | 0.7252 | 24.4 | 0.4081 | 0.8844 | 1.0 | équivalent | 1.0 | équivalent |
+| 82 | ACP itérative (rang faible) | B · gradient boosting quantile | concurrent | acp_iterative | boosting | 0.7101 | 2.016 | 2.006 | 0.7675 | 11.6 | 0.2766 | 0.3871 | 1.0 | équivalent | 1.0 | équivalent |
+| 83 | Estimée : prix, puis issue, puis médiane | A · forêt aléatoire quantile | concurrent | estimee | foret | 0.7102 | 1.944 | 1.944 | 0.7102 | 24.4 | 0.3565 |  | 1.0 | équivalent |  | — référence |
+| 84 | Régressions enchaînées (ridge, principe de MICE) | A · forêt aléatoire quantile | concurrent | regression | foret | 0.7135 | 1.927 | 1.916 | 0.7314 | 24.2 | 0.3027 | 0.7407 | 1.0 | équivalent | 1.0 | équivalent |
+| 85 | SoftImpute (norme nucléaire) | A · forêt aléatoire quantile | concurrent | softimpute | foret | 0.7153 | 1.939 | 1.951 | 0.7356 | 22.3 | 0.2927 | 0.7367 | 1.0 | équivalent | 1.0 | équivalent |
+| 86 | Moyenne du service | E · XGBoost quantile (second ordre) | concurrent | moyenne | xgboost | 0.7168 | 1.915 | 1.904 | 0.7444 | 15.0 | 0.2418 | 0.4507 | 1.0 | équivalent | 1.0 | équivalent |
+| 87 | Médiane du service | E · XGBoost quantile (second ordre) | concurrent | mediane | xgboost | 0.7168 | 1.915 | 1.904 | 0.7444 | 15.1 | 0.2418 | 0.4507 | 1.0 | équivalent | 1.0 | équivalent |
+| 88 | Médiane de la tranche d'âge | E · XGBoost quantile (second ordre) | concurrent | mediane_age | xgboost | 0.7168 | 1.915 | 1.904 | 0.7444 | 15.0 | 0.2418 | 0.4507 | 1.0 | équivalent | 1.0 | équivalent |
+| 89 | Loi normale multivariée par EM | E · XGBoost quantile (second ordre) | concurrent | em | xgboost | 0.7171 | 1.916 | 1.921 | 0.7273 | 14.9 | 0.2202 | 0.3021 | 1.0 | équivalent | 1.0 | équivalent |
+| 90 | XGBoost (avec le diagnostic) | SVR quantile, noyau laplacien | svm | xgboost | svr_q_laplacien | 0.7175 | 1.991 | 1.953 | 0.6952 | 5.4 | 0.1212 | 0.2196 | 1.0 | équivalent | 1.0 | équivalent |
+| 91 | Hybride : prix, sinon XGBoost | SVR quantile, noyau laplacien | svm | hybride | svr_q_laplacien | 0.7204 | 1.995 | 1.952 | 0.6959 | 5.1 | 0.0915 | 0.1617 | 1.0 | équivalent | 1.0 | équivalent |
+| 92 | Régressions enchaînées (ridge, principe de MICE) | E · XGBoost quantile (second ordre) | concurrent | regression | xgboost | 0.7218 | 1.909 | 1.915 | 0.7332 | 15.0 | 0.1742 | 0.6238 | 1.0 | équivalent | 1.0 | équivalent |
+| 93 | Loi normale multivariée par EM | A · forêt aléatoire quantile | concurrent | em | foret | 0.7224 | 1.941 | 1.924 | 0.7347 | 23.8 | 0.1768 | 0.1915 | 1.0 | équivalent | 1.0 | équivalent |
+| 94 | k plus proches voisins (prix, âge, sexe, issue, mois) | A · forêt aléatoire quantile | concurrent | knn | foret | 0.725 | 1.972 | 1.956 | 0.7339 | 24.4 | 0.1641 | 0.2678 | 1.0 | équivalent | 1.0 | équivalent |
+| 95 | Estimée : prix, puis issue, puis médiane | E · XGBoost quantile (second ordre) | concurrent | estimee | xgboost | 0.7264 | 1.911 | 1.911 | 0.7264 | 15.1 | 0.1201 |  | 1.0 | équivalent |  | — référence |
+| 96 | Loi normale multivariée par EM | B · gradient boosting quantile | concurrent | em | boosting | 0.7285 | 1.889 | 1.885 | 0.7438 | 12.7 | 0.0977 | 0.8068 | 1.0 | équivalent | 1.0 | équivalent |
+| 97 | Régressions enchaînées (ridge, principe de MICE) | B · gradient boosting quantile | concurrent | regression | boosting | 0.7287 | 1.859 | 1.862 | 0.7444 | 12.3 | 0.0748 | 0.8338 | 1.0 | équivalent | 1.0 | équivalent |
+| 98 | SoftImpute (norme nucléaire) | E · XGBoost quantile (second ordre) | concurrent | softimpute | xgboost | 0.7288 | 1.884 | 1.909 | 0.7509 | 14.0 | 0.1198 | 0.8421 | 1.0 | équivalent | 1.0 | équivalent |
+| 99 | Estimée : prix, puis issue, puis médiane | B · gradient boosting quantile | concurrent | estimee | boosting | 0.7314 | 1.863 | 1.863 | 0.7314 | 12.5 | 0.0685 |  | 1.0 | équivalent |  | — référence |
+| 100 | SoftImpute (norme nucléaire) | B · gradient boosting quantile | concurrent | softimpute | boosting | 0.7314 | 1.874 | 1.886 | 0.7538 | 11.3 | 0.0637 | 0.9999 | 1.0 | équivalent | 1.0 | équivalent |
+| 101 | k plus proches voisins (prix, âge, sexe, issue, mois) | E · XGBoost quantile (second ordre) | concurrent | knn | xgboost | 0.7339 | 1.918 | 1.921 | 0.7318 | 15.0 | 0.0643 | 0.5832 | 1.0 | équivalent | 1.0 | équivalent |
+| 102 | Hybride : prix, sinon XGBoost | E · XGBoost quantile (second ordre) | concurrent | hybride | xgboost | 0.7363 | 1.999 | 1.927 | 0.7116 | 14.5 | 0.0813 | 0.5767 | 1.0 | équivalent | 1.0 | équivalent |
+| 103 | Hybride : prix, sinon XGBoost | B · gradient boosting quantile | concurrent | hybride | boosting | 0.7378 | 1.984 | 1.939 | 0.7194 | 11.5 | 0.0653 | 0.7751 | 1.0 | équivalent | 1.0 | équivalent |
+| 104 | XGBoost (avec le diagnostic) | E · XGBoost quantile (second ordre) | concurrent | xgboost | xgboost | 0.7388 | 1.982 | 1.92 | 0.7141 | 14.1 | 0.0751 | 0.524 | 1.0 | équivalent | 1.0 | équivalent |
+| 105 | k plus proches voisins (prix, âge, sexe, issue, mois) | B · gradient boosting quantile | concurrent | knn | boosting | 0.7419 | 1.876 | 1.872 | 0.7355 | 12.8 | 0.0363 | 0.5453 | 1.0 | équivalent | 1.0 | équivalent |
+| 106 | Médiane du service | B · gradient boosting quantile | concurrent | mediane | boosting | 0.7481 | 1.888 | 1.882 | 0.7805 | 13.2 | 0.0145 | 0.3288 | 1.0 | équivalent | 1.0 | équivalent |
+| 107 | Moyenne du service | B · gradient boosting quantile | concurrent | moyenne | boosting | 0.7481 | 1.888 | 1.882 | 0.7805 | 12.7 | 0.0145 | 0.3288 | 1.0 | équivalent | 1.0 | équivalent |
+| 108 | Médiane de la tranche d'âge | B · gradient boosting quantile | concurrent | mediane_age | boosting | 0.7481 | 1.888 | 1.882 | 0.7805 | 12.4 | 0.0145 | 0.3288 | 1.0 | équivalent | 1.0 | équivalent |
+| 109 | XGBoost (avec le diagnostic) | B · gradient boosting quantile | concurrent | xgboost | boosting | 0.7561 | 1.985 | 1.93 | 0.736 | 11.2 | 0.0174 | 0.2834 | 1.0 | équivalent | 1.0 | équivalent |
+| 110 | ACP itérative (rang faible) | SVR RBF (niveau 2) | svm | acp_iterative | svr_rbf | 0.8635 | 1.907 | 1.905 | 0.9613 | 1.7 | 0.0002 | 0.0073 | 0.022 | moins bon | 0.8322 | équivalent |
+| 111 | ACP itérative (rang faible) | SVR linéaire (niveau 1) | svm | acp_iterative | svr_lineaire | 0.8939 | 1.944 | 1.918 | 0.9801 | 0.4 | 0.0001 | 0.1946 | 0.0114 | moins bon | 1.0 | équivalent |
+| 112 | Médiane du service | SVR linéaire (niveau 1) | svm | mediane | svr_lineaire | 0.8978 | 1.838 | 1.822 | 0.9114 | 0.5 | 0.0001 | 0.0459 | 0.0114 | moins bon | 1.0 | équivalent |
+| 113 | Moyenne du service | SVR linéaire (niveau 1) | svm | moyenne | svr_lineaire | 0.8978 | 1.838 | 1.822 | 0.9114 | 0.5 | 0.0001 | 0.0459 | 0.0114 | moins bon | 1.0 | équivalent |
+| 114 | Médiane de la tranche d'âge | SVR linéaire (niveau 1) | svm | mediane_age | svr_lineaire | 0.8978 | 1.838 | 1.822 | 0.9114 | 0.5 | 0.0001 | 0.0459 | 0.0114 | moins bon | 1.0 | équivalent |
+| 115 | Médiane du service | SVR RBF (niveau 2) | svm | mediane | svr_rbf | 0.9178 | 1.852 | 1.837 | 0.932 | 1.7 | 0.0 | 0.2961 | 0.0 | moins bon | 1.0 | équivalent |
+| 116 | Moyenne du service | SVR RBF (niveau 2) | svm | moyenne | svr_rbf | 0.9178 | 1.852 | 1.837 | 0.932 | 1.7 | 0.0 | 0.2961 | 0.0 | moins bon | 1.0 | équivalent |
+| 117 | Médiane de la tranche d'âge | SVR RBF (niveau 2) | svm | mediane_age | svr_rbf | 0.9178 | 1.852 | 1.837 | 0.932 | 1.8 | 0.0 | 0.2961 | 0.0 | moins bon | 1.0 | équivalent |
+| 118 | SoftImpute (norme nucléaire) | SVR RBF (niveau 2) | svm | softimpute | svr_rbf | 0.924 | 1.821 | 1.842 | 0.9327 | 1.5 | 0.0 | 0.4855 | 0.0 | moins bon | 1.0 | équivalent |
+| 119 | Estimée : prix, puis issue, puis médiane | SVR linéaire (niveau 1) | svm | estimee | svr_lineaire | 0.9319 | 1.835 | 1.835 | 0.9319 | 0.5 | 0.0 |  | 0.0 | moins bon |  | — référence |
+| 120 | Estimée : prix, puis issue, puis médiane | SVR RBF (niveau 2) | svm | estimee | svr_rbf | 0.9319 | 1.835 | 1.835 | 0.9319 | 2.0 | 0.0 |  | 0.0 | moins bon |  | — référence |
+| 121 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR RBF (niveau 2) | svm | knn | svr_rbf | 0.936 | 1.844 | 1.841 | 0.9262 | 1.7 | 0.0 | 0.8078 | 0.0 | moins bon | 1.0 | équivalent |
+| 122 | SoftImpute (norme nucléaire) | SVR linéaire (niveau 1) | svm | softimpute | svr_lineaire | 0.9379 | 1.831 | 1.84 | 0.9408 | 0.4 | 0.0 | 0.6843 | 0.0 | moins bon | 1.0 | équivalent |
+| 123 | Loi normale multivariée par EM | SVR RBF (niveau 2) | svm | em | svr_rbf | 0.9473 | 1.853 | 1.85 | 0.9371 | 2.1 | 0.0 | 0.0578 | 0.0 | moins bon | 1.0 | équivalent |
+| 124 | Régressions enchaînées (ridge, principe de MICE) | SVR RBF (niveau 2) | svm | regression | svr_rbf | 0.949 | 1.851 | 1.852 | 0.9396 | 2.1 | 0.0 | 0.0284 | 0.0 | moins bon | 1.0 | équivalent |
+| 125 | Régressions enchaînées (ridge, principe de MICE) | SVR linéaire (niveau 1) | svm | regression | svr_lineaire | 0.9534 | 1.845 | 1.842 | 0.9421 | 0.6 | 0.0 | 0.0249 | 0.0 | moins bon | 1.0 | équivalent |
+| 126 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR linéaire (niveau 1) | svm | knn | svr_lineaire | 0.9578 | 1.856 | 1.825 | 0.9343 | 0.5 | 0.0 | 0.1863 | 0.0 | moins bon | 1.0 | équivalent |
+| 127 | Loi normale multivariée par EM | SVR linéaire (niveau 1) | svm | em | svr_lineaire | 0.9603 | 1.855 | 1.848 | 0.9483 | 0.4 | 0.0 | 0.0022 | 0.0 | moins bon | 0.2552 | équivalent |
+| 128 | Hybride : prix, sinon XGBoost | SVR linéaire (niveau 1) | svm | hybride | svr_lineaire | 1.0455 | 1.901 | 1.897 | 0.9411 | 0.5 | 0.0 | 0.0005 | 0.0 | moins bon | 0.0585 | équivalent |
+| 129 | XGBoost (avec le diagnostic) | SVR RBF (niveau 2) | svm | xgboost | svr_rbf | 1.0515 | 1.897 | 1.88 | 0.939 | 1.8 | 0.0 | 0.0 | 0.0 | moins bon | 0.0 | moins bon |
+| 130 | Hybride : prix, sinon XGBoost | SVR RBF (niveau 2) | svm | hybride | svr_rbf | 1.0592 | 1.902 | 1.882 | 0.9471 | 1.7 | 0.0 | 0.0 | 0.0 | moins bon | 0.0 | moins bon |
+| 131 | XGBoost (avec le diagnostic) | SVR linéaire (niveau 1) | svm | xgboost | svr_lineaire | 1.0597 | 1.915 | 1.906 | 0.9515 | 0.5 | 0.0 | 0.0002 | 0.0 | moins bon | 0.0236 | moins bon |
+
+
+Meilleure paire : **Loi normale multivariée par EM × LS-SVR (moindres carrés), noyau RBF, quantiles LOO**.
+
+
+## Horizon J+7
+
+
+### P1 · Durées inconnues
+
+173 jours évalués.
+
+Variantes impossibles à évaluer (série trop courte) : Exclure les séjours sans durée (Série trop courte pour cet horizon.).
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Médiane du service | 15/07/2024 | 4 | 8.62 | 47.9 | -1.6 | 2.705 | 0.9582 | 31.3 | 2.672 | 0.927 | 9.0 | 0.3683 | 1.0 | équivalent |
+| Moyenne du service | 15/07/2024 | 4 | 8.62 | 47.9 | -1.6 | 2.705 | 0.9582 | 31.3 | 2.672 | 0.927 | 9.1 | 0.3683 | 1.0 | équivalent |
+| Médiane de la tranche d'âge | 15/07/2024 | 4 | 8.62 | 47.9 | -1.6 | 2.705 | 0.9582 | 31.3 | 2.672 | 0.927 | 9.2 | 0.3683 | 1.0 | équivalent |
+| Estimée : prix, puis issue, puis médiane (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 9.7 |  |  | — choix retenu |
+| k plus proches voisins (prix, âge, sexe, issue, mois) | 15/07/2024 | 4 | 8.48 | 47.1 | -3.2 | 2.681 | 0.9647 | 31.4 | 2.65 | 0.9448 | 9.8 | 0.5304 | 1.0 | équivalent |
+| Régressions enchaînées (ridge, principe de MICE) | 15/07/2024 | 4 | 8.46 | 47.0 | -3.4 | 2.68 | 0.9555 | 32.5 | 2.653 | 0.9428 | 9.7 | 0.5183 | 1.0 | équivalent |
+| Loi normale multivariée par EM | 15/07/2024 | 4 | 8.46 | 47.0 | -3.4 | 2.685 | 0.9579 | 32.6 | 2.654 | 0.9428 | 12.0 | 0.7112 | 1.0 | équivalent |
+| ACP itérative (rang faible) | 15/07/2024 | 4 | 8.68 | 48.2 | -0.9 | 2.809 | 1.0075 | 31.2 | 2.677 | 0.9279 | 14.2 | 0.5397 | 1.0 | équivalent |
+| SoftImpute (norme nucléaire) | 15/07/2024 | 4 | 8.48 | 47.1 | -3.2 | 2.705 | 0.964 | 32.1 | 2.657 | 0.9397 | 11.9 | 0.5149 | 1.0 | équivalent |
+| XGBoost (avec le diagnostic) | 15/07/2024 | 4 | 8.26 | 45.9 | -5.8 | 2.56 | 0.9064 | 33.8 | 2.64 | 0.9619 | 36.6 | 0.1585 | 1.0 | équivalent |
+| Hybride : prix, sinon XGBoost | 15/07/2024 | 4 | 8.26 | 45.9 | -5.8 | 2.554 | 0.8998 | 33.9 | 2.643 | 0.9622 | 37.7 | 0.1572 | 1.0 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Estimée : prix, puis issue, puis médiane (retenu)).
+
+
+
+### P2 · Fenêtre de censure (encore hospitalisé)
+
+173 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 14 jours | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.0 |  |  | identique |
+| 30 jours | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 10.9 |  |  | identique |
+| p95 des durées connues (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.6 |  |  | — choix retenu |
+| 60 jours | 15/07/2024 | 4 | 8.7 | 48.3 | -2.8 | 3.025 | 1.1111 | 22.8 | 2.645 | 0.9435 | 9.9 | 0.357 | 0.357 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (p95 des durées connues (retenu)).
+
+
+
+### P3 · Convention du nombre de jours
+
+173 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Attendue (nuit incertaine = 1 − p) (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.0 |  |  | — choix retenu |
+| Tout inclusif (borne basse) | 15/07/2024 | 4 | 7.94 | 44.1 | -6.8 | 2.542 | 0.9002 | 33.3 | 2.659 | 0.9916 | 10.8 | 0.1504 | 0.3008 | équivalent |
+| Tout en nuits (borne haute) | 15/07/2024 | 4 | 9.02 | 50.1 | 2.4 | 2.824 | 1.023 | 30.1 | 2.685 | 0.92 | 9.9 | 0.5187 | 0.5187 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Attendue (nuit incertaine = 1 − p) (retenu)).
+
+
+
+### P4 · Patients « Ancien » reportés
+
+173 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Garder toutes les lignes (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.0 |  |  | — choix retenu |
+| Fusionner les reports confirmés | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.2 |  |  | identique |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Garder toutes les lignes (retenu)).
+
+
+
+### P5 · Période exploitable
+
+173 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Durées connues ≥ 80 % | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.4 |  |  | identique |
+| Durées connues ≥ 90 % (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.2 |  |  | — choix retenu |
+| Durées connues ≥ 95 % | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.5 |  |  | identique |
+| ≥ 90 %, sans rodage au début (premier mois = début réel du registre) | 01/07/2024 | 4 | 8.41 | 46.7 | -3.2 | 2.659 | 0.9562 | 32.1 | 2.659 | 0.9562 | 11.1 | 0.0991 | 0.0991 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Durées connues ≥ 90 % (retenu)).
+
+
+
+### P6 · Fin de série (délai d'inscription)
+
+170 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Aucune coupe | 15/07/2024 | 0 | 8.44 | 46.9 | -3.4 | 2.583 | 0.9277 | 33.3 | 2.583 | 0.9277 | 11.7 |  |  | identique |
+| 7 derniers jours retirés | 15/07/2024 | 7 | 8.49 | 47.2 | -3.6 | 2.583 | 0.9277 | 33.3 | 2.583 | 0.9277 | 12.1 |  |  | identique |
+| p95 du délai d'inscription (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.583 | 0.9277 | 33.3 | 2.583 | 0.9277 | 10.8 |  |  | — choix retenu |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (p95 du délai d'inscription (retenu)).
+
+
+
+### P7 · Trous de saisie (≥ 4 jours sans admission)
+
+173 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Gardés tels quels (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.0 |  |  | — choix retenu |
+| Lignes d'apprentissage qui les touchent exclues | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.635 | 0.9341 | 32.7 | 2.635 | 0.9341 | 10.9 | 0.264 | 0.264 | équivalent |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Gardés tels quels (retenu)).
+
+
+
+### P8 · Méthode de comptage des présents
+
+173 jours évalués.
+
+| variante | début série | jours coupés en fin | présents moyens | TOM % | écart Little % | MAE propre | pinball τ=0.8 propre | gain / persistance % | MAE retenue | pinball τ=0.8 retenue | temps (s) | DM p (pinball τ=0.8) | p Holm | vs choix retenu |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Recensement de minuit (nuits passées) (retenu) | 15/07/2024 | 4 | 8.47 | 47.0 | -3.3 | 2.641 | 0.9433 | 32.5 | 2.641 | 0.9433 | 11.0 |  |  | — choix retenu |
+| Présence dans la journée (jour de sortie compris) | 15/07/2024 | 4 | 11.17 | 62.0 | -2.6 | 3.154 | 1.058 | 27.8 | 3.324 | 1.1743 | 11.2 | 0.0308 | 0.0308 | moins bon |
+
+
+Aucune variante ne fait significativement mieux que le choix retenu (Recensement de minuit (nuits passées) (retenu)).
+
+
+
+### P1 × modèles (J+7) : chaque méthode des durées inconnues avec chaque modèle
+
+173 jours évalués ; tri par MAE contre la série retenue.
+
+| variante | imputation | modèle | famille | cle_imputation | cle_modele | pinball τ=0.8 retenue | MAE retenue | MAE propre | pinball τ=0.8 propre | temps (s) | DM p vs paire retenue | DM p vs imputation retenue, même modèle | p Holm vs paire retenue | vs paire retenue | p Holm vs imputation retenue, même modèle | vs imputation retenue, même modèle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | Médiane de la tranche d'âge | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | mediane_age | lssvr_rbf | 0.9218 | 2.736 | 2.761 | 0.9536 | 0.3 | 0.603 | 0.7158 | 1.0 | équivalent | 1.0 | équivalent |
+| 1 | Moyenne du service | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | moyenne | lssvr_rbf | 0.9218 | 2.736 | 2.761 | 0.9536 | 0.2 | 0.603 | 0.7158 | 1.0 | équivalent | 1.0 | équivalent |
+| 2 | Médiane du service | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | mediane | lssvr_rbf | 0.9218 | 2.736 | 2.761 | 0.9536 | 0.2 | 0.603 | 0.7158 | 1.0 | équivalent | 1.0 | équivalent |
+| 3 | Médiane de la tranche d'âge | SVR quantile composite (niveau 4, retenu) | svm | mediane_age | svr_q_composite | 0.927 | 2.672 | 2.705 | 0.9582 | 11.0 | 0.3683 | 0.3683 | 1.0 | équivalent | 1.0 | équivalent |
+| 4 | Médiane du service | SVR quantile composite (niveau 4, retenu) | svm | mediane | svr_q_composite | 0.927 | 2.672 | 2.705 | 0.9582 | 10.7 | 0.3683 | 0.3683 | 1.0 | équivalent | 1.0 | équivalent |
+| 5 | Moyenne du service | SVR quantile composite (niveau 4, retenu) | svm | moyenne | svr_q_composite | 0.927 | 2.672 | 2.705 | 0.9582 | 10.9 | 0.3683 | 0.3683 | 1.0 | équivalent | 1.0 | équivalent |
+| 6 | ACP itérative (rang faible) | SVR quantile composite (niveau 4, retenu) | svm | acp_iterative | svr_q_composite | 0.9279 | 2.677 | 2.809 | 1.0075 | 8.7 | 0.5397 | 0.5397 | 1.0 | équivalent | 1.0 | équivalent |
+| 7 | Estimée : prix, puis issue, puis médiane | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | estimee | lssvr_rbf | 0.9287 | 2.74 | 2.74 | 0.9287 | 0.2 | 0.5803 |  | 1.0 | équivalent |  | — référence |
+| 8 | Loi normale multivariée par EM | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | em | lssvr_rbf | 0.9313 | 2.736 | 2.773 | 0.9475 | 0.2 | 0.6382 | 0.4007 | 1.0 | équivalent | 1.0 | équivalent |
+| 9 | Médiane du service | SVR quantile RBF (niveau 3) | svm | mediane | svr_q_rbf | 0.9318 | 2.704 | 2.735 | 0.9622 | 1.7 | 0.7439 | 0.5783 | 1.0 | équivalent | 1.0 | équivalent |
+| 10 | Moyenne du service | SVR quantile RBF (niveau 3) | svm | moyenne | svr_q_rbf | 0.9318 | 2.704 | 2.735 | 0.9622 | 1.6 | 0.7439 | 0.5783 | 1.0 | équivalent | 1.0 | équivalent |
+| 11 | Médiane de la tranche d'âge | SVR quantile RBF (niveau 3) | svm | mediane_age | svr_q_rbf | 0.9318 | 2.704 | 2.735 | 0.9622 | 1.8 | 0.7439 | 0.5783 | 1.0 | équivalent | 1.0 | équivalent |
+| 12 | Régressions enchaînées (ridge, principe de MICE) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | regression | lssvr_rbf | 0.9319 | 2.745 | 2.778 | 0.9447 | 0.3 | 0.6626 | 0.288 | 1.0 | équivalent | 1.0 | équivalent |
+| 13 | ACP itérative (rang faible) | SVR quantile RBF (niveau 3) | svm | acp_iterative | svr_q_rbf | 0.9321 | 2.688 | 2.828 | 1.0059 | 1.3 | 0.7736 | 0.6868 | 1.0 | équivalent | 1.0 | équivalent |
+| 14 | k plus proches voisins (prix, âge, sexe, issue, mois) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | knn | lssvr_rbf | 0.9325 | 2.753 | 2.769 | 0.9534 | 0.3 | 0.7098 | 0.6668 | 1.0 | équivalent | 1.0 | équivalent |
+| 15 | SoftImpute (norme nucléaire) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | softimpute | lssvr_rbf | 0.9341 | 2.733 | 2.785 | 0.9609 | 0.2 | 0.7482 | 0.5092 | 1.0 | équivalent | 1.0 | équivalent |
+| 16 | SoftImpute (norme nucléaire) | SVR quantile RBF (niveau 3) | svm | softimpute | svr_q_rbf | 0.9364 | 2.699 | 2.745 | 0.9607 | 1.6 | 0.7939 | 0.5139 | 1.0 | équivalent | 1.0 | équivalent |
+| 17 | ACP itérative (rang faible) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | acp_iterative | lssvr_rbf | 0.9373 | 2.721 | 2.819 | 0.9875 | 0.2 | 0.8878 | 0.6814 | 1.0 | équivalent | 1.0 | équivalent |
+| 18 | Estimée : prix, puis issue, puis médiane | SVR quantile RBF (niveau 3) | svm | estimee | svr_q_rbf | 0.938 | 2.689 | 2.689 | 0.938 | 1.7 | 0.8388 |  | 1.0 | équivalent |  | — référence |
+| 19 | Moyenne du service | SVR quantile, noyau laplacien | svm | moyenne | svr_q_laplacien | 0.9386 | 2.704 | 2.735 | 0.9692 | 2.7 | 0.8929 | 0.4798 | 1.0 | équivalent | 1.0 | équivalent |
+| 20 | Médiane du service | SVR quantile, noyau laplacien | svm | mediane | svr_q_laplacien | 0.9386 | 2.704 | 2.735 | 0.9692 | 3.0 | 0.8929 | 0.4798 | 1.0 | équivalent | 1.0 | équivalent |
+| 21 | Médiane de la tranche d'âge | SVR quantile, noyau laplacien | svm | mediane_age | svr_q_laplacien | 0.9386 | 2.704 | 2.735 | 0.9692 | 2.8 | 0.8929 | 0.4798 | 1.0 | équivalent | 1.0 | équivalent |
+| 22 | ACP itérative (rang faible) | SVR quantile, noyau laplacien | svm | acp_iterative | svr_q_laplacien | 0.9391 | 2.692 | 2.838 | 1.0134 | 2.0 | 0.9127 | 0.634 | 1.0 | équivalent | 1.0 | équivalent |
+| 23 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile RBF (niveau 3) | svm | regression | svr_q_rbf | 0.9396 | 2.691 | 2.711 | 0.9523 | 1.6 | 0.8802 | 0.458 | 1.0 | équivalent | 1.0 | équivalent |
+| 24 | SoftImpute (norme nucléaire) | SVR quantile composite (niveau 4, retenu) | svm | softimpute | svr_q_composite | 0.9397 | 2.657 | 2.705 | 0.964 | 8.1 | 0.5149 | 0.5149 | 1.0 | équivalent | 1.0 | équivalent |
+| 25 | XGBoost (avec le diagnostic) | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | xgboost | lssvr_rbf | 0.9404 | 2.753 | 2.678 | 0.8946 | 0.2 | 0.886 | 0.3677 | 1.0 | équivalent | 1.0 | équivalent |
+| 26 | Loi normale multivariée par EM | SVR quantile RBF (niveau 3) | svm | em | svr_q_rbf | 0.9407 | 2.69 | 2.715 | 0.9511 | 1.7 | 0.9185 | 0.2104 | 1.0 | équivalent | 1.0 | équivalent |
+| 27 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile RBF (niveau 3) | svm | knn | svr_q_rbf | 0.9415 | 2.692 | 2.718 | 0.9632 | 2.0 | 0.944 | 0.363 | 1.0 | équivalent | 1.0 | équivalent |
+| 28 | SoftImpute (norme nucléaire) | SVR quantile, noyau laplacien | svm | softimpute | svr_q_laplacien | 0.9422 | 2.692 | 2.739 | 0.9664 | 1.6 | 0.9682 | 0.038 | 1.0 | équivalent | 1.0 | équivalent |
+| 29 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile composite (niveau 4, retenu) | svm | regression | svr_q_composite | 0.9428 | 2.653 | 2.68 | 0.9555 | 9.5 | 0.5183 | 0.5183 | 1.0 | équivalent | 1.0 | équivalent |
+| 30 | Loi normale multivariée par EM | SVR quantile composite (niveau 4, retenu) | svm | em | svr_q_composite | 0.9428 | 2.654 | 2.685 | 0.9579 | 8.8 | 0.7112 | 0.7112 | 1.0 | équivalent | 1.0 | équivalent |
+| 31 | Hybride : prix, sinon XGBoost | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | svm | hybride | lssvr_rbf | 0.9432 | 2.755 | 2.665 | 0.8909 | 0.2 | 0.9973 | 0.2967 | 1.0 | équivalent | 1.0 | équivalent |
+| 32 | Estimée : prix, puis issue, puis médiane | SVR quantile composite (niveau 4, retenu) | svm | estimee | svr_q_composite | 0.9433 | 2.641 | 2.641 | 0.9433 | 10.6 |  |  |  | — référence |  | — référence |
+| 33 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile composite (niveau 4, retenu) | svm | knn | svr_q_composite | 0.9448 | 2.65 | 2.681 | 0.9647 | 10.8 | 0.5304 | 0.5304 | 1.0 | équivalent | 1.0 | équivalent |
+| 34 | Estimée : prix, puis issue, puis médiane | SVR quantile, noyau laplacien | svm | estimee | svr_q_laplacien | 0.9457 | 2.687 | 2.687 | 0.9457 | 2.7 | 0.9271 |  | 1.0 | équivalent |  | — référence |
+| 35 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile, noyau laplacien | svm | regression | svr_q_laplacien | 0.9462 | 2.687 | 2.71 | 0.959 | 2.2 | 0.9062 | 0.8068 | 1.0 | équivalent | 1.0 | équivalent |
+| 36 | Loi normale multivariée par EM | SVR quantile, noyau laplacien | svm | em | svr_q_laplacien | 0.9474 | 2.686 | 2.713 | 0.9575 | 2.1 | 0.8733 | 0.4101 | 1.0 | équivalent | 1.0 | équivalent |
+| 37 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile, noyau laplacien | svm | knn | svr_q_laplacien | 0.9485 | 2.687 | 2.715 | 0.9681 | 2.4 | 0.8343 | 0.5068 | 1.0 | équivalent | 1.0 | équivalent |
+| 38 | XGBoost (avec le diagnostic) | SVR quantile RBF (niveau 3) | svm | xgboost | svr_q_rbf | 0.9505 | 2.679 | 2.596 | 0.8987 | 1.8 | 0.6119 | 0.6503 | 1.0 | équivalent | 1.0 | équivalent |
+| 39 | Hybride : prix, sinon XGBoost | SVR quantile RBF (niveau 3) | svm | hybride | svr_q_rbf | 0.951 | 2.679 | 2.59 | 0.8921 | 2.0 | 0.5912 | 0.6399 | 1.0 | équivalent | 1.0 | équivalent |
+| 40 | XGBoost (avec le diagnostic) | SVR quantile, noyau laplacien | svm | xgboost | svr_q_laplacien | 0.9548 | 2.669 | 2.59 | 0.902 | 2.1 | 0.4233 | 0.7472 | 1.0 | équivalent | 1.0 | équivalent |
+| 41 | Hybride : prix, sinon XGBoost | SVR quantile, noyau laplacien | svm | hybride | svr_q_laplacien | 0.9549 | 2.671 | 2.585 | 0.8953 | 1.8 | 0.4142 | 0.743 | 1.0 | équivalent | 1.0 | équivalent |
+| 42 | Moyenne du service | A · forêt aléatoire quantile | concurrent | moyenne | foret | 0.956 | 2.751 | 2.773 | 0.9876 | 22.6 | 0.6873 | 0.2116 | 1.0 | équivalent | 1.0 | équivalent |
+| 43 | Médiane du service | A · forêt aléatoire quantile | concurrent | mediane | foret | 0.956 | 2.751 | 2.773 | 0.9876 | 22.5 | 0.6873 | 0.2116 | 1.0 | équivalent | 1.0 | équivalent |
+| 44 | Médiane de la tranche d'âge | A · forêt aléatoire quantile | concurrent | mediane_age | foret | 0.956 | 2.751 | 2.773 | 0.9876 | 22.6 | 0.6873 | 0.2116 | 1.0 | équivalent | 1.0 | équivalent |
+| 45 | ACP itérative (rang faible) | A · forêt aléatoire quantile | concurrent | acp_iterative | foret | 0.9565 | 2.693 | 2.786 | 1.0074 | 21.1 | 0.7592 | 0.4948 | 1.0 | équivalent | 1.0 | équivalent |
+| 46 | SoftImpute (norme nucléaire) | A · forêt aléatoire quantile | concurrent | softimpute | foret | 0.9592 | 2.757 | 2.809 | 0.9839 | 20.9 | 0.6091 | 0.3056 | 1.0 | équivalent | 1.0 | équivalent |
+| 47 | XGBoost (avec le diagnostic) | SVR quantile composite (niveau 4, retenu) | svm | xgboost | svr_q_composite | 0.9619 | 2.64 | 2.56 | 0.9064 | 8.6 | 0.1585 | 0.1585 | 1.0 | équivalent | 1.0 | équivalent |
+| 48 | Hybride : prix, sinon XGBoost | SVR quantile composite (niveau 4, retenu) | svm | hybride | svr_q_composite | 0.9622 | 2.643 | 2.554 | 0.8998 | 9.0 | 0.1572 | 0.1572 | 1.0 | équivalent | 1.0 | équivalent |
+| 49 | ACP itérative (rang faible) | SVR quantile, noyau polynomial (degré 2) | svm | acp_iterative | svr_q_polynomial | 0.9681 | 2.778 | 2.912 | 1.0409 | 6.0 | 0.4118 | 0.3773 | 1.0 | équivalent | 1.0 | équivalent |
+| 50 | k plus proches voisins (prix, âge, sexe, issue, mois) | A · forêt aléatoire quantile | concurrent | knn | foret | 0.9714 | 2.752 | 2.763 | 0.9888 | 22.3 | 0.338 | 0.6003 | 1.0 | équivalent | 1.0 | équivalent |
+| 51 | Loi normale multivariée par EM | A · forêt aléatoire quantile | concurrent | em | foret | 0.9781 | 2.793 | 2.833 | 0.9955 | 21.4 | 0.2585 | 0.7741 | 1.0 | équivalent | 1.0 | équivalent |
+| 52 | Médiane du service | D · LSTM quantile | concurrent | mediane | lstm | 0.9789 | 2.841 | 2.875 | 1.0011 | 11.3 | 0.4411 | 0.3538 | 1.0 | équivalent | 1.0 | équivalent |
+| 53 | Médiane de la tranche d'âge | D · LSTM quantile | concurrent | mediane_age | lstm | 0.9789 | 2.841 | 2.875 | 1.0011 | 11.3 | 0.4411 | 0.3538 | 1.0 | équivalent | 1.0 | équivalent |
+| 54 | Moyenne du service | D · LSTM quantile | concurrent | moyenne | lstm | 0.9789 | 2.841 | 2.875 | 1.0011 | 11.7 | 0.4411 | 0.3538 | 1.0 | équivalent | 1.0 | équivalent |
+| 55 | Médiane du service | SVR quantile, noyau polynomial (degré 2) | svm | mediane | svr_q_polynomial | 0.9805 | 2.775 | 2.797 | 1.0114 | 5.8 | 0.2371 | 0.168 | 1.0 | équivalent | 1.0 | équivalent |
+| 56 | Moyenne du service | SVR quantile, noyau polynomial (degré 2) | svm | moyenne | svr_q_polynomial | 0.9805 | 2.775 | 2.797 | 1.0114 | 5.8 | 0.2371 | 0.168 | 1.0 | équivalent | 1.0 | équivalent |
+| 57 | Médiane de la tranche d'âge | SVR quantile, noyau polynomial (degré 2) | svm | mediane_age | svr_q_polynomial | 0.9805 | 2.775 | 2.797 | 1.0114 | 6.4 | 0.2371 | 0.168 | 1.0 | équivalent | 1.0 | équivalent |
+| 58 | Estimée : prix, puis issue, puis médiane | A · forêt aléatoire quantile | concurrent | estimee | foret | 0.982 | 2.722 | 2.722 | 0.982 | 22.3 | 0.1955 |  | 1.0 | équivalent |  | — référence |
+| 59 | ACP itérative (rang faible) | E · XGBoost quantile (second ordre) | concurrent | acp_iterative | xgboost | 0.9834 | 2.747 | 2.851 | 1.0703 | 14.3 | 0.1192 | 0.631 | 1.0 | équivalent | 1.0 | équivalent |
+| 60 | Médiane de la tranche d'âge | E · XGBoost quantile (second ordre) | concurrent | mediane_age | xgboost | 0.9853 | 2.765 | 2.801 | 1.0223 | 15.5 | 0.1671 | 0.3826 | 1.0 | équivalent | 1.0 | équivalent |
+| 61 | Moyenne du service | E · XGBoost quantile (second ordre) | concurrent | moyenne | xgboost | 0.9853 | 2.765 | 2.801 | 1.0223 | 15.9 | 0.1671 | 0.3826 | 1.0 | équivalent | 1.0 | équivalent |
+| 62 | Médiane du service | E · XGBoost quantile (second ordre) | concurrent | mediane | xgboost | 0.9853 | 2.765 | 2.801 | 1.0223 | 15.6 | 0.1671 | 0.3826 | 1.0 | équivalent | 1.0 | équivalent |
+| 63 | ACP itérative (rang faible) | B · gradient boosting quantile | concurrent | acp_iterative | boosting | 0.9879 | 2.795 | 2.885 | 1.0784 | 11.4 | 0.3077 | 0.4169 | 1.0 | équivalent | 1.0 | équivalent |
+| 64 | Régressions enchaînées (ridge, principe de MICE) | E · XGBoost quantile (second ordre) | concurrent | regression | xgboost | 0.9879 | 2.831 | 2.861 | 1.0006 | 14.7 | 0.1464 | 0.1141 | 1.0 | équivalent | 1.0 | équivalent |
+| 65 | Régressions enchaînées (ridge, principe de MICE) | A · forêt aléatoire quantile | concurrent | regression | foret | 0.9882 | 2.802 | 2.841 | 1.0009 | 22.6 | 0.1449 | 0.6449 | 1.0 | équivalent | 1.0 | équivalent |
+| 66 | k plus proches voisins (prix, âge, sexe, issue, mois) | E · XGBoost quantile (second ordre) | concurrent | knn | xgboost | 0.9888 | 2.804 | 2.829 | 1.0117 | 15.6 | 0.2527 | 0.4744 | 1.0 | équivalent | 1.0 | équivalent |
+| 67 | XGBoost (avec le diagnostic) | A · forêt aléatoire quantile | concurrent | xgboost | foret | 0.9931 | 2.749 | 2.675 | 0.9279 | 21.1 | 0.1103 | 0.6473 | 1.0 | équivalent | 1.0 | équivalent |
+| 68 | SoftImpute (norme nucléaire) | E · XGBoost quantile (second ordre) | concurrent | softimpute | xgboost | 0.9934 | 2.798 | 2.847 | 1.0228 | 14.3 | 0.1407 | 0.5574 | 1.0 | équivalent | 1.0 | équivalent |
+| 69 | Hybride : prix, sinon XGBoost | A · forêt aléatoire quantile | concurrent | hybride | foret | 0.9958 | 2.773 | 2.67 | 0.9322 | 21.5 | 0.1433 | 0.6106 | 1.0 | équivalent | 1.0 | équivalent |
+| 70 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR quantile, noyau polynomial (degré 2) | svm | knn | svr_q_polynomial | 0.9967 | 2.79 | 2.798 | 1.0168 | 6.4 | 0.082 | 0.4588 | 1.0 | équivalent | 1.0 | équivalent |
+| 71 | SoftImpute (norme nucléaire) | SVR quantile, noyau polynomial (degré 2) | svm | softimpute | svr_q_polynomial | 1.0002 | 2.775 | 2.808 | 1.0252 | 4.7 | 0.0855 | 0.8422 | 1.0 | équivalent | 1.0 | équivalent |
+| 72 | Estimée : prix, puis issue, puis médiane | E · XGBoost quantile (second ordre) | concurrent | estimee | xgboost | 1.0004 | 2.813 | 2.813 | 1.0004 | 15.1 | 0.0769 |  | 1.0 | équivalent |  | — référence |
+| 73 | Estimée : prix, puis issue, puis médiane | SVR quantile, noyau polynomial (degré 2) | svm | estimee | svr_q_polynomial | 1.0009 | 2.766 | 2.766 | 1.0009 | 6.2 | 0.0615 |  | 1.0 | équivalent |  | — référence |
+| 74 | Régressions enchaînées (ridge, principe de MICE) | SVR quantile, noyau polynomial (degré 2) | svm | regression | svr_q_polynomial | 1.0014 | 2.777 | 2.788 | 1.0142 | 4.8 | 0.0593 | 0.8853 | 1.0 | équivalent | 1.0 | équivalent |
+| 75 | Estimée : prix, puis issue, puis médiane | C · perceptron multicouche quantile | concurrent | estimee | mlp | 1.0025 | 2.801 | 2.801 | 1.0025 | 1.4 | 0.0924 |  | 1.0 | équivalent |  | — référence |
+| 76 | Loi normale multivariée par EM | SVR quantile, noyau polynomial (degré 2) | svm | em | svr_q_polynomial | 1.003 | 2.78 | 2.796 | 1.0199 | 5.2 | 0.0517 | 0.6394 | 1.0 | équivalent | 1.0 | équivalent |
+| 77 | Estimée : prix, puis issue, puis médiane | D · LSTM quantile | concurrent | estimee | lstm | 1.0069 | 2.914 | 2.914 | 1.0069 | 11.5 | 0.0489 |  | 1.0 | équivalent |  | — référence |
+| 78 | Loi normale multivariée par EM | E · XGBoost quantile (second ordre) | concurrent | em | xgboost | 1.0112 | 2.806 | 2.849 | 1.0279 | 14.5 | 0.0475 | 0.0884 | 1.0 | équivalent | 1.0 | équivalent |
+| 79 | Moyenne du service | B · gradient boosting quantile | concurrent | moyenne | boosting | 1.0123 | 2.787 | 2.834 | 1.0484 | 12.8 | 0.0793 | 0.6373 | 1.0 | équivalent | 1.0 | équivalent |
+| 80 | Médiane de la tranche d'âge | B · gradient boosting quantile | concurrent | mediane_age | boosting | 1.0123 | 2.787 | 2.834 | 1.0484 | 12.5 | 0.0793 | 0.6373 | 1.0 | équivalent | 1.0 | équivalent |
+| 81 | Médiane du service | B · gradient boosting quantile | concurrent | mediane | boosting | 1.0123 | 2.787 | 2.834 | 1.0484 | 12.6 | 0.0793 | 0.6373 | 1.0 | équivalent | 1.0 | équivalent |
+| 82 | SoftImpute (norme nucléaire) | B · gradient boosting quantile | concurrent | softimpute | boosting | 1.0132 | 2.796 | 2.84 | 1.0433 | 11.3 | 0.1478 | 0.5572 | 1.0 | équivalent | 1.0 | équivalent |
+| 83 | XGBoost (avec le diagnostic) | SVR quantile, noyau polynomial (degré 2) | svm | xgboost | svr_q_polynomial | 1.0133 | 2.778 | 2.675 | 0.9451 | 4.3 | 0.0577 | 0.5548 | 1.0 | équivalent | 1.0 | équivalent |
+| 84 | Médiane de la tranche d'âge | C · perceptron multicouche quantile | concurrent | mediane_age | mlp | 1.0156 | 2.769 | 2.825 | 1.0411 | 1.4 | 0.1141 | 0.594 | 1.0 | équivalent | 1.0 | équivalent |
+| 85 | Moyenne du service | C · perceptron multicouche quantile | concurrent | moyenne | mlp | 1.0156 | 2.769 | 2.825 | 1.0411 | 1.4 | 0.1141 | 0.594 | 1.0 | équivalent | 1.0 | équivalent |
+| 86 | Médiane du service | C · perceptron multicouche quantile | concurrent | mediane | mlp | 1.0156 | 2.769 | 2.825 | 1.0411 | 1.3 | 0.1141 | 0.594 | 1.0 | équivalent | 1.0 | équivalent |
+| 87 | Hybride : prix, sinon XGBoost | SVR quantile, noyau polynomial (degré 2) | svm | hybride | svr_q_polynomial | 1.0161 | 2.782 | 2.676 | 0.9405 | 5.5 | 0.0513 | 0.4631 | 1.0 | équivalent | 1.0 | équivalent |
+| 88 | ACP itérative (rang faible) | D · LSTM quantile | concurrent | acp_iterative | lstm | 1.017 | 2.916 | 3.059 | 1.0786 | 12.5 | 0.0596 | 0.7171 | 1.0 | équivalent | 1.0 | équivalent |
+| 89 | XGBoost (avec le diagnostic) | B · gradient boosting quantile | concurrent | xgboost | boosting | 1.0173 | 2.89 | 2.778 | 0.9446 | 11.6 | 0.1912 | 0.779 | 1.0 | équivalent | 1.0 | équivalent |
+| 90 | Régressions enchaînées (ridge, principe de MICE) | C · perceptron multicouche quantile | concurrent | regression | mlp | 1.019 | 2.81 | 2.843 | 1.03 | 1.3 | 0.0366 | 0.0024 | 1.0 | équivalent | 0.2592 | équivalent |
+| 91 | SoftImpute (norme nucléaire) | D · LSTM quantile | concurrent | softimpute | lstm | 1.021 | 2.9 | 2.948 | 1.0416 | 12.0 | 0.046 | 0.3173 | 1.0 | équivalent | 1.0 | équivalent |
+| 92 | Régressions enchaînées (ridge, principe de MICE) | D · LSTM quantile | concurrent | regression | lstm | 1.0211 | 2.938 | 2.98 | 1.0332 | 11.1 | 0.0113 | 0.2115 | 1.0 | équivalent | 1.0 | équivalent |
+| 93 | Régressions enchaînées (ridge, principe de MICE) | B · gradient boosting quantile | concurrent | regression | boosting | 1.0212 | 2.839 | 2.872 | 1.0339 | 12.7 | 0.1099 | 0.866 | 1.0 | équivalent | 1.0 | équivalent |
+| 94 | k plus proches voisins (prix, âge, sexe, issue, mois) | D · LSTM quantile | concurrent | knn | lstm | 1.0237 | 2.914 | 2.948 | 1.0468 | 11.3 | 0.0132 | 0.2216 | 1.0 | équivalent | 1.0 | équivalent |
+| 95 | Estimée : prix, puis issue, puis médiane | B · gradient boosting quantile | concurrent | estimee | boosting | 1.026 | 2.877 | 2.877 | 1.026 | 12.8 | 0.0888 |  | 1.0 | équivalent |  | — référence |
+| 96 | SoftImpute (norme nucléaire) | C · perceptron multicouche quantile | concurrent | softimpute | mlp | 1.0261 | 2.777 | 2.843 | 1.0444 | 1.2 | 0.0468 | 0.1041 | 1.0 | équivalent | 1.0 | équivalent |
+| 97 | Hybride : prix, sinon XGBoost | B · gradient boosting quantile | concurrent | hybride | boosting | 1.0273 | 2.934 | 2.806 | 0.9489 | 12.0 | 0.1379 | 0.961 | 1.0 | équivalent | 1.0 | équivalent |
+| 98 | ACP itérative (rang faible) | C · perceptron multicouche quantile | concurrent | acp_iterative | mlp | 1.0277 | 2.771 | 2.92 | 1.0611 | 1.3 | 0.1147 | 0.3829 | 1.0 | équivalent | 1.0 | équivalent |
+| 99 | XGBoost (avec le diagnostic) | D · LSTM quantile | concurrent | xgboost | lstm | 1.0281 | 2.94 | 2.868 | 0.9809 | 11.5 | 0.0183 | 0.358 | 1.0 | équivalent | 1.0 | équivalent |
+| 100 | k plus proches voisins (prix, âge, sexe, issue, mois) | B · gradient boosting quantile | concurrent | knn | boosting | 1.0322 | 2.881 | 2.926 | 1.0543 | 12.7 | 0.1323 | 0.8652 | 1.0 | équivalent | 1.0 | équivalent |
+| 101 | Hybride : prix, sinon XGBoost | E · XGBoost quantile (second ordre) | concurrent | hybride | xgboost | 1.0331 | 2.835 | 2.732 | 0.9433 | 14.2 | 0.109 | 0.258 | 1.0 | équivalent | 1.0 | équivalent |
+| 102 | XGBoost (avec le diagnostic) | E · XGBoost quantile (second ordre) | concurrent | xgboost | xgboost | 1.0332 | 2.835 | 2.761 | 0.9535 | 14.5 | 0.1227 | 0.2777 | 1.0 | équivalent | 1.0 | équivalent |
+| 103 | XGBoost (avec le diagnostic) | C · perceptron multicouche quantile | concurrent | xgboost | mlp | 1.0338 | 2.745 | 2.664 | 0.9902 | 1.2 | 0.0089 | 0.0691 | 1.0 | équivalent | 1.0 | équivalent |
+| 104 | Hybride : prix, sinon XGBoost | D · LSTM quantile | concurrent | hybride | lstm | 1.0365 | 2.951 | 2.858 | 0.9835 | 12.5 | 0.0483 | 0.3266 | 1.0 | équivalent | 1.0 | équivalent |
+| 105 | k plus proches voisins (prix, âge, sexe, issue, mois) | C · perceptron multicouche quantile | concurrent | knn | mlp | 1.0373 | 2.799 | 2.862 | 1.0622 | 1.4 | 0.0136 | 0.0092 | 1.0 | équivalent | 0.966 | équivalent |
+| 106 | Loi normale multivariée par EM | C · perceptron multicouche quantile | concurrent | em | mlp | 1.0389 | 2.806 | 2.844 | 1.0563 | 1.3 | 0.0126 | 0.0 | 1.0 | équivalent | 0.0 | moins bon |
+| 107 | Loi normale multivariée par EM | D · LSTM quantile | concurrent | em | lstm | 1.0426 | 2.956 | 3.005 | 1.0551 | 12.4 | 0.0103 | 0.0569 | 1.0 | équivalent | 1.0 | équivalent |
+| 108 | Hybride : prix, sinon XGBoost | C · perceptron multicouche quantile | concurrent | hybride | mlp | 1.043 | 2.773 | 2.646 | 0.9916 | 1.3 | 0.0092 | 0.0435 | 1.0 | équivalent | 1.0 | équivalent |
+| 109 | Loi normale multivariée par EM | B · gradient boosting quantile | concurrent | em | boosting | 1.046 | 2.901 | 2.921 | 1.0633 | 12.1 | 0.0725 | 0.562 | 1.0 | équivalent | 1.0 | équivalent |
+| 110 | ACP itérative (rang faible) | SVR RBF (niveau 2) | svm | acp_iterative | svr_rbf | 1.2966 | 2.691 | 2.816 | 1.4386 | 0.4 | 0.0159 | 0.0001 | 1.0 | équivalent | 0.0119 | meilleur |
+| 111 | Médiane du service | SVR RBF (niveau 2) | svm | mediane | svr_rbf | 1.3178 | 2.716 | 2.745 | 1.3544 | 0.4 | 0.0126 | 0.0005 | 1.0 | équivalent | 0.0565 | équivalent |
+| 112 | Médiane de la tranche d'âge | SVR RBF (niveau 2) | svm | mediane_age | svr_rbf | 1.3178 | 2.716 | 2.745 | 1.3544 | 0.4 | 0.0126 | 0.0005 | 1.0 | équivalent | 0.0565 | équivalent |
+| 113 | Moyenne du service | SVR RBF (niveau 2) | svm | moyenne | svr_rbf | 1.3178 | 2.716 | 2.745 | 1.3544 | 0.4 | 0.0126 | 0.0005 | 1.0 | équivalent | 0.0565 | équivalent |
+| 114 | SoftImpute (norme nucléaire) | SVR RBF (niveau 2) | svm | softimpute | svr_rbf | 1.36 | 2.718 | 2.764 | 1.381 | 0.3 | 0.0095 | 0.0054 | 1.0 | équivalent | 0.5778 | équivalent |
+| 115 | Estimée : prix, puis issue, puis médiane | SVR RBF (niveau 2) | svm | estimee | svr_rbf | 1.3769 | 2.718 | 2.718 | 1.3769 | 0.4 | 0.0079 |  | 0.9243 | équivalent |  | — référence |
+| 116 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR RBF (niveau 2) | svm | knn | svr_rbf | 1.3772 | 2.727 | 2.747 | 1.3786 | 0.4 | 0.0078 | 0.974 | 0.9204 | équivalent | 1.0 | équivalent |
+| 117 | Régressions enchaînées (ridge, principe de MICE) | SVR RBF (niveau 2) | svm | regression | svr_rbf | 1.3804 | 2.724 | 2.748 | 1.3822 | 0.4 | 0.0083 | 0.3422 | 0.9545 | équivalent | 1.0 | équivalent |
+| 118 | Loi normale multivariée par EM | SVR RBF (niveau 2) | svm | em | svr_rbf | 1.3843 | 2.725 | 2.754 | 1.3902 | 0.4 | 0.008 | 0.0723 | 0.928 | équivalent | 1.0 | équivalent |
+| 119 | XGBoost (avec le diagnostic) | SVR RBF (niveau 2) | svm | xgboost | svr_rbf | 1.4213 | 2.714 | 2.641 | 1.2787 | 0.4 | 0.0053 | 0.0003 | 0.6466 | équivalent | 0.0342 | moins bon |
+| 120 | Hybride : prix, sinon XGBoost | SVR RBF (niveau 2) | svm | hybride | svr_rbf | 1.4323 | 2.72 | 2.635 | 1.2857 | 0.4 | 0.0051 | 0.0002 | 0.6273 | équivalent | 0.023 | moins bon |
+| 121 | Moyenne du service | SVR linéaire (niveau 1) | svm | moyenne | svr_lineaire | 1.4577 | 2.824 | 2.856 | 1.4965 | 0.4 | 0.0057 | 0.0001 | 0.6897 | équivalent | 0.0119 | meilleur |
+| 122 | Médiane de la tranche d'âge | SVR linéaire (niveau 1) | svm | mediane_age | svr_lineaire | 1.4577 | 2.824 | 2.856 | 1.4965 | 0.4 | 0.0057 | 0.0001 | 0.6897 | équivalent | 0.0119 | meilleur |
+| 123 | Médiane du service | SVR linéaire (niveau 1) | svm | mediane | svr_lineaire | 1.4577 | 2.824 | 2.856 | 1.4965 | 0.4 | 0.0057 | 0.0001 | 0.6897 | équivalent | 0.0119 | meilleur |
+| 124 | ACP itérative (rang faible) | SVR linéaire (niveau 1) | svm | acp_iterative | svr_lineaire | 1.4628 | 2.822 | 2.953 | 1.6079 | 0.3 | 0.0045 | 0.0387 | 0.5625 | équivalent | 1.0 | équivalent |
+| 125 | SoftImpute (norme nucléaire) | SVR linéaire (niveau 1) | svm | softimpute | svr_lineaire | 1.4868 | 2.818 | 2.859 | 1.5058 | 0.4 | 0.0048 | 0.0006 | 0.5952 | équivalent | 0.066 | équivalent |
+| 126 | k plus proches voisins (prix, âge, sexe, issue, mois) | SVR linéaire (niveau 1) | svm | knn | svr_lineaire | 1.5292 | 2.82 | 2.85 | 1.5358 | 0.3 | 0.0039 | 0.8582 | 0.4914 | équivalent | 1.0 | équivalent |
+| 127 | Estimée : prix, puis issue, puis médiane | SVR linéaire (niveau 1) | svm | estimee | svr_lineaire | 1.5319 | 2.822 | 2.822 | 1.5319 | 0.3 | 0.0035 |  | 0.4445 | équivalent |  | — référence |
+| 128 | Régressions enchaînées (ridge, principe de MICE) | SVR linéaire (niveau 1) | svm | regression | svr_lineaire | 1.5385 | 2.832 | 2.86 | 1.5419 | 0.3 | 0.0032 | 0.1985 | 0.4128 | équivalent | 1.0 | équivalent |
+| 129 | Loi normale multivariée par EM | SVR linéaire (niveau 1) | svm | em | svr_lineaire | 1.5417 | 2.828 | 2.861 | 1.5496 | 0.3 | 0.0032 | 0.0775 | 0.4128 | équivalent | 1.0 | équivalent |
+| 130 | XGBoost (avec le diagnostic) | SVR linéaire (niveau 1) | svm | xgboost | svr_lineaire | 1.5714 | 2.803 | 2.724 | 1.4257 | 0.3 | 0.0029 | 0.0059 | 0.377 | équivalent | 0.6254 | équivalent |
+| 131 | Hybride : prix, sinon XGBoost | SVR linéaire (niveau 1) | svm | hybride | svr_lineaire | 1.5908 | 2.817 | 2.715 | 1.4356 | 0.5 | 0.0024 | 0.0008 | 0.3144 | équivalent | 0.0872 | équivalent |
+
+
+Meilleure paire : **Médiane de la tranche d'âge × LS-SVR (moindres carrés), noyau RBF, quantiles LOO**.

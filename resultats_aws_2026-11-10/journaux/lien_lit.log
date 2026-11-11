@@ -1,0 +1,16 @@
+════ Service PED (18 lits)
+════ Service MEDF (17 lits)
+── 09:16 export_resultats_PED
+── 09:16 export_resultats_MEDF
+   terminé (resultats/journaux/export_resultats_PED.log)
+   terminé (resultats/journaux/export_resultats_MEDF.log)
+════ Lien triage → lits
+── 09:16 lien_triage_PED_minuit
+── 09:16 lien_triage_PED_pic
+── 09:16 lien_triage_PED_journee
+   terminé (resultats/journaux/lien_triage_PED_pic.log)
+   terminé (resultats/journaux/lien_triage_PED_journee.log)
+   terminé (resultats/journaux/lien_triage_PED_minuit.log)
+── 09:28 export_resultats_PED
+   terminé (resultats/journaux/export_resultats_PED.log)
+── 09:28 fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/

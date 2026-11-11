@@ -1,0 +1,8 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+gamma = 0,005;2.753;3.245;-0.95;1.6618;0.5;0.2732;1.0;équivalent
+gamma = 0,01;2.749;3.253;-0.997;1.6737;0.5;0.179;0.895;équivalent
+gamma = 0,02;2.704;3.197;-1.033;1.6616;0.6;0.0965;0.579;équivalent
+gamma = 0,05 (retenu);2.534;3.011;-0.998;1.5663;0.9;;;— choix retenu
+gamma = 0,1;2.532;3.03;-1.015;1.5708;1.2;0.9119;1.0;équivalent
+gamma = 0,2;2.615;3.1;-1.051;1.6231;1.2;0.3664;1.0;équivalent
+gamma = 0,5;2.635;3.061;-0.936;1.5982;0.9;0.7358;1.0;équivalent

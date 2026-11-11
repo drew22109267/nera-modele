@@ -1,0 +1,4 @@
+﻿variante;début série;jours coupés en fin;présents moyens;TOM %;écart Little %;MAE propre;pinball τ=0.8 propre;gain / persistance %;MAE retenue;pinball τ=0.8 retenue;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+Attendue (nuit incertaine = 1 − p) (retenu);15/07/2024;4;8.47;47.0;-3.3;1.855;0.6831;8.2;1.855;0.6831;13.0;;;— choix retenu
+Tout inclusif (borne basse);15/07/2024;4;7.94;44.1;-6.8;1.866;0.6667;5.9;1.929;0.6982;12.8;0.4043;0.4078;équivalent
+Tout en nuits (borne haute);15/07/2024;4;9.02;50.1;2.4;1.989;0.7117;6.8;1.995;0.7062;11.5;0.2039;0.4078;équivalent

@@ -1,0 +1,22 @@
+{
+ "banc": "T10",
+ "variante": "knn × svm_composite_constantes",
+ "modele": "svm_composite_constantes",
+ "imputation": "knn",
+ "plaintes": null,
+ "echelle": null,
+ "selection": null,
+ "transfert": null,
+ "cout_moyen": 0.5670103092783505,
+ "auc": 0.6453944260746339,
+ "sensibilite": 0.9310344827586207,
+ "specificite": 0.14383561643835616,
+ "sens_s90": 0.5241379310344828,
+ "spec_s90": 0.6575342465753424,
+ "alertes_s90": 0.4329896907216495,
+ "mcnemar_p": 0.26520539259150766,
+ "spec_s90_p": 1.3029544554399308e-08,
+ "spec_s90_p_holm": 2.2150225742478824e-06,
+ "diff_cout": -0.024054982817869417,
+ "cout_p": 0.6162767446510697
+}

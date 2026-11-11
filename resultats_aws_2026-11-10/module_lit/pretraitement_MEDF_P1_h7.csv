@@ -1,0 +1,13 @@
+﻿variante;début série;jours coupés en fin;présents moyens;TOM %;écart Little %;MAE propre;pinball τ=0.8 propre;gain / persistance %;MAE retenue;pinball τ=0.8 retenue;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+Exclure les séjours sans durée;15/05/2026;0;11.29;66.4;-1.2;2.124;0.8529;54.9;1.902;0.764;3.4;;;non testé (trop peu de jours)
+Médiane du service;15/07/2025;0;9.73;57.3;-3.5;1.929;0.7061;55.9;1.819;0.6617;5.0;;;non testé (trop peu de jours)
+Moyenne du service;15/07/2025;0;10.06;59.2;-0.2;1.919;0.7105;53.8;1.868;0.6883;5.1;;;non testé (trop peu de jours)
+Médiane de la tranche d'âge;15/07/2025;0;9.73;57.3;-3.5;1.929;0.7061;55.9;1.819;0.6617;5.0;;;non testé (trop peu de jours)
+Estimée : prix, puis issue, puis médiane (retenu);15/07/2025;0;9.73;57.2;-3.6;1.811;0.6511;55.2;1.811;0.6511;4.7;;;— choix retenu
+k plus proches voisins (prix, âge, sexe, issue, mois);15/07/2025;0;9.75;57.3;-3.4;1.808;0.6626;55.2;1.808;0.6626;4.9;;;non testé (trop peu de jours)
+Régressions enchaînées (ridge, principe de MICE);15/07/2025;0;9.75;57.3;-3.4;1.806;0.6484;55.3;1.806;0.6484;6.4;;;non testé (trop peu de jours)
+Loi normale multivariée par EM;15/07/2025;0;9.74;57.3;-3.4;1.809;0.6465;55.2;1.809;0.6465;5.8;;;non testé (trop peu de jours)
+ACP itérative (rang faible);15/07/2025;0;9.62;56.6;-4.3;1.804;0.5606;55.3;1.804;0.5606;8.2;;;non testé (trop peu de jours)
+SoftImpute (norme nucléaire);15/07/2025;0;9.75;57.3;-3.4;1.807;0.6833;56.5;1.813;0.6611;6.1;;;non testé (trop peu de jours)
+XGBoost (avec le diagnostic);15/07/2025;0;9.7;57.0;-3.8;1.805;0.5927;55.3;1.805;0.5927;23.7;;;non testé (trop peu de jours)
+Hybride : prix, sinon XGBoost;15/07/2025;0;9.7;57.0;-3.8;1.805;0.5931;55.3;1.805;0.5931;24.4;;;non testé (trop peu de jours)

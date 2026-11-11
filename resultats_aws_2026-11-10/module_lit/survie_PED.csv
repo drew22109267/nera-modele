@@ -1,0 +1,6 @@
+﻿modèle;Brier;log-loss;AUC;MAE J0 (sorties/jour);MAE J1 (sorties/jour);MAE J2 (sorties/jour);biais J0
+Table de survie (ancienneté seule);0.1671;0.505;0.667;1.288;1.279;1.06;-0.193
+Loi gamma de la durée (a = 1.88, θ = 1.95);0.1686;0.512;0.642;1.271;1.248;1.069;-0.054
+SVM linéaire, coûts symétriques + Platt;0.1704;0.5211;0.751;1.224;1.193;1.021;0.247
+SVM linéaire, coûts asymétriques C+/C− = 3.2 + Platt (retenu);0.1566;0.4806;0.743;1.075;1.118;0.895;-0.026
+SVM par cause (risques concurrents), somme des hasards;0.1545;0.4744;0.745;1.036;1.067;0.856;0.034

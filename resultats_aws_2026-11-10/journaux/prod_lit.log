@@ -1,0 +1,165 @@
+── 05:30 verification
+   terminé (resultats/journaux/verification.log)
+════ Service PED (18 lits)
+════ Service MEDF (17 lits)
+── 05:30 conversion_PED
+── 05:30 conversion_MEDF
+   terminé (resultats/journaux/conversion_MEDF.log)
+── 05:30 occupation_MEDF_minuit
+   terminé (resultats/journaux/conversion_PED.log)
+── 05:30 occupation_PED_minuit
+   terminé (resultats/journaux/occupation_MEDF_minuit.log)
+── 05:35 occupation_MEDF_pic
+── 05:35 occupation_MEDF_journee
+   terminé (resultats/journaux/occupation_MEDF_pic.log)
+   terminé (resultats/journaux/occupation_MEDF_journee.log)
+── 05:35 niveaux_MEDF_minuit
+── 05:35 niveaux_MEDF_pic
+── 05:35 niveaux_MEDF_journee
+── 05:35 banc_pretraitement_MEDF
+── 05:35 survie_MEDF
+   terminé (resultats/journaux/survie_MEDF.log)
+   terminé (resultats/journaux/occupation_PED_minuit.log)
+── 05:42 occupation_PED_pic
+── 05:42 occupation_PED_journee
+   terminé (resultats/journaux/occupation_PED_pic.log)
+   terminé (resultats/journaux/occupation_PED_journee.log)
+── 05:42 niveaux_PED_minuit
+── 05:42 niveaux_PED_pic
+── 05:42 niveaux_PED_journee
+── 05:42 banc_pretraitement_PED
+── 05:42 survie_PED
+   ÉCHEC : voir resultats/journaux/banc_pretraitement_PED.log
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/nera/nera-modele/module_lit/svr/caracteristiques.py", line 86, in construire
+    origines = torch.arange(max(retards - 1, 6 if flux else 0, debut_min), len(jours) - h)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: upper bound and lower bound inconsistent with step sign
+   terminé (resultats/journaux/survie_PED.log)
+   terminé (resultats/journaux/niveaux_MEDF_journee.log)
+── 05:48 banc_choix_MEDF_journee
+   terminé (resultats/journaux/niveaux_MEDF_minuit.log)
+── 05:48 banc_choix_MEDF_minuit
+   terminé (resultats/journaux/niveaux_MEDF_pic.log)
+── 05:48 banc_choix_MEDF_pic
+   ÉCHEC : voir resultats/journaux/banc_pretraitement_MEDF.log
+    dm = M.diebold_mariano(y_ref, points[nom], points[nom_ref], h=h, perte="pinball", tau=a.tau)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/nera/nera-modele/module_lit/svr/metriques.py", line 115, in diebold_mariano
+    raise ValueError("Trop peu de jours pour le test de Diebold-Mariano.")
+ValueError: Trop peu de jours pour le test de Diebold-Mariano.
+   terminé (resultats/journaux/banc_choix_MEDF_journee.log)
+── 05:55 banc_parametres_MEDF_journee
+   terminé (resultats/journaux/banc_choix_MEDF_minuit.log)
+── 05:55 banc_parametres_MEDF_minuit
+   terminé (resultats/journaux/banc_choix_MEDF_pic.log)
+── 05:56 banc_parametres_MEDF_pic
+   terminé (resultats/journaux/niveaux_PED_journee.log)
+── 06:01 banc_choix_PED_journee
+   terminé (resultats/journaux/niveaux_PED_pic.log)
+── 06:03 banc_choix_PED_pic
+   terminé (resultats/journaux/niveaux_PED_minuit.log)
+── 06:03 banc_choix_PED_minuit
+   terminé (resultats/journaux/banc_choix_PED_journee.log)
+── 06:11 banc_parametres_PED_journee
+   terminé (resultats/journaux/banc_choix_PED_minuit.log)
+── 06:13 banc_parametres_PED_minuit
+   terminé (resultats/journaux/banc_choix_PED_pic.log)
+── 06:14 banc_parametres_PED_pic
+   terminé (resultats/journaux/banc_parametres_MEDF_journee.log)
+── 06:20 sensibilite_MEDF_journee
+   terminé (resultats/journaux/banc_parametres_MEDF_minuit.log)
+── 06:21 sensibilite_MEDF_minuit
+   terminé (resultats/journaux/banc_parametres_MEDF_pic.log)
+── 06:21 sensibilite_MEDF_pic
+   terminé (resultats/journaux/sensibilite_MEDF_journee.log)
+── 06:24 figures_MEDF_journee
+   terminé (resultats/journaux/figures_MEDF_journee.log)
+   terminé (resultats/journaux/sensibilite_MEDF_minuit.log)
+── 06:25 figures_MEDF_minuit
+   terminé (resultats/journaux/sensibilite_MEDF_pic.log)
+── 06:25 figures_MEDF_pic
+   terminé (resultats/journaux/figures_MEDF_minuit.log)
+   terminé (resultats/journaux/figures_MEDF_pic.log)
+── 06:26 export_resultats_MEDF
+   terminé (resultats/journaux/export_resultats_MEDF.log)
+   terminé (resultats/journaux/banc_parametres_PED_journee.log)
+── 06:53 sensibilite_PED_journee
+   terminé (resultats/journaux/banc_parametres_PED_minuit.log)
+── 06:56 sensibilite_PED_minuit
+   terminé (resultats/journaux/sensibilite_PED_journee.log)
+── 06:57 figures_PED_journee
+   terminé (resultats/journaux/figures_PED_journee.log)
+   terminé (resultats/journaux/banc_parametres_PED_pic.log)
+── 06:59 sensibilite_PED_pic
+   terminé (resultats/journaux/sensibilite_PED_minuit.log)
+── 07:01 figures_PED_minuit
+   terminé (resultats/journaux/figures_PED_minuit.log)
+   terminé (resultats/journaux/sensibilite_PED_pic.log)
+── 07:03 figures_PED_pic
+   terminé (resultats/journaux/figures_PED_pic.log)
+── 07:04 export_resultats_PED
+   terminé (resultats/journaux/export_resultats_PED.log)
+── exports réunis : donnees/export_outil_PED_MEDF.csv
+════ Transfert entre services (les deux sens, chaque comptage)
+── 07:04 transfert_PED_vers_MEDF_minuit
+── 07:04 transfert_MEDF_vers_PED_minuit
+── 07:04 transfert_PED_vers_MEDF_pic
+── 07:04 transfert_MEDF_vers_PED_pic
+── 07:04 transfert_PED_vers_MEDF_journee
+── 07:04 transfert_MEDF_vers_PED_journee
+   terminé (resultats/journaux/transfert_PED_vers_MEDF_minuit.log)
+   terminé (resultats/journaux/transfert_PED_vers_MEDF_pic.log)
+   terminé (resultats/journaux/transfert_PED_vers_MEDF_journee.log)
+   terminé (resultats/journaux/transfert_MEDF_vers_PED_pic.log)
+   terminé (resultats/journaux/transfert_MEDF_vers_PED_minuit.log)
+   terminé (resultats/journaux/transfert_MEDF_vers_PED_journee.log)
+── 07:59 fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/
+════ Service PED (18 lits)
+════ Service MEDF (17 lits)
+── 08:51 export_resultats_PED
+── 08:51 export_resultats_MEDF
+   terminé (resultats/journaux/export_resultats_PED.log)
+   terminé (resultats/journaux/export_resultats_MEDF.log)
+════ Lien triage → lits
+── 08:51 lien_triage_PED_minuit
+── 08:51 lien_triage_PED_pic
+── 08:51 lien_triage_PED_journee
+   ÉCHEC : voir resultats/journaux/lien_triage_PED_journee.log
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/nera/nera-modele/module_lit/lien_triage_lits.py", line 180, in correlation
+    xd[:s] = xa[N - s:]                               # rotation : la fin revient au début
+    ~~^^^^
+ValueError: assignment destination is read-only
+   ÉCHEC : voir resultats/journaux/lien_triage_PED_minuit.log
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/nera/nera-modele/module_lit/lien_triage_lits.py", line 180, in correlation
+    xd[:s] = xa[N - s:]                               # rotation : la fin revient au début
+    ~~^^^^
+ValueError: assignment destination is read-only
+   ÉCHEC : voir resultats/journaux/lien_triage_PED_pic.log
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/nera/nera-modele/module_lit/lien_triage_lits.py", line 180, in correlation
+    xd[:s] = xa[N - s:]                               # rotation : la fin revient au début
+    ~~^^^^
+ValueError: assignment destination is read-only
+── 08:51 export_resultats_PED
+   terminé (resultats/journaux/export_resultats_PED.log)
+════ Sélection du SVM et du prétraitement
+── 08:51 selection_PED_minuit
+── 08:51 selection_PED_pic
+── 08:51 selection_PED_journee
+   terminé (resultats/journaux/selection_PED_minuit.log)
+   terminé (resultats/journaux/selection_PED_pic.log)
+   terminé (resultats/journaux/selection_PED_journee.log)
+── 08:51 export_resultats_PED
+   terminé (resultats/journaux/export_resultats_PED.log)
+── 08:51 selection_MEDF_minuit
+── 08:51 selection_MEDF_pic
+── 08:51 selection_MEDF_journee
+   terminé (resultats/journaux/selection_MEDF_pic.log)
+   terminé (resultats/journaux/selection_MEDF_journee.log)
+   terminé (resultats/journaux/selection_MEDF_minuit.log)
+── 08:51 export_resultats_MEDF
+   terminé (resultats/journaux/export_resultats_MEDF.log)
+── 08:51 fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/

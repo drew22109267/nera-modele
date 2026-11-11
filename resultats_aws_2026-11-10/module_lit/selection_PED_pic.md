@@ -1,0 +1,40 @@
+# Sélection — PED_pic
+
+Règle : significatif. Critère : perte pinball au quantile décisionnel, moyenne sur les horizons.
+
+**SVM retenu : SVR quantile composite (niveau 4, retenu)** (pinball moyen 0.7110 ; contre le choix d'origine : — choix retenu).
+
+**Durées inconnues : estimee** (pinball moyenne 0.7981 (acp_iterative) ; contre « estimee » pour ce modèle : équivalent : non significatif, méthode retenue gardée).
+
+Meilleur modèle toutes familles confondues : SVR quantile RBF (niveau 3).
+
+| variante | famille | modèle | pinball_moyen | MAE_moyenne | horizons | significatif |
+|---|---|---|---|---|---|---|
+| 24 | svm | SVR quantile RBF (niveau 3) | 0.7032 | 2.0485 | 2 | équivalent |
+| 21 | svm | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | 0.7064 | 2.052 | 2 | équivalent |
+| 25 | svm | SVR quantile composite (niveau 4, retenu) | 0.711 | 2.046 | 2 | — choix retenu |
+| 19 | autre (D1) | SVR quantile composite (niveau 4) | 0.711 | 2.046 | 2 | — choix retenu |
+| 26 | svm | SVR quantile, noyau laplacien | 0.72 | 2.083 | 2 | équivalent |
+| 27 | svm | SVR quantile, noyau polynomial (degré 2) | 0.7346 | 2.039 | 2 | équivalent |
+| 3 | autre (D1) | C · perceptron multicouche quantile | 0.7484 | 2.0895 | 2 | équivalent |
+| 4 | autre (D1) | D · LSTM quantile | 0.7752 | 2.161 | 2 | équivalent |
+| 2 | autre (D1) | B · gradient boosting quantile | 0.7757 | 2.122 | 2 | équivalent |
+| 18 | autre (D1) | SARIMA(2,1,1)(1,0,0)7 (ordre choisi sur l'apprentissage) | 0.776 | 2.2205 | 2 | équivalent |
+| 5 | autre (D1) | E · XGBoost quantile (second ordre) | 0.7768 | 2.1395 | 2 | moins bon, équivalent |
+| 1 | autre (D1) | AR(p) par AIC | 0.7848 | 2.18 | 2 | équivalent |
+| 0 | autre (D1) | A · forêt aléatoire quantile | 0.7899 | 2.1835 | 2 | moins bon, équivalent |
+| 13 | autre (D1) | Moyenne historique | 0.9612 | 2.756 | 2 | moins bon, équivalent |
+| 8 | autre (D1) | Holt-Winters additif amorti | 0.9839 | 2.7225 | 2 | moins bon |
+| 12 | autre (D1) | Lissage saisonnier sans tendance | 0.9839 | 2.7225 | 2 | moins bon |
+| 10 | autre (D1) | Holt-Winters multiplicatif amorti | 0.9904 | 2.7905 | 2 | moins bon |
+| 11 | autre (D1) | Lissage exponentiel simple | 0.9929 | 2.763 | 2 | moins bon |
+| 15 | autre (D1) | Méthode Thêta | 0.9929 | 2.762 | 2 | moins bon |
+| 6 | autre (D1) | Holt amorti | 0.9929 | 2.763 | 2 | moins bon |
+| 7 | autre (D1) | Holt linéaire | 1.0086 | 2.8115 | 2 | moins bon |
+| 22 | svm | SVR RBF (niveau 2) | 1.014 | 2.0325 | 2 | moins bon, équivalent |
+| 17 | autre (D1) | Régression ridge (λ = 1) | 1.0442 | 2.0605 | 2 | moins bon, équivalent |
+| 23 | svm | SVR linéaire (niveau 1) | 1.0634 | 2.0555 | 2 | moins bon, équivalent |
+| 9 | autre (D1) | Holt-Winters additif, grille fixée avant la validation | 1.1329 | 2.3705 | 2 | moins bon, équivalent |
+| 16 | autre (D1) | Persistance | 1.3343 | 2.763 | 2 | moins bon |
+| 20 | autre (D1) | Saisonnière hebdomadaire | 1.4236 | 3.0585 | 2 | moins bon, équivalent |
+| 14 | autre (D1) | Moyenne mobile 7 j | 1.5128 | 3.14 | 2 | moins bon |

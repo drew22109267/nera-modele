@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+moyenne_polyak = 0;2.756;3.338;-0.134;0.9227;89.3;8.7;;;identique
+moyenne_polyak = 0,25;2.756;3.338;-0.134;0.9227;89.3;9.1;;;identique
+moyenne_polyak = 0,5 (retenu);2.756;3.338;-0.134;0.9227;89.3;8.2;;;— choix retenu
+moyenne_polyak = 0,75;2.756;3.338;-0.134;0.9227;89.3;8.1;;;identique

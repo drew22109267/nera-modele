@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+profondeur_boosting = 1;2.84;3.501;-0.295;1.0223;83.6;3.8;0.8576;1.0;équivalent
+profondeur_boosting = 2;2.897;3.556;-0.374;1.0061;81.9;7.4;0.4745;1.0;équivalent
+profondeur_boosting = 3 (retenu);2.885;3.54;-0.349;1.0299;73.4;12.4;;;— choix retenu
+profondeur_boosting = 5;2.878;3.49;-0.263;1.0504;66.1;23.4;0.5111;1.0;équivalent

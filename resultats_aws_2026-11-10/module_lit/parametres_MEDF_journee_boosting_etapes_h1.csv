@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+etapes = 50;2.074;2.585;-0.679;0.7481;86.9;1.4;0.1142;0.1142;équivalent
+etapes = 100;1.94;2.464;-0.61;0.7653;83.1;2.8;0.0526;0.1052;équivalent
+etapes = 300 (retenu);1.921;2.429;-0.587;0.8012;75.4;8.3;;;— choix retenu
+etapes = 600;1.931;2.441;-0.612;0.827;72.1;16.3;0.0051;0.0153;moins bon

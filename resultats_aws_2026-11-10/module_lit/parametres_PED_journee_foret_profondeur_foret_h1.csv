@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+profondeur_foret = 3;2.097;2.76;-0.034;0.8007;96.2;2.9;0.0041;0.0164;moins bon
+profondeur_foret = 5;1.95;2.609;-0.073;0.7441;94.5;7.0;0.3124;0.9372;équivalent
+profondeur_foret = 8;1.936;2.559;0.006;0.7249;94.5;16.6;0.5967;0.9372;équivalent
+profondeur_foret = 12 (retenu);1.921;2.533;0.044;0.7303;94.0;22.8;;;— choix retenu
+profondeur_foret = 20;1.915;2.53;0.027;0.7197;93.4;24.1;0.334;0.9372;équivalent

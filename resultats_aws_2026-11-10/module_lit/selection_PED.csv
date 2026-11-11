@@ -1,0 +1,29 @@
+﻿famille;modèle;pinball_moyen;MAE_moyenne;horizons;significatif
+svm;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;0.7963;2.2995;2;équivalent
+svm;SVR quantile RBF (niveau 3);0.8117;2.3;2;équivalent
+svm;SVR quantile composite (niveau 4, retenu);0.8181499999999999;2.263;2;— choix retenu
+autre (D1);SVR quantile composite (niveau 4);0.8181499999999999;2.263;2;— choix retenu
+svm;SVR quantile, noyau laplacien;0.8305;2.3395;2;équivalent
+autre (D1);C · perceptron multicouche quantile;0.8330500000000001;2.349;2;équivalent
+autre (D1);SARIMA(2,1,1)(1,0,0)7 (ordre choisi sur l'apprentissage);0.84075;2.394;2;équivalent
+svm;SVR quantile, noyau polynomial (degré 2);0.8440000000000001;2.3135000000000003;2;équivalent
+autre (D1);D · LSTM quantile;0.8463;2.3914999999999997;2;équivalent
+autre (D1);A · forêt aléatoire quantile;0.8508;2.3425;2;équivalent
+autre (D1);AR(p) par AIC;0.85265;2.373;2;équivalent
+autre (D1);E · XGBoost quantile (second ordre);0.8688;2.3705;2;équivalent
+autre (D1);B · gradient boosting quantile;0.8771500000000001;2.3695;2;équivalent
+autre (D1);Moyenne historique;1.0001;2.7430000000000003;2;moins bon, équivalent
+autre (D1);Lissage saisonnier sans tendance;1.0558;2.9444999999999997;2;moins bon, équivalent
+autre (D1);Holt-Winters additif amorti;1.0571;2.9555000000000002;2;moins bon, équivalent
+autre (D1);Holt amorti;1.06275;2.9645;2;moins bon, équivalent
+autre (D1);Holt linéaire;1.06275;2.9645;2;moins bon, équivalent
+autre (D1);Méthode Thêta;1.06275;2.9635;2;moins bon, équivalent
+autre (D1);Lissage exponentiel simple;1.06275;2.9645;2;moins bon, équivalent
+autre (D1);Holt-Winters multiplicatif amorti;1.0676;2.9885;2;moins bon, équivalent
+svm;SVR RBF (niveau 2);1.1419;2.291;2;moins bon, équivalent
+autre (D1);Régression ridge (λ = 1);1.1852;2.315;2;moins bon, équivalent
+svm;SVR linéaire (niveau 1);1.21575;2.329;2;moins bon
+autre (D1);Holt-Winters additif, grille fixée avant la validation;1.2208999999999999;2.5345;2;moins bon, équivalent
+autre (D1);Saisonnière hebdomadaire;1.4303;3.0570000000000004;2;moins bon, équivalent
+autre (D1);Persistance;1.4417;2.963;2;moins bon
+autre (D1);Moyenne mobile 7 j;1.5316;3.167;2;moins bon

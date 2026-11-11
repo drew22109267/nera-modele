@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+cache_lstm = 4;2.912;3.456;-1.159;1.232;61.0;4.5;0.0497;0.0994;équivalent
+cache_lstm = 8;3.028;3.555;-1.39;1.4562;61.0;5.6;0.001;0.003;moins bon
+cache_lstm = 16 (retenu);3.389;3.983;-1.914;1.0421;67.8;7.6;;;— choix retenu
+cache_lstm = 32;3.3;3.833;-2.034;1.0238;78.0;11.4;0.7979;0.7979;équivalent

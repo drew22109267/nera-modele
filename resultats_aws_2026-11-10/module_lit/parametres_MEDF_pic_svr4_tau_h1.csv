@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+tau = 0,5;1.399;1.782;-0.38;0.8134;85.2;5.1;0.0;0.0;moins bon
+tau = 0,6;1.406;1.788;-0.393;0.8207;85.2;6.5;0.0;0.0;moins bon
+tau = 0,7;1.398;1.782;-0.381;0.8133;85.2;6.6;0.0;0.0;moins bon
+tau = 0,8 (retenu);1.399;1.782;-0.38;0.5262;85.2;6.7;;;— choix retenu
+tau = 0,9;1.399;1.782;-0.38;0.8134;85.2;6.5;0.0;0.0;moins bon

@@ -1,0 +1,167 @@
+Urgences (enfant) : 06/07/2025 → 31/12/2025, 111 jours transcrits sur 179
+
+── Corrélations de Spearman (urgences au jour d, PED au jour d+k)
+                                signal des urgences (jour d) service (jour d+k)  k (jours)  jours  spearman  IC95_bas  IC95_haut  p_valeur
+                               passages enfants aux urgences         admissions          0    111     0.001    -0.204      0.155    0.9987
+                               passages enfants aux urgences         admissions          1    111     0.145    -0.079      0.287    0.2402
+                               passages enfants aux urgences         admissions          2    111     0.241     0.025      0.397    0.0444
+                               passages enfants aux urgences         admissions          3    111    -0.000    -0.225      0.206    1.0000
+                               passages enfants aux urgences           presents          0    111    -0.093    -0.290      0.051    0.4608
+                               passages enfants aux urgences           presents          1    111     0.040    -0.188      0.198    0.7546
+                               passages enfants aux urgences           presents          2    111     0.171    -0.077      0.327    0.1540
+                               passages enfants aux urgences           presents          3    111     0.131    -0.112      0.288    0.2937
+                 enfants graves orientés (décision observée)         admissions          0    111     0.006    -0.213      0.181    0.9465
+                 enfants graves orientés (décision observée)         admissions          1    111     0.174    -0.061      0.335    0.1436
+                 enfants graves orientés (décision observée)         admissions          2    111     0.084    -0.121      0.234    0.5000
+                 enfants graves orientés (décision observée)         admissions          3    111     0.053    -0.131      0.211    0.6658
+                 enfants graves orientés (décision observée)           presents          0    111    -0.050    -0.236      0.073    0.6292
+                 enfants graves orientés (décision observée)           presents          1    111     0.093    -0.156      0.248    0.3512
+                 enfants graves orientés (décision observée)           presents          2    111     0.183    -0.082      0.338    0.0679
+                 enfants graves orientés (décision observée)           presents          3    111     0.218     0.008      0.365    0.0352
+         charge grave attendue Σ P(grave) (modèle de triage)         admissions          0     99    -0.072    -0.238      0.079    0.5666
+         charge grave attendue Σ P(grave) (modèle de triage)         admissions          1     99     0.096    -0.100      0.262    0.4530
+         charge grave attendue Σ P(grave) (modèle de triage)         admissions          2     99    -0.075    -0.289      0.199    0.5574
+         charge grave attendue Σ P(grave) (modèle de triage)         admissions          3     99     0.019    -0.191      0.255    0.8825
+         charge grave attendue Σ P(grave) (modèle de triage)           presents          0     99    -0.130    -0.269      0.025    0.2781
+         charge grave attendue Σ P(grave) (modèle de triage)           presents          1     99    -0.026    -0.172      0.121    0.8198
+         charge grave attendue Σ P(grave) (modèle de triage)           presents          2     99    -0.046    -0.271      0.175    0.7076
+         charge grave attendue Σ P(grave) (modèle de triage)           presents          3     99    -0.044    -0.244      0.199    0.7167
+         charge Σ P(grave), modèle transféré (cible_fourier)         admissions          0     99    -0.073    -0.240      0.046    0.5888
+         charge Σ P(grave), modèle transféré (cible_fourier)         admissions          1     99     0.125    -0.077      0.297    0.3525
+         charge Σ P(grave), modèle transféré (cible_fourier)         admissions          2     99    -0.002    -0.214      0.217    0.9974
+         charge Σ P(grave), modèle transféré (cible_fourier)         admissions          3     99     0.052    -0.168      0.267    0.7102
+         charge Σ P(grave), modèle transféré (cible_fourier)           presents          0     99    -0.158    -0.346     -0.003    0.1645
+         charge Σ P(grave), modèle transféré (cible_fourier)           presents          1     99    -0.029    -0.222      0.118    0.8185
+         charge Σ P(grave), modèle transféré (cible_fourier)           presents          2     99    -0.013    -0.241      0.174    0.9164
+         charge Σ P(grave), modèle transféré (cible_fourier)           presents          3     99     0.019    -0.214      0.243    0.8812
+          charge Σ P(grave), modèle transféré (source_seule)         admissions          0     99    -0.133    -0.322      0.010    0.3055
+          charge Σ P(grave), modèle transféré (source_seule)         admissions          1     99     0.113    -0.100      0.313    0.3747
+          charge Σ P(grave), modèle transféré (source_seule)         admissions          2     99     0.121    -0.062      0.319    0.3512
+          charge Σ P(grave), modèle transféré (source_seule)         admissions          3     99     0.091    -0.103      0.284    0.4896
+          charge Σ P(grave), modèle transféré (source_seule)           presents          0     99    -0.088    -0.285      0.058    0.4308
+          charge Σ P(grave), modèle transféré (source_seule)           presents          1     99    -0.066    -0.264      0.105    0.5548
+          charge Σ P(grave), modèle transféré (source_seule)           presents          2     99     0.021    -0.223      0.232    0.8538
+          charge Σ P(grave), modèle transféré (source_seule)           presents          3     99     0.121    -0.100      0.328    0.2676
+     charge Σ P(grave), modèle transféré (source_recalibree)         admissions          0     99    -0.129    -0.290     -0.012    0.3525
+     charge Σ P(grave), modèle transféré (source_recalibree)         admissions          1     99     0.115    -0.120      0.327    0.4164
+     charge Σ P(grave), modèle transféré (source_recalibree)         admissions          2     99     0.129    -0.068      0.337    0.3538
+     charge Σ P(grave), modèle transféré (source_recalibree)         admissions          3     99     0.061    -0.112      0.235    0.6697
+     charge Σ P(grave), modèle transféré (source_recalibree)           presents          0     99    -0.138    -0.318      0.006    0.2272
+     charge Σ P(grave), modèle transféré (source_recalibree)           presents          1     99    -0.047    -0.235      0.099    0.6867
+     charge Σ P(grave), modèle transféré (source_recalibree)           presents          2     99     0.052    -0.152      0.229    0.6645
+     charge Σ P(grave), modèle transféré (source_recalibree)           presents          3     99     0.104    -0.109      0.315    0.3773
+               charge Σ P(grave), modèle transféré (reunies)         admissions          0     99    -0.035    -0.248      0.089    0.7911
+               charge Σ P(grave), modèle transféré (reunies)         admissions          1     99     0.157    -0.099      0.362    0.2193
+               charge Σ P(grave), modèle transféré (reunies)         admissions          2     99     0.039    -0.178      0.245    0.7715
+               charge Σ P(grave), modèle transféré (reunies)         admissions          3     99     0.021    -0.167      0.197    0.8773
+               charge Σ P(grave), modèle transféré (reunies)           presents          0     99    -0.069    -0.307      0.085    0.5483
+               charge Σ P(grave), modèle transféré (reunies)           presents          1     99     0.036    -0.247      0.236    0.7755
+               charge Σ P(grave), modèle transféré (reunies)           presents          2     99     0.074    -0.186      0.272    0.5144
+               charge Σ P(grave), modèle transféré (reunies)           presents          3     99     0.075    -0.173      0.269    0.5117
+          charge Σ P(grave), modèle transféré (augmentation)         admissions          0     99    -0.063    -0.251      0.059    0.6345
+          charge Σ P(grave), modèle transféré (augmentation)         admissions          1     99     0.123    -0.127      0.330    0.3368
+          charge Σ P(grave), modèle transféré (augmentation)         admissions          2     99     0.061    -0.151      0.281    0.6514
+          charge Σ P(grave), modèle transféré (augmentation)         admissions          3     99     0.007    -0.186      0.209    0.9726
+          charge Σ P(grave), modèle transféré (augmentation)           presents          0     99    -0.093    -0.309      0.064    0.4321
+          charge Σ P(grave), modèle transféré (augmentation)           presents          1     99     0.020    -0.223      0.206    0.8838
+          charge Σ P(grave), modèle transféré (augmentation)           presents          2     99     0.063    -0.183      0.266    0.6097
+          charge Σ P(grave), modèle transféré (augmentation)           presents          3     99     0.044    -0.190      0.260    0.7441
+charge Σ P(grave), modèle transféré (regularisation_biaisee)         admissions          0     99    -0.087    -0.268      0.044    0.5352
+charge Σ P(grave), modèle transféré (regularisation_biaisee)         admissions          1     99     0.144    -0.065      0.338    0.2833
+charge Σ P(grave), modèle transféré (regularisation_biaisee)         admissions          2     99     0.062    -0.145      0.300    0.6645
+charge Σ P(grave), modèle transféré (regularisation_biaisee)         admissions          3     99     0.060    -0.138      0.250    0.6671
+charge Σ P(grave), modèle transféré (regularisation_biaisee)           presents          0     99    -0.141    -0.339     -0.002    0.2193
+charge Σ P(grave), modèle transféré (regularisation_biaisee)           presents          1     99    -0.036    -0.235      0.129    0.7507
+charge Σ P(grave), modèle transféré (regularisation_biaisee)           presents          2     99     0.028    -0.206      0.238    0.8068
+charge Σ P(grave), modèle transféré (regularisation_biaisee)           presents          3     99     0.071    -0.144      0.290    0.5457
+                 charge Σ P(grave), modèle transféré (a_svm)         admissions          0     99    -0.100    -0.286      0.030    0.4713
+                 charge Σ P(grave), modèle transféré (a_svm)         admissions          1     99     0.097    -0.117      0.279    0.4817
+                 charge Σ P(grave), modèle transféré (a_svm)         admissions          2     99     0.084    -0.125      0.326    0.5535
+                 charge Σ P(grave), modèle transféré (a_svm)         admissions          3     99     0.064    -0.135      0.260    0.6514
+                 charge Σ P(grave), modèle transféré (a_svm)           presents          0     99    -0.132    -0.333      0.012    0.2402
+                 charge Σ P(grave), modèle transféré (a_svm)           presents          1     99    -0.040    -0.238      0.114    0.7376
+                 charge Σ P(grave), modèle transféré (a_svm)           presents          2     99     0.037    -0.184      0.230    0.7507
+                 charge Σ P(grave), modèle transféré (a_svm)           presents          3     99     0.094    -0.127      0.329    0.4073
+          charge Σ P(grave), modèle transféré (score_source)         admissions          0     99    -0.084    -0.240      0.051    0.5483
+          charge Σ P(grave), modèle transféré (score_source)         admissions          1     99     0.130    -0.077      0.322    0.3381
+          charge Σ P(grave), modèle transféré (score_source)         admissions          2     99     0.032    -0.175      0.282    0.8211
+          charge Σ P(grave), modèle transféré (score_source)         admissions          3     99     0.036    -0.159      0.243    0.7963
+          charge Σ P(grave), modèle transféré (score_source)           presents          0     99    -0.159    -0.341      0.006    0.2193
+          charge Σ P(grave), modèle transféré (score_source)           presents          1     99    -0.035    -0.207      0.128    0.8003
+          charge Σ P(grave), modèle transféré (score_source)           presents          2     99     0.010    -0.221      0.230    0.9439
+          charge Σ P(grave), modèle transféré (score_source)           presents          3     99     0.040    -0.168      0.279    0.7624
+
+── Part des admissions passées par les urgences (jours transcrits seulement)
+         jours_transcrits  passages_enfants  graves_hors_meo   meo  admissions_service  part_admissions_par_urgences_%
+jour                                                                                                                  
+2025-07                 1               4.0              2.0   0.0                   0                             inf
+2025-09                23             106.0             24.0   5.0                  59                            40.7
+2025-10                31             167.0             41.0  12.0                  85                            48.2
+2025-11                29             124.0             37.0  13.0                  74                            50.0
+2025-12                27             111.0             25.0  17.0                  58                            43.1
+
+══════ Banc D12, horizon J+1
+   D12-0 · sans les urgences (même fenêtre)
+   D12-1 · + passages enfants aux urgences
+   D12-2 · + enfants graves orientés (décision observée)
+   D12-3 · + charge grave attendue Σ P(grave) (module triage)
+   D12-4 · + graves observés + charge
+   D12-T · + charge du modèle transféré (cible_fourier)
+   D12-T · + charge du modèle transféré (source_seule)
+   D12-T · + charge du modèle transféré (source_recalibree)
+   D12-T · + charge du modèle transféré (reunies)
+   D12-T · + charge du modèle transféré (augmentation)
+   D12-T · + charge du modèle transféré (regularisation_biaisee)
+   D12-T · + charge du modèle transféré (a_svm)
+   D12-T · + charge du modèle transféré (score_source)
+                                                                      MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  DM p (pinball τ=0.8)  p Holm vs choix retenu  DM p vs charge locale  p Holm vs charge locale vs charge locale (D12-3)
+variante                                                                                                                                                                                                                                      
+D12-0 · sans les urgences (même fenêtre) (retenu)                   2.073  2.430  0.209         0.6869             69.2                   NaN     NaN  — choix retenu                    NaN                      NaN                         
+D12-1 · + passages enfants aux urgences                             2.040  2.443  0.028         0.7457             69.2                0.0068  0.0884      équivalent                    NaN                      NaN                         
+D12-2 · + enfants graves orientés (décision observée)               2.147  2.530  0.032         0.7403             69.2                0.0049  0.0686      équivalent                    NaN                      NaN                         
+D12-3 · + charge grave attendue Σ P(grave) (module triage)          2.095  2.497  0.005         0.7255             74.4                0.0728  0.7280      équivalent                    NaN                      NaN                         
+D12-4 · + graves observés + charge                                  2.167  2.559 -0.095         0.7511             71.8                0.0271  0.2981      équivalent                    NaN                      NaN                         
+D12-T · + charge du modèle transféré (cible_fourier)                2.089  2.507 -0.016         0.7092             71.8                0.1767  0.7280      équivalent                 0.0680                   0.4760               équivalent
+D12-T · + charge du modèle transféré (source_seule)                 2.085  2.488 -0.011         0.7101             74.4                0.1574  0.7280      équivalent                 0.0785                   0.4760               équivalent
+D12-T · + charge du modèle transféré (source_recalibree)            2.041  2.478 -0.051         0.6994             69.2                0.4837  0.9674      équivalent                 0.0120                   0.0960               équivalent
+D12-T · + charge du modèle transféré (reunies)                      2.045  2.453 -0.075         0.7095             71.8                0.0989  0.7280      équivalent                 0.1423                   0.5612               équivalent
+D12-T · + charge du modèle transféré (augmentation)                 2.071  2.489 -0.093         0.7084             71.8                0.1356  0.7280      équivalent                 0.1403                   0.5612               équivalent
+D12-T · + charge du modèle transféré (regularisation_biaisee)       2.102  2.518  0.040         0.7157             69.2                0.1202  0.7280      équivalent                 0.0704                   0.4760               équivalent
+D12-T · + charge du modèle transféré (a_svm)                        2.048  2.444  0.096         0.7191             74.4                0.0910  0.7280      équivalent                 0.4782                   0.9564               équivalent
+D12-T · + charge du modèle transféré (score_source)                 2.105  2.530  0.041         0.7208             69.2                0.0746  0.7280      équivalent                 0.5271                   0.9564               équivalent
+modèle habituel, tout l'historique de la pédiatrie (sans urgences)  1.285  1.814  0.225         0.4353             94.9                0.0121  0.1452      équivalent                    NaN                      NaN                         
+persistance                                                         1.504  2.161 -0.151         0.7973              NaN                0.4849  0.9674      équivalent                    NaN                      NaN                         
+
+══════ Banc D12, horizon J+7
+   D12-0 · sans les urgences (même fenêtre)
+   D12-1 · + passages enfants aux urgences
+   D12-2 · + enfants graves orientés (décision observée)
+   D12-3 · + charge grave attendue Σ P(grave) (module triage)
+   D12-4 · + graves observés + charge
+   D12-T · + charge du modèle transféré (cible_fourier)
+   D12-T · + charge du modèle transféré (source_seule)
+   D12-T · + charge du modèle transféré (source_recalibree)
+   D12-T · + charge du modèle transféré (reunies)
+   D12-T · + charge du modèle transféré (augmentation)
+   D12-T · + charge du modèle transféré (regularisation_biaisee)
+   D12-T · + charge du modèle transféré (a_svm)
+   D12-T · + charge du modèle transféré (score_source)
+                                                                      MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  DM p (pinball τ=0.8)  p Holm vs choix retenu  DM p vs charge locale  p Holm vs charge locale vs charge locale (D12-3)
+variante                                                                                                                                                                                                                                      
+D12-0 · sans les urgences (même fenêtre) (retenu)                   2.791  3.245  0.485         0.9113             87.9                   NaN     NaN  — choix retenu                    NaN                      NaN                         
+D12-1 · + passages enfants aux urgences                             2.783  3.223  0.345         0.9120             87.9                0.8767     1.0      équivalent                    NaN                      NaN                         
+D12-2 · + enfants graves orientés (décision observée)               2.815  3.248  0.363         0.9137             87.9                0.5896     1.0      équivalent                    NaN                      NaN                         
+D12-3 · + charge grave attendue Σ P(grave) (module triage)          2.815  3.246  0.293         0.9130             87.9                0.8063     1.0      équivalent                    NaN                      NaN                         
+D12-4 · + graves observés + charge                                  2.843  3.264  0.249         0.9131             87.9                0.8547     1.0      équivalent                    NaN                      NaN                         
+D12-T · + charge du modèle transféré (cible_fourier)                2.797  3.233  0.314         0.9132             87.9                0.7778     1.0      équivalent                 0.9363                   1.0000               équivalent
+D12-T · + charge du modèle transféré (source_seule)                 2.804  3.243  0.368         0.9089             87.9                0.7787     1.0      équivalent                 0.0424                   0.3392               équivalent
+D12-T · + charge du modèle transféré (source_recalibree)            2.794  3.233  0.342         0.9111             87.9                0.9817     1.0      équivalent                 0.6265                   1.0000               équivalent
+D12-T · + charge du modèle transféré (reunies)                      2.791  3.229  0.335         0.9129             87.9                0.7952     1.0      équivalent                 0.8545                   1.0000               équivalent
+D12-T · + charge du modèle transféré (augmentation)                 2.800  3.238  0.331         0.9114             87.9                0.9903     1.0      équivalent                 0.4909                   1.0000               équivalent
+D12-T · + charge du modèle transféré (regularisation_biaisee)       2.805  3.241  0.323         0.9114             87.9                0.9906     1.0      équivalent                 0.1436                   1.0000               équivalent
+D12-T · + charge du modèle transféré (a_svm)                        2.796  3.234  0.323         0.9093             87.9                0.8157     1.0      équivalent                 0.3886                   1.0000               équivalent
+D12-T · + charge du modèle transféré (score_source)                 2.805  3.238  0.305         0.9122             87.9                0.9186     1.0      équivalent                 0.7306                   1.0000               équivalent
+modèle habituel, tout l'historique de la pédiatrie (sans urgences)  3.097  3.769  1.935         1.0250             93.9                0.4311     1.0      équivalent                    NaN                      NaN                         
+persistance                                                         2.677  3.514  0.626         1.1506              NaN                0.5107     1.0      équivalent                    NaN                      NaN                         
+
+Rapport : resultats/lien_triage_PED_pic.md · figure : lien_triage_PED_pic.png

@@ -1,0 +1,560 @@
+2835 passages lus ; 2261 avant le 01/01/2026 (date illisible : 93, valeurs écrites mais illisibles : {'age': 282, 'ta': 76, 'glycemie': 28, 'pouls': 28, 'temperature': 31, 'fr': 1, 'spo2': 7, 'poids': 8, 'decision': 95})
+     groupe  passages  renseigne_age  renseigne_pouls  renseigne_ta_sys  renseigne_temperature  renseigne_fr  renseigne_spo2  renseigne_glycemie  renseigne_poids  grave  non_grave  intermediaire  sans_decision  groupe_deduit  plainte_reconnue
+     adulte      1622          0.943            0.706             0.781                  0.425         0.006           0.028               0.335            0.076    326        534            262            500             93             0.727
+     enfant       512          0.951            0.135             0.098                  0.695         0.021           0.068               0.033            0.461    129        182             47            154             19             0.836
+âge inconnu       127          0.000            0.142             0.173                  0.299         0.008           0.024               0.094            0.047     15         29             14             69              0             0.457
+Sac de mots : 150 mots écrits dans au moins 5 passages avant le 01/01/2026
+
+══════ enfant : 512 passages
+  modèle principal : sensibilité 0.931, spécificité 0.096, alertes 91.8%, AUC 0.693, spécificité à 90 % de sensibilité 0.226
+  T1 MEO grave      hors MEO (249 passages) : AUC 0.721, spécificité à 90 % de sensibilité 0.226
+  T1 MEO non_grave  hors MEO (249 passages) : AUC 0.709, spécificité à 90 % de sensibilité 0.342
+  T1 MEO exclue     hors MEO (249 passages) : AUC 0.720, spécificité à 90 % de sensibilité 0.397
+  T2 regle                    sensibilité 0.834, alertes 81.1%, AUC 0.577, spec@90 0.000
+  T2 logistique               sensibilité 0.924, alertes 88.3%, AUC 0.665, spec@90 0.199
+  T2 arbre                    sensibilité 0.869, alertes 83.8%, AUC 0.582, spec@90 0.089
+  T2 foret                    sensibilité 1.000, alertes 100.0%, AUC 0.642, spec@90 0.192
+  T2 xgboost                  sensibilité 0.938, alertes 93.8%, AUC 0.541, spec@90 0.110
+  T2 svm_lineaire             sensibilité 0.917, alertes 88.0%, AUC 0.642, spec@90 0.199
+  T2 svm_rbf                  sensibilité 0.931, alertes 91.8%, AUC 0.693, spec@90 0.226
+  T2 svm_composite            sensibilité 0.924, alertes 89.0%, AUC 0.674, spec@90 0.192
+  T2 svm_composite_constantes sensibilité 0.862, alertes 80.8%, AUC 0.646, spec@90 0.219
+  T2 svm_composite_plaintes   sensibilité 0.986, alertes 98.6%, AUC 0.699, spec@90 0.342
+  T2 svm_laplacien            sensibilité 0.986, alertes 99.0%, AUC 0.622, spec@90 0.247
+  T2 svm_polynomial           sensibilité 0.931, alertes 89.0%, AUC 0.693, spec@90 0.226
+  T2 svm_hinge_carree         sensibilité 0.924, alertes 88.3%, AUC 0.614, spec@90 0.205
+  T2 lssvm                    sensibilité 0.931, alertes 90.4%, AUC 0.651, spec@90 0.178
+  T2 svm_fourier              sensibilité 0.931, alertes 90.0%, AUC 0.695, spec@90 0.247
+  T2 svm_rbf_xgboost          sensibilité 0.938, alertes 91.8%, AUC 0.632, spec@90 0.144
+  T7 originales      sensibilité 0.931, AUC 0.693
+  T7 acp             sensibilité 0.972, AUC 0.602
+  T7 afdm            sensibilité 0.993, AUC 0.633
+  T7 kmeans          sensibilité 1.000, AUC 0.601
+  T7 origine+kmeans  sensibilité 0.931, AUC 0.691
+  T8 suppression_lignes   impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T8 suppression_colonnes passages 291, sensibilité 0.938, AUC 0.710
+  T8 mediane              passages 291, sensibilité 0.931, AUC 0.693
+  T8 moyenne              passages 291, sensibilité 0.952, AUC 0.695
+  T8 mediane_age          passages 291, sensibilité 0.952, AUC 0.542
+  T8 knn                  passages 291, sensibilité 0.952, AUC 0.645
+  T8 regression           passages 291, sensibilité 0.972, AUC 0.692
+  T8 em                   passages 291, sensibilité 0.972, AUC 0.628
+  T8 acp_iterative        passages 291, sensibilité 0.959, AUC 0.681
+  T8 softimpute           passages 291, sensibilité 0.945, AUC 0.699
+  T10 suppression_lignes × logistique impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × logistique               coût 0.543, AUC 0.703
+  T10 mediane              × logistique               coût 0.574, AUC 0.665
+  T10 moyenne              × logistique               coût 0.581, AUC 0.634
+  T10 mediane_age          × logistique               coût 0.560, AUC 0.695
+  T10 knn                  × logistique               coût 0.574, AUC 0.632
+  T10 regression           × logistique               coût 0.553, AUC 0.648
+  T10 em                   × logistique               coût 0.567, AUC 0.655
+  T10 acp_iterative        × logistique               coût 0.605, AUC 0.662
+  T10 softimpute           × logistique               coût 0.588, AUC 0.563
+  T10 suppression_lignes × arbre impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × arbre                    coût 0.667, AUC 0.582
+  T10 mediane              × arbre                    coût 0.667, AUC 0.582
+  T10 moyenne              × arbre                    coût 0.546, AUC 0.592
+  T10 mediane_age          × arbre                    coût 0.546, AUC 0.584
+  T10 knn                  × arbre                    coût 0.502, AUC 0.573
+  T10 regression           × arbre                    coût 0.502, AUC 0.566
+  T10 em                   × arbre                    coût 0.502, AUC 0.562
+  T10 acp_iterative        × arbre                    coût 0.502, AUC 0.601
+  T10 softimpute           × arbre                    coût 0.502, AUC 0.536
+  T10 suppression_lignes × foret impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × foret                    coût 0.502, AUC 0.642
+  T10 mediane              × foret                    coût 0.502, AUC 0.642
+  T10 moyenne              × foret                    coût 0.502, AUC 0.660
+  T10 mediane_age          × foret                    coût 0.502, AUC 0.663
+  T10 knn                  × foret                    coût 0.502, AUC 0.670
+  T10 regression           × foret                    coût 0.533, AUC 0.670
+  T10 em                   × foret                    coût 0.533, AUC 0.649
+  T10 acp_iterative        × foret                    coût 0.581, AUC 0.666
+  T10 softimpute           × foret                    coût 0.522, AUC 0.618
+  T10 suppression_lignes × xgboost impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × xgboost                  coût 0.595, AUC 0.540
+  T10 mediane              × xgboost                  coût 0.595, AUC 0.541
+  T10 moyenne              × xgboost                  coût 0.512, AUC 0.510
+  T10 mediane_age          × xgboost                  coût 0.529, AUC 0.523
+  T10 knn                  × xgboost                  coût 0.502, AUC 0.595
+  T10 regression           × xgboost                  coût 0.502, AUC 0.550
+  T10 em                   × xgboost                  coût 0.522, AUC 0.534
+  T10 acp_iterative        × xgboost                  coût 0.567, AUC 0.593
+  T10 softimpute           × xgboost                  coût 0.502, AUC 0.617
+  T10 suppression_lignes × svm_lineaire impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_lineaire             coût 0.533, AUC 0.690
+  T10 mediane              × svm_lineaire             coût 0.588, AUC 0.642
+  T10 moyenne              × svm_lineaire             coût 0.574, AUC 0.650
+  T10 mediane_age          × svm_lineaire             coût 0.581, AUC 0.647
+  T10 knn                  × svm_lineaire             coût 0.577, AUC 0.644
+  T10 regression           × svm_lineaire             coût 0.540, AUC 0.645
+  T10 em                   × svm_lineaire             coût 0.557, AUC 0.652
+  T10 acp_iterative        × svm_lineaire             coût 0.584, AUC 0.627
+  T10 softimpute           × svm_lineaire             coût 0.595, AUC 0.555
+  T10 suppression_lignes × svm_rbf impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_rbf                  coût 0.598, AUC 0.710
+  T10 mediane              × svm_rbf                  coût 0.591, AUC 0.693
+  T10 moyenne              × svm_rbf                  coût 0.557, AUC 0.695
+  T10 mediane_age          × svm_rbf                  coût 0.567, AUC 0.542
+  T10 knn                  × svm_rbf                  coût 0.557, AUC 0.645
+  T10 regression           × svm_rbf                  coût 0.540, AUC 0.692
+  T10 em                   × svm_rbf                  coût 0.540, AUC 0.628
+  T10 acp_iterative        × svm_rbf                  coût 0.560, AUC 0.681
+  T10 softimpute           × svm_rbf                  coût 0.557, AUC 0.699
+  T10 suppression_lignes × svm_composite impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_composite            coût 0.591, AUC 0.695
+  T10 mediane              × svm_composite            coût 0.581, AUC 0.674
+  T10 moyenne              × svm_composite            coût 0.570, AUC 0.681
+  T10 mediane_age          × svm_composite            coût 0.653, AUC 0.597
+  T10 knn                  × svm_composite            coût 0.557, AUC 0.673
+  T10 regression           × svm_composite            coût 0.570, AUC 0.685
+  T10 em                   × svm_composite            coût 0.595, AUC 0.620
+  T10 acp_iterative        × svm_composite            coût 0.625, AUC 0.659
+  T10 softimpute           × svm_composite            coût 0.540, AUC 0.674
+  T10 suppression_lignes × svm_composite_constantes impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_composite_constantes coût 0.584, AUC 0.660
+  T10 mediane              × svm_composite_constantes coût 0.653, AUC 0.646
+  T10 moyenne              × svm_composite_constantes coût 0.577, AUC 0.642
+  T10 mediane_age          × svm_composite_constantes coût 0.663, AUC 0.589
+  T10 knn                  × svm_composite_constantes coût 0.567, AUC 0.645
+  T10 regression           × svm_composite_constantes coût 0.553, AUC 0.674
+  T10 em                   × svm_composite_constantes coût 0.557, AUC 0.648
+  T10 acp_iterative        × svm_composite_constantes coût 0.632, AUC 0.647
+  T10 softimpute           × svm_composite_constantes coût 0.560, AUC 0.661
+  T10 suppression_lignes × svm_composite_plaintes impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_composite_plaintes   coût 0.574, AUC 0.703
+  T10 mediane              × svm_composite_plaintes   coût 0.522, AUC 0.699
+  T10 moyenne              × svm_composite_plaintes   coût 0.570, AUC 0.625
+  T10 mediane_age          × svm_composite_plaintes   coût 0.560, AUC 0.559
+  T10 knn                  × svm_composite_plaintes   coût 0.557, AUC 0.627
+  T10 regression           × svm_composite_plaintes   coût 0.560, AUC 0.619
+  T10 em                   × svm_composite_plaintes   coût 0.536, AUC 0.564
+  T10 acp_iterative        × svm_composite_plaintes   coût 0.577, AUC 0.683
+  T10 softimpute           × svm_composite_plaintes   coût 0.502, AUC 0.632
+  T10 suppression_lignes × svm_laplacien impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_laplacien            coût 0.512, AUC 0.551
+  T10 mediane              × svm_laplacien            coût 0.526, AUC 0.622
+  T10 moyenne              × svm_laplacien            coût 0.498, AUC 0.620
+  T10 mediane_age          × svm_laplacien            coût 0.553, AUC 0.619
+  T10 knn                  × svm_laplacien            coût 0.498, AUC 0.627
+  T10 regression           × svm_laplacien            coût 0.522, AUC 0.635
+  T10 em                   × svm_laplacien            coût 0.546, AUC 0.610
+  T10 acp_iterative        × svm_laplacien            coût 0.546, AUC 0.637
+  T10 softimpute           × svm_laplacien            coût 0.498, AUC 0.608
+  T10 suppression_lignes × svm_polynomial impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_polynomial           coût 0.588, AUC 0.706
+  T10 mediane              × svm_polynomial           coût 0.564, AUC 0.693
+  T10 moyenne              × svm_polynomial           coût 0.584, AUC 0.677
+  T10 mediane_age          × svm_polynomial           coût 0.553, AUC 0.547
+  T10 knn                  × svm_polynomial           coût 0.574, AUC 0.677
+  T10 regression           × svm_polynomial           coût 0.526, AUC 0.636
+  T10 em                   × svm_polynomial           coût 0.553, AUC 0.630
+  T10 acp_iterative        × svm_polynomial           coût 0.595, AUC 0.666
+  T10 softimpute           × svm_polynomial           coût 0.601, AUC 0.642
+  T10 suppression_lignes × svm_hinge_carree impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_hinge_carree         coût 0.598, AUC 0.599
+  T10 mediane              × svm_hinge_carree         coût 0.574, AUC 0.614
+  T10 moyenne              × svm_hinge_carree         coût 0.577, AUC 0.695
+  T10 mediane_age          × svm_hinge_carree         coût 0.560, AUC 0.608
+  T10 knn                  × svm_hinge_carree         coût 0.581, AUC 0.645
+  T10 regression           × svm_hinge_carree         coût 0.557, AUC 0.680
+  T10 em                   × svm_hinge_carree         coût 0.553, AUC 0.639
+  T10 acp_iterative        × svm_hinge_carree         coût 0.574, AUC 0.626
+  T10 softimpute           × svm_hinge_carree         coût 0.584, AUC 0.681
+  T10 suppression_lignes × lssvm impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × lssvm                    coût 0.560, AUC 0.582
+  T10 mediane              × lssvm                    coût 0.577, AUC 0.651
+  T10 moyenne              × lssvm                    coût 0.574, AUC 0.697
+  T10 mediane_age          × lssvm                    coût 0.533, AUC 0.594
+  T10 knn                  × lssvm                    coût 0.546, AUC 0.659
+  T10 regression           × lssvm                    coût 0.515, AUC 0.651
+  T10 em                   × lssvm                    coût 0.502, AUC 0.622
+  T10 acp_iterative        × lssvm                    coût 0.536, AUC 0.679
+  T10 softimpute           × lssvm                    coût 0.588, AUC 0.678
+  T10 suppression_lignes × svm_fourier impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_fourier              coût 0.584, AUC 0.701
+  T10 mediane              × svm_fourier              coût 0.574, AUC 0.695
+  T10 moyenne              × svm_fourier              coût 0.581, AUC 0.683
+  T10 mediane_age          × svm_fourier              coût 0.584, AUC 0.671
+  T10 knn                  × svm_fourier              coût 0.584, AUC 0.659
+  T10 regression           × svm_fourier              coût 0.529, AUC 0.644
+  T10 em                   × svm_fourier              coût 0.543, AUC 0.650
+  T10 acp_iterative        × svm_fourier              coût 0.557, AUC 0.676
+  T10 softimpute           × svm_fourier              coût 0.574, AUC 0.687
+  T10 suppression_lignes × svm_rbf_xgboost impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_rbf_xgboost          coût 0.595, AUC 0.649
+  T10 mediane              × svm_rbf_xgboost          coût 0.574, AUC 0.632
+  T10 moyenne              × svm_rbf_xgboost          coût 0.608, AUC 0.625
+  T10 mediane_age          × svm_rbf_xgboost          coût 0.543, AUC 0.513
+  T10 knn                  × svm_rbf_xgboost          coût 0.515, AUC 0.643
+  T10 regression           × svm_rbf_xgboost          coût 0.522, AUC 0.619
+  T10 em                   × svm_rbf_xgboost          coût 0.533, AUC 0.631
+  T10 acp_iterative        × svm_rbf_xgboost          coût 0.577, AUC 0.652
+  T10 softimpute           × svm_rbf_xgboost          coût 0.574, AUC 0.638
+  T11 familles         × logistique               coût 0.574, AUC 0.665
+  T11 mots             × logistique               coût 0.588, AUC 0.601
+  T11 familles + mots  × logistique               coût 0.584, AUC 0.638
+  T11 sans plaintes    × logistique               coût 0.612, AUC 0.619
+  T11 familles         × arbre                    coût 0.667, AUC 0.582
+  T11 mots             × arbre                    coût 0.667, AUC 0.572
+  T11 familles + mots  × arbre                    coût 0.667, AUC 0.582
+  T11 sans plaintes    × arbre                    coût 0.667, AUC 0.572
+  T11 familles         × foret                    coût 0.502, AUC 0.642
+  T11 mots             × foret                    coût 0.502, AUC 0.630
+  T11 familles + mots  × foret                    coût 0.595, AUC 0.675
+  T11 sans plaintes    × foret                    coût 0.515, AUC 0.612
+  T11 familles         × xgboost                  coût 0.595, AUC 0.541
+  T11 mots             × xgboost                  coût 0.502, AUC 0.551
+  T11 familles + mots  × xgboost                  coût 0.522, AUC 0.576
+  T11 sans plaintes    × xgboost                  coût 0.515, AUC 0.523
+  T11 familles         × svm_lineaire             coût 0.588, AUC 0.642
+  T11 mots             × svm_lineaire             coût 0.639, AUC 0.579
+  T11 familles + mots  × svm_lineaire             coût 0.581, AUC 0.554
+  T11 sans plaintes    × svm_lineaire             coût 0.660, AUC 0.599
+  T11 familles         × svm_rbf                  coût 0.591, AUC 0.693
+  T11 mots             × svm_rbf                  coût 0.512, AUC 0.656
+  T11 familles + mots  × svm_rbf                  coût 0.515, AUC 0.685
+  T11 sans plaintes    × svm_rbf                  coût 0.502, AUC 0.604
+  T11 familles         × svm_composite            coût 0.581, AUC 0.674
+  T11 mots             × svm_composite            coût 0.595, AUC 0.634
+  T11 familles + mots  × svm_composite            coût 0.608, AUC 0.661
+  T11 sans plaintes    × svm_composite            coût 0.591, AUC 0.613
+  T11 familles         × svm_composite_constantes coût 0.653, AUC 0.646
+  T11 mots             × svm_composite_constantes coût 0.646, AUC 0.629
+  T11 familles + mots  × svm_composite_constantes coût 0.670, AUC 0.648
+  T11 sans plaintes    × svm_composite_constantes coût 0.577, AUC 0.617
+  T11 familles         × svm_composite_plaintes   coût 0.522, AUC 0.699
+  T11 mots             × svm_composite_plaintes   coût 0.639, AUC 0.627
+  T11 familles + mots  × svm_composite_plaintes   coût 0.601, AUC 0.664
+  T11 sans plaintes    × svm_composite_plaintes   coût 0.567, AUC 0.599
+  T11 familles         × svm_laplacien            coût 0.526, AUC 0.622
+  T11 mots             × svm_laplacien            coût 0.502, AUC 0.619
+  T11 familles + mots  × svm_laplacien            coût 0.502, AUC 0.668
+  T11 sans plaintes    × svm_laplacien            coût 0.536, AUC 0.592
+  T11 familles         × svm_polynomial           coût 0.564, AUC 0.693
+  T11 mots             × svm_polynomial           coût 0.505, AUC 0.658
+  T11 familles + mots  × svm_polynomial           coût 0.512, AUC 0.680
+  T11 sans plaintes    × svm_polynomial           coût 0.612, AUC 0.585
+  T11 familles         × svm_hinge_carree         coût 0.574, AUC 0.614
+  T11 mots             × svm_hinge_carree         coût 0.564, AUC 0.609
+  T11 familles + mots  × svm_hinge_carree         coût 0.564, AUC 0.640
+  T11 sans plaintes    × svm_hinge_carree         coût 0.584, AUC 0.593
+  T11 familles         × lssvm                    coût 0.577, AUC 0.651
+  T11 mots             × lssvm                    coût 0.512, AUC 0.641
+  T11 familles + mots  × lssvm                    coût 0.502, AUC 0.697
+  T11 sans plaintes    × lssvm                    coût 0.533, AUC 0.596
+  T11 familles         × svm_fourier              coût 0.574, AUC 0.695
+  T11 mots             × svm_fourier              coût 0.512, AUC 0.666
+  T11 familles + mots  × svm_fourier              coût 0.515, AUC 0.699
+  T11 sans plaintes    × svm_fourier              coût 0.512, AUC 0.603
+  T11 familles         × svm_rbf_xgboost          coût 0.574, AUC 0.632
+  T11 mots             × svm_rbf_xgboost          coût 0.625, AUC 0.603
+  T11 familles + mots  × svm_rbf_xgboost          coût 0.605, AUC 0.647
+  T11 sans plaintes    × svm_rbf_xgboost          coût 0.619, AUC 0.576
+  T12 avec groupes déduits AUC 0.693 ; sans : AUC 0.674 (19 passages déduits)
+  T13 c₊/c₋ = 1   seuil 0.500 : sensibilité 0.607, spécificité 0.699, alertes 45.4%
+  T13 c₊/c₋ = 2   seuil 0.333 : sensibilité 0.890, spécificité 0.274, alertes 80.8%
+  T13 c₊/c₋ = 3   seuil 0.250 : sensibilité 0.924, spécificité 0.158, alertes 88.3%
+  T13 c₊/c₋ = 4   seuil 0.200 : sensibilité 0.931, spécificité 0.096, alertes 91.8%
+  T13 c₊/c₋ = 6   seuil 0.143 : sensibilité 0.972, spécificité 0.055, alertes 95.9%
+  T14 zscore   coût 0.591, AUC 0.693
+  T14 robuste  coût 0.502, AUC 0.650
+  T14 minmax   coût 0.495, AUC 0.572
+  T14 aucune   coût 0.564, AUC 0.566
+  T15 aucune     coût 0.591, AUC 0.693
+  T15 lasso      coût 0.512, AUC 0.688, variables gardées 18.0
+  T15 lasso_1se  coût 0.502, AUC 0.608, variables gardées 12.0
+  T9 pré-entraînement sur 26260 passages NHAMCS (enfant)…
+     {'passages_source': 25749, 'variables_communes': 50, 'D': 500, 'C_source': 1.0, 'auc_validation_source': 0.7114}
+  T9 cible_fourier            sensibilité 0.924, AUC 0.632
+  T9 source_seule             sensibilité 0.021, AUC 0.622
+  T9 source_recalibree        sensibilité 1.000, AUC 0.513
+  T9 reunies                  sensibilité 0.993, AUC 0.554
+  T9 augmentation             sensibilité 0.986, AUC 0.544
+  T9 regularisation_biaisee   sensibilité 0.952, AUC 0.695
+  T9 a_svm                    sensibilité 0.959, AUC 0.721
+  T9 score_source             sensibilité 0.917, AUC 0.697
+  probabilités par passage écrites : probabilites_enfant.csv (358 passages)
+  ► SVM sélectionné (enfant) : knn × svm_composite_constantes [T10], spécificité au seuil s₉₀ 0.6575342465753424, AUC 0.645, coût moyen 0.567
+
+══════ adulte : 1622 passages
+  modèle principal : sensibilité 1.000, spécificité 0.000, alertes 100.0%, AUC 0.659, spécificité à 90 % de sensibilité 0.201
+  T1 MEO grave      hors MEO (705 passages) : AUC 0.691, spécificité à 90 % de sensibilité 0.251
+  T1 MEO non_grave  hors MEO (705 passages) : AUC 0.679, spécificité à 90 % de sensibilité 0.177
+  T1 MEO exclue     hors MEO (705 passages) : AUC 0.703, spécificité à 90 % de sensibilité 0.158
+  T2 regle                    sensibilité 0.938, alertes 90.4%, AUC 0.643, spec@90 0.134
+  T2 logistique               sensibilité 0.967, alertes 96.7%, AUC 0.653, spec@90 0.176
+  T2 arbre                    sensibilité 0.993, alertes 98.5%, AUC 0.630, spec@90 0.116
+  T2 foret                    sensibilité 0.988, alertes 97.3%, AUC 0.658, spec@90 0.212
+  T2 xgboost                  sensibilité 0.976, alertes 95.8%, AUC 0.652, spec@90 0.176
+  T2 svm_lineaire             sensibilité 0.978, alertes 97.3%, AUC 0.651, spec@90 0.170
+  T2 svm_rbf                  sensibilité 1.000, alertes 100.0%, AUC 0.659, spec@90 0.201
+  T2 svm_composite            sensibilité 1.000, alertes 100.0%, AUC 0.652, spec@90 0.195
+  T2 svm_composite_constantes sensibilité 0.998, alertes 99.7%, AUC 0.652, spec@90 0.212
+  T2 svm_composite_plaintes   sensibilité 1.000, alertes 100.0%, AUC 0.663, spec@90 0.195
+  T2 svm_laplacien            sensibilité 0.998, alertes 99.8%, AUC 0.670, spec@90 0.227
+  T2 svm_polynomial           sensibilité 0.974, alertes 98.0%, AUC 0.652, spec@90 0.199
+  T2 svm_hinge_carree         sensibilité 0.983, alertes 98.8%, AUC 0.658, spec@90 0.206
+  T2 lssvm                    sensibilité 1.000, alertes 99.9%, AUC 0.656, spec@90 0.195
+  T2 svm_fourier              sensibilité 1.000, alertes 100.0%, AUC 0.649, spec@90 0.191
+  T2 svm_rbf_xgboost          sensibilité 0.971, alertes 97.1%, AUC 0.667, spec@90 0.184
+  T7 originales      sensibilité 1.000, AUC 0.659
+  T7 acp             sensibilité 0.954, AUC 0.623
+  T7 afdm            sensibilité 0.971, AUC 0.640
+  T7 kmeans          sensibilité 1.000, AUC 0.585
+  T7 origine+kmeans  sensibilité 1.000, AUC 0.659
+  T8 suppression_lignes   impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T8 suppression_colonnes passages 1109, sensibilité 1.000, AUC 0.654
+  T8 mediane              passages 1109, sensibilité 1.000, AUC 0.659
+  T8 moyenne              passages 1109, sensibilité 0.998, AUC 0.660
+  T8 mediane_age          passages 1109, sensibilité 1.000, AUC 0.652
+  T8 knn                  passages 1109, sensibilité 0.998, AUC 0.661
+  T8 regression           passages 1109, sensibilité 0.997, AUC 0.663
+  T8 em                   passages 1109, sensibilité 0.988, AUC 0.653
+  T8 acp_iterative        passages 1109, sensibilité 0.990, AUC 0.664
+  T8 softimpute           passages 1109, sensibilité 0.985, AUC 0.656
+  T10 suppression_lignes × logistique impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × logistique               coût 0.524, AUC 0.642
+  T10 mediane              × logistique               coût 0.528, AUC 0.653
+  T10 moyenne              × logistique               coût 0.530, AUC 0.654
+  T10 mediane_age          × logistique               coût 0.528, AUC 0.653
+  T10 knn                  × logistique               coût 0.526, AUC 0.655
+  T10 regression           × logistique               coût 0.527, AUC 0.653
+  T10 em                   × logistique               coût 0.532, AUC 0.643
+  T10 acp_iterative        × logistique               coût 0.549, AUC 0.652
+  T10 softimpute           × logistique               coût 0.549, AUC 0.638
+  T10 suppression_lignes × arbre impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × arbre                    coût 0.479, AUC 0.585
+  T10 mediane              × arbre                    coût 0.479, AUC 0.630
+  T10 moyenne              × arbre                    coût 0.475, AUC 0.601
+  T10 mediane_age          × arbre                    coût 0.479, AUC 0.623
+  T10 knn                  × arbre                    coût 0.482, AUC 0.562
+  T10 regression           × arbre                    coût 0.571, AUC 0.609
+  T10 em                   × arbre                    coût 0.476, AUC 0.592
+  T10 acp_iterative        × arbre                    coût 0.482, AUC 0.593
+  T10 softimpute           × arbre                    coût 0.573, AUC 0.617
+  T10 suppression_lignes × foret impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × foret                    coût 0.472, AUC 0.645
+  T10 mediane              × foret                    coût 0.481, AUC 0.658
+  T10 moyenne              × foret                    coût 0.487, AUC 0.662
+  T10 mediane_age          × foret                    coût 0.476, AUC 0.657
+  T10 knn                  × foret                    coût 0.482, AUC 0.645
+  T10 regression           × foret                    coût 0.499, AUC 0.639
+  T10 em                   × foret                    coût 0.498, AUC 0.636
+  T10 acp_iterative        × foret                    coût 0.501, AUC 0.629
+  T10 softimpute           × foret                    coût 0.480, AUC 0.649
+  T10 suppression_lignes × xgboost impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × xgboost                  coût 0.503, AUC 0.641
+  T10 mediane              × xgboost                  coût 0.497, AUC 0.652
+  T10 moyenne              × xgboost                  coût 0.509, AUC 0.657
+  T10 mediane_age          × xgboost                  coût 0.502, AUC 0.656
+  T10 knn                  × xgboost                  coût 0.528, AUC 0.674
+  T10 regression           × xgboost                  coût 0.527, AUC 0.656
+  T10 em                   × xgboost                  coût 0.531, AUC 0.652
+  T10 acp_iterative        × xgboost                  coût 0.518, AUC 0.639
+  T10 softimpute           × xgboost                  coût 0.500, AUC 0.651
+  T10 suppression_lignes × svm_lineaire impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_lineaire             coût 0.515, AUC 0.648
+  T10 mediane              × svm_lineaire             coût 0.508, AUC 0.651
+  T10 moyenne              × svm_lineaire             coût 0.522, AUC 0.648
+  T10 mediane_age          × svm_lineaire             coût 0.518, AUC 0.652
+  T10 knn                  × svm_lineaire             coût 0.528, AUC 0.659
+  T10 regression           × svm_lineaire             coût 0.519, AUC 0.650
+  T10 em                   × svm_lineaire             coût 0.538, AUC 0.644
+  T10 acp_iterative        × svm_lineaire             coût 0.534, AUC 0.646
+  T10 softimpute           × svm_lineaire             coût 0.541, AUC 0.634
+  T10 suppression_lignes × svm_rbf impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_rbf                  coût 0.476, AUC 0.654
+  T10 mediane              × svm_rbf                  coût 0.476, AUC 0.659
+  T10 moyenne              × svm_rbf                  coût 0.479, AUC 0.660
+  T10 mediane_age          × svm_rbf                  coût 0.476, AUC 0.652
+  T10 knn                  × svm_rbf                  coût 0.480, AUC 0.661
+  T10 regression           × svm_rbf                  coût 0.482, AUC 0.663
+  T10 em                   × svm_rbf                  coût 0.499, AUC 0.653
+  T10 acp_iterative        × svm_rbf                  coût 0.495, AUC 0.664
+  T10 softimpute           × svm_rbf                  coût 0.506, AUC 0.656
+  T10 suppression_lignes × svm_composite impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_composite            coût 0.470, AUC 0.639
+  T10 mediane              × svm_composite            coût 0.476, AUC 0.652
+  T10 moyenne              × svm_composite            coût 0.482, AUC 0.660
+  T10 mediane_age          × svm_composite            coût 0.475, AUC 0.642
+  T10 knn                  × svm_composite            coût 0.479, AUC 0.653
+  T10 regression           × svm_composite            coût 0.474, AUC 0.649
+  T10 em                   × svm_composite            coût 0.491, AUC 0.636
+  T10 acp_iterative        × svm_composite            coût 0.491, AUC 0.652
+  T10 softimpute           × svm_composite            coût 0.502, AUC 0.647
+  T10 suppression_lignes × svm_composite_constantes impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_composite_constantes coût 0.482, AUC 0.627
+  T10 mediane              × svm_composite_constantes coût 0.478, AUC 0.652
+  T10 moyenne              × svm_composite_constantes coût 0.502, AUC 0.646
+  T10 mediane_age          × svm_composite_constantes coût 0.496, AUC 0.628
+  T10 knn                  × svm_composite_constantes coût 0.498, AUC 0.640
+  T10 regression           × svm_composite_constantes coût 0.506, AUC 0.644
+  T10 em                   × svm_composite_constantes coût 0.518, AUC 0.627
+  T10 acp_iterative        × svm_composite_constantes coût 0.515, AUC 0.642
+  T10 softimpute           × svm_composite_constantes coût 0.521, AUC 0.630
+  T10 suppression_lignes × svm_composite_plaintes impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_composite_plaintes   coût 0.474, AUC 0.640
+  T10 mediane              × svm_composite_plaintes   coût 0.476, AUC 0.663
+  T10 moyenne              × svm_composite_plaintes   coût 0.474, AUC 0.665
+  T10 mediane_age          × svm_composite_plaintes   coût 0.476, AUC 0.652
+  T10 knn                  × svm_composite_plaintes   coût 0.469, AUC 0.661
+  T10 regression           × svm_composite_plaintes   coût 0.472, AUC 0.662
+  T10 em                   × svm_composite_plaintes   coût 0.473, AUC 0.655
+  T10 acp_iterative        × svm_composite_plaintes   coût 0.474, AUC 0.660
+  T10 softimpute           × svm_composite_plaintes   coût 0.470, AUC 0.659
+  T10 suppression_lignes × svm_laplacien impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_laplacien            coût 0.475, AUC 0.661
+  T10 mediane              × svm_laplacien            coût 0.479, AUC 0.670
+  T10 moyenne              × svm_laplacien            coût 0.479, AUC 0.675
+  T10 mediane_age          × svm_laplacien            coût 0.476, AUC 0.669
+  T10 knn                  × svm_laplacien            coût 0.473, AUC 0.673
+  T10 regression           × svm_laplacien            coût 0.480, AUC 0.675
+  T10 em                   × svm_laplacien            coût 0.475, AUC 0.667
+  T10 acp_iterative        × svm_laplacien            coût 0.485, AUC 0.672
+  T10 softimpute           × svm_laplacien            coût 0.483, AUC 0.673
+  T10 suppression_lignes × svm_polynomial impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_polynomial           coût 0.514, AUC 0.640
+  T10 mediane              × svm_polynomial           coût 0.524, AUC 0.652
+  T10 moyenne              × svm_polynomial           coût 0.519, AUC 0.650
+  T10 mediane_age          × svm_polynomial           coût 0.514, AUC 0.649
+  T10 knn                  × svm_polynomial           coût 0.525, AUC 0.651
+  T10 regression           × svm_polynomial           coût 0.510, AUC 0.650
+  T10 em                   × svm_polynomial           coût 0.519, AUC 0.648
+  T10 acp_iterative        × svm_polynomial           coût 0.525, AUC 0.641
+  T10 softimpute           × svm_polynomial           coût 0.539, AUC 0.641
+  T10 suppression_lignes × svm_hinge_carree impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_hinge_carree         coût 0.503, AUC 0.639
+  T10 mediane              × svm_hinge_carree         coût 0.509, AUC 0.658
+  T10 moyenne              × svm_hinge_carree         coût 0.512, AUC 0.659
+  T10 mediane_age          × svm_hinge_carree         coût 0.513, AUC 0.659
+  T10 knn                  × svm_hinge_carree         coût 0.509, AUC 0.659
+  T10 regression           × svm_hinge_carree         coût 0.512, AUC 0.663
+  T10 em                   × svm_hinge_carree         coût 0.533, AUC 0.654
+  T10 acp_iterative        × svm_hinge_carree         coût 0.528, AUC 0.661
+  T10 softimpute           × svm_hinge_carree         coût 0.528, AUC 0.643
+  T10 suppression_lignes × lssvm impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × lssvm                    coût 0.483, AUC 0.643
+  T10 mediane              × lssvm                    coût 0.475, AUC 0.656
+  T10 moyenne              × lssvm                    coût 0.482, AUC 0.664
+  T10 mediane_age          × lssvm                    coût 0.486, AUC 0.658
+  T10 knn                  × lssvm                    coût 0.481, AUC 0.659
+  T10 regression           × lssvm                    coût 0.506, AUC 0.661
+  T10 em                   × lssvm                    coût 0.523, AUC 0.652
+  T10 acp_iterative        × lssvm                    coût 0.509, AUC 0.657
+  T10 softimpute           × lssvm                    coût 0.527, AUC 0.652
+  T10 suppression_lignes × svm_fourier impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_fourier              coût 0.476, AUC 0.642
+  T10 mediane              × svm_fourier              coût 0.476, AUC 0.649
+  T10 moyenne              × svm_fourier              coût 0.476, AUC 0.650
+  T10 mediane_age          × svm_fourier              coût 0.480, AUC 0.642
+  T10 knn                  × svm_fourier              coût 0.480, AUC 0.645
+  T10 regression           × svm_fourier              coût 0.475, AUC 0.645
+  T10 em                   × svm_fourier              coût 0.484, AUC 0.637
+  T10 acp_iterative        × svm_fourier              coût 0.490, AUC 0.645
+  T10 softimpute           × svm_fourier              coût 0.495, AUC 0.639
+  T10 suppression_lignes × svm_rbf_xgboost impossible : Aucun mois évaluable (classes absentes de l'apprentissage ou de la calibration).
+  T10 suppression_colonnes × svm_rbf_xgboost          coût 0.518, AUC 0.648
+  T10 mediane              × svm_rbf_xgboost          coût 0.524, AUC 0.667
+  T10 moyenne              × svm_rbf_xgboost          coût 0.522, AUC 0.661
+  T10 mediane_age          × svm_rbf_xgboost          coût 0.537, AUC 0.664
+  T10 knn                  × svm_rbf_xgboost          coût 0.508, AUC 0.665
+  T10 regression           × svm_rbf_xgboost          coût 0.522, AUC 0.666
+  T10 em                   × svm_rbf_xgboost          coût 0.542, AUC 0.649
+  T10 acp_iterative        × svm_rbf_xgboost          coût 0.552, AUC 0.656
+  T10 softimpute           × svm_rbf_xgboost          coût 0.552, AUC 0.650
+  T11 familles         × logistique               coût 0.528, AUC 0.653
+  T11 mots             × logistique               coût 0.517, AUC 0.645
+  T11 familles + mots  × logistique               coût 0.542, AUC 0.658
+  T11 sans plaintes    × logistique               coût 0.521, AUC 0.628
+  T11 familles         × arbre                    coût 0.479, AUC 0.630
+  T11 mots             × arbre                    coût 0.476, AUC 0.581
+  T11 familles + mots  × arbre                    coût 0.479, AUC 0.616
+  T11 sans plaintes    × arbre                    coût 0.476, AUC 0.577
+  T11 familles         × foret                    coût 0.481, AUC 0.658
+  T11 mots             × foret                    coût 0.470, AUC 0.673
+  T11 familles + mots  × foret                    coût 0.463, AUC 0.664
+  T11 sans plaintes    × foret                    coût 0.460, AUC 0.643
+  T11 familles         × xgboost                  coût 0.497, AUC 0.652
+  T11 mots             × xgboost                  coût 0.511, AUC 0.640
+  T11 familles + mots  × xgboost                  coût 0.485, AUC 0.670
+  T11 sans plaintes    × xgboost                  coût 0.489, AUC 0.623
+  T11 familles         × svm_lineaire             coût 0.508, AUC 0.651
+  T11 mots             × svm_lineaire             coût 0.508, AUC 0.648
+  T11 familles + mots  × svm_lineaire             coût 0.521, AUC 0.630
+  T11 sans plaintes    × svm_lineaire             coût 0.503, AUC 0.621
+  T11 familles         × svm_rbf                  coût 0.476, AUC 0.659
+  T11 mots             × svm_rbf                  coût 0.475, AUC 0.639
+  T11 familles + mots  × svm_rbf                  coût 0.484, AUC 0.666
+  T11 sans plaintes    × svm_rbf                  coût 0.479, AUC 0.627
+  T11 familles         × svm_composite            coût 0.476, AUC 0.652
+  T11 mots             × svm_composite            coût 0.486, AUC 0.595
+  T11 familles + mots  × svm_composite            coût 0.482, AUC 0.641
+  T11 sans plaintes    × svm_composite            coût 0.476, AUC 0.642
+  T11 familles         × svm_composite_constantes coût 0.478, AUC 0.652
+  T11 mots             × svm_composite_constantes coût 0.484, AUC 0.586
+  T11 familles + mots  × svm_composite_constantes coût 0.483, AUC 0.622
+  T11 sans plaintes    × svm_composite_constantes coût 0.476, AUC 0.629
+  T11 familles         × svm_composite_plaintes   coût 0.476, AUC 0.663
+  T11 mots             × svm_composite_plaintes   coût 0.482, AUC 0.643
+  T11 familles + mots  × svm_composite_plaintes   coût 0.487, AUC 0.657
+  T11 sans plaintes    × svm_composite_plaintes   coût 0.476, AUC 0.638
+  T11 familles         × svm_laplacien            coût 0.479, AUC 0.670
+  T11 mots             × svm_laplacien            coût 0.476, AUC 0.661
+  T11 familles + mots  × svm_laplacien            coût 0.476, AUC 0.669
+  T11 sans plaintes    × svm_laplacien            coût 0.476, AUC 0.648
+  T11 familles         × svm_polynomial           coût 0.524, AUC 0.652
+  T11 mots             × svm_polynomial           coût 0.505, AUC 0.639
+  T11 familles + mots  × svm_polynomial           coût 0.491, AUC 0.661
+  T11 sans plaintes    × svm_polynomial           coût 0.514, AUC 0.620
+  T11 familles         × svm_hinge_carree         coût 0.509, AUC 0.658
+  T11 mots             × svm_hinge_carree         coût 0.493, AUC 0.639
+  T11 familles + mots  × svm_hinge_carree         coût 0.486, AUC 0.665
+  T11 sans plaintes    × svm_hinge_carree         coût 0.508, AUC 0.637
+  T11 familles         × lssvm                    coût 0.475, AUC 0.656
+  T11 mots             × lssvm                    coût 0.501, AUC 0.641
+  T11 familles + mots  × lssvm                    coût 0.494, AUC 0.661
+  T11 sans plaintes    × lssvm                    coût 0.482, AUC 0.633
+  T11 familles         × svm_fourier              coût 0.476, AUC 0.649
+  T11 mots             × svm_fourier              coût 0.492, AUC 0.635
+  T11 familles + mots  × svm_fourier              coût 0.476, AUC 0.664
+  T11 sans plaintes    × svm_fourier              coût 0.475, AUC 0.630
+  T11 familles         × svm_rbf_xgboost          coût 0.524, AUC 0.667
+  T11 mots             × svm_rbf_xgboost          coût 0.499, AUC 0.649
+  T11 familles + mots  × svm_rbf_xgboost          coût 0.512, AUC 0.659
+  T11 sans plaintes    × svm_rbf_xgboost          coût 0.526, AUC 0.624
+  T12 avec groupes déduits AUC 0.661 ; sans : AUC 0.648 (93 passages déduits)
+  T13 c₊/c₋ = 1   seuil 0.500 : sensibilité 0.587, spécificité 0.631, alertes 48.3%
+  T13 c₊/c₋ = 2   seuil 0.333 : sensibilité 0.871, spécificité 0.231, alertes 82.2%
+  T13 c₊/c₋ = 3   seuil 0.250 : sensibilité 0.993, spécificité 0.017, alertes 98.8%
+  T13 c₊/c₋ = 4   seuil 0.200 : sensibilité 1.000, spécificité 0.000, alertes 100.0%
+  T13 c₊/c₋ = 6   seuil 0.143 : sensibilité 1.000, spécificité 0.000, alertes 100.0%
+  T14 zscore   coût 0.476, AUC 0.659
+  T14 robuste  coût 0.475, AUC 0.613
+  T14 minmax   coût 0.476, AUC 0.678
+  T14 aucune   coût 0.576, AUC 0.595
+  T15 aucune     coût 0.476, AUC 0.659
+  T15 lasso      coût 0.476, AUC 0.672, variables gardées 14.2
+  T15 lasso_1se  coût 0.476, AUC 0.643, variables gardées 7.5
+  T9 pré-entraînement sur 117841 passages NHAMCS (adulte)…
+     {'passages_source': 60000, 'variables_communes': 52, 'D': 500, 'C_source': 1.0, 'auc_validation_source': 0.7586}
+  T9 cible_fourier            sensibilité 0.995, AUC 0.649
+  T9 source_seule             sensibilité 0.773, AUC 0.670
+  T9 source_recalibree        sensibilité 0.941, AUC 0.672
+  T9 reunies                  sensibilité 0.955, AUC 0.573
+  T9 augmentation             sensibilité 0.933, AUC 0.563
+  T9 regularisation_biaisee   sensibilité 0.966, AUC 0.690
+  T9 a_svm                    sensibilité 0.960, AUC 0.651
+  T9 score_source             sensibilité 0.960, AUC 0.688
+  probabilités par passage écrites : probabilites_adulte.csv (1122 passages)
+  ► SVM sélectionné (adulte) : knn × svm_polynomial [T10], spécificité au seuil s₉₀ 0.4015151515151515, AUC 0.651, coût moyen 0.525
+
+══════ Raccordement enfants + adultes
+  modèles séparés réunis (référence)       passages 1400, sensibilité 0.986, AUC 0.665
+  modèle commun enfants + adultes          passages 1400, sensibilité 0.970, AUC 0.663
+  dont enfant : modèle séparé              passages 291, sensibilité 0.931, AUC 0.693
+  dont enfant : modèle commun              passages 291, sensibilité 0.993, AUC 0.683
+  dont adulte : modèle séparé              passages 1109, sensibilité 1.000, AUC 0.659
+  dont adulte : modèle commun              passages 1109, sensibilité 0.964, AUC 0.660
+
+Résultats : resultats/triage/

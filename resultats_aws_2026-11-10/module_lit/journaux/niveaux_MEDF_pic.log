@@ -1,0 +1,45 @@
+Série : 15/07/2025 → 31/08/2026 · validation glissante du 01/03/2026 au verrou (01/09/2026), pas de 14 j
+
+══ Horizon J+1
+    niveau 1 : C=0.3, epsilon=0.5, score=1.225
+  1 · SVR linéaire…
+    niveau 2 : C=3, epsilon=0.5, gamma=0.02, score=1.312
+  2 · SVR RBF…
+    niveau 3 : C=3, epsilon_quantile=0, gamma=0.02, score=0.5148
+  3 · SVR quantile RBF…
+    niveau 4 : C=3, epsilon_quantile=0, gamma1=0.1, gamma2=0.05, score=0.5113
+  4 · SVR quantile composite…
+                              MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+niveau                                                                                                                                                                                        
+0 · persistance             1.290  1.876   11.70 -0.004                49.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · saisonnière             2.357  2.920   22.15  0.018                50.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · moyenne mobile 7 j      1.979  2.482   18.48 -0.001                57.4           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+1 · SVR linéaire            1.225  1.582   10.72 -0.376                63.4           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+2 · SVR RBF                 1.312  1.670   11.65 -0.363                61.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+3 · SVR quantile RBF        1.406  1.756   12.26 -0.474                62.3          83.6             6.44       0.2148          0.7029        0.1997           0.5148                    30.6
+4 · SVR quantile composite  1.372  1.759   12.21 -0.378                62.3          84.7             6.20       0.2218          0.6860        0.1942           0.5113                    33.3
+5 · empilement              1.289  1.780   11.32  0.037                49.0          85.2             5.69       0.2409          0.6446        0.1993           0.4782                    29.0
+4 · (mêmes jours que 5)     1.397  1.782   11.61 -0.511                65.2          85.2             6.28       0.2231          0.6987        0.1942           0.5203                    37.4 
+
+══ Horizon J+7
+    niveau 1 : C=0.3, epsilon=0.5, score=2.761
+  1 · SVR linéaire…
+    niveau 2 : C=3, epsilon=0.5, gamma=0.05, score=2.45
+  2 · SVR RBF…
+    niveau 3 : C=0.3, epsilon_quantile=0, gamma=0.02, score=0.8301
+  3 · SVR quantile RBF…
+    niveau 4 : C=0.3, epsilon_quantile=0, gamma1=0.1, gamma2=0.05, score=0.8489
+  4 · SVR quantile composite…
+                              MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+niveau                                                                                                                                                                                        
+0 · persistance             2.686  3.323   24.68 -0.004                53.1           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · saisonnière             2.384  2.944   22.45  0.048                50.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · moyenne mobile 7 j      2.592  3.178   24.01  0.055                50.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+1 · SVR linéaire            2.761  3.273   24.12 -1.054                62.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+2 · SVR RBF                 2.450  2.935   21.46 -0.889                63.8           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+3 · SVR quantile RBF        2.670  3.144   23.34 -1.009                62.7          92.1            11.07       0.3505          1.3351        0.2473           0.8301                    32.8
+4 · SVR quantile composite  2.630  3.095   23.16 -0.910                63.3          90.4            11.01       0.3509          1.3150        0.2475           0.8489                    33.3
+5 · empilement              2.603  3.105   22.11 -0.293                57.7          89.3             9.27       0.2982          1.3017        0.2234           0.8808                    26.2
+4 · (mêmes jours que 5)     2.643  3.086   20.78 -1.384                69.8          89.9            10.99       0.3758          1.3215        0.2283           0.8262                    38.3 
+
+Résultats écrits dans /home/ubuntu/nera/nera-modele/module_lit/resultats

@@ -1,0 +1,25 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);couverture 90 %;réglages;DM p (pinball τ=0.8);p Holm;vs choix retenu
+Persistance;2.127;2.795;-0.016;1.0686;0.0;;;0.0001;0.0018;moins bon
+Saisonnière hebdomadaire;2.669;3.416;0.039;1.3226;0.0;;;0.0;0.0;moins bon
+Moyenne mobile 7 j;2.451;3.019;0.007;1.2234;0.0;;;0.0;0.0;moins bon
+Moyenne historique;3.243;3.952;-1.885;0.9688;0.0;89.1;;0.0002;0.0034;moins bon
+Lissage exponentiel simple;2.122;2.786;-0.016;0.7748;0.0;88.5;;0.985;1.0;équivalent
+Méthode Thêta;2.123;2.786;-0.005;0.7748;0.0;88.5;;0.985;1.0;équivalent
+Holt linéaire;2.122;2.786;-0.016;0.7748;0.1;88.5;;0.985;1.0;équivalent
+Holt amorti;2.126;2.79;-0.016;0.7743;0.1;88.5;;0.9777;1.0;équivalent
+Lissage saisonnier sans tendance;1.961;2.498;-0.004;0.6918;0.1;90.7;;0.1455;1.0;équivalent
+Holt-Winters additif amorti;1.965;2.531;-0.002;0.7062;0.2;90.7;;0.2341;1.0;équivalent
+Holt-Winters multiplicatif amorti;2.127;2.795;-0.016;0.7757;0.0;89.1;;0.9972;1.0;équivalent
+AR(p) par AIC;1.935;2.486;-0.258;0.696;0.1;88.5;;0.0744;1.0;équivalent
+SARIMA(2,0,0)(1,0,0)7 (ordre choisi sur l'apprentissage);1.961;2.535;-0.293;0.7133;4.5;88.5;;0.1767;1.0;équivalent
+Holt-Winters additif, grille fixée avant la validation;1.872;2.418;-0.004;0.9371;0.1;;alpha=0.9, beta=0.0, gamma=0.3, phi=0.8;0.013;0.195;équivalent
+Régression ridge (λ = 1);1.839;2.264;-0.617;1.1044;0.1;;;0.0;0.0;moins bon
+A · forêt aléatoire quantile;2.027;2.562;-0.51;0.7136;9.8;94.5;;0.0938;1.0;équivalent
+B · gradient boosting quantile;1.921;2.429;-0.587;0.8012;9.2;75.4;;0.5116;1.0;équivalent
+C · perceptron multicouche quantile;2.116;2.577;-1.156;0.8087;1.1;80.9;;0.519;1.0;équivalent
+D · LSTM quantile;2.12;2.618;-1.027;0.8186;10.6;81.4;;0.2768;1.0;équivalent
+E · XGBoost quantile (second ordre);1.97;2.486;-0.55;0.7714;8.9;85.8;;0.8915;1.0;équivalent
+SVR linéaire (niveau 1);1.817;2.282;-0.723;1.1255;0.5;;;0.0;0.0;moins bon
+SVR RBF (niveau 2);1.852;2.358;-0.712;1.1395;1.3;;;0.0;0.0;moins bon
+SVR quantile RBF (niveau 3);2.002;2.507;-0.752;0.7261;4.2;88.0;;0.0004;0.0064;meilleur
+SVR quantile composite (niveau 4) (retenu);2.004;2.51;-0.745;0.7759;6.5;86.3;;;;— choix retenu

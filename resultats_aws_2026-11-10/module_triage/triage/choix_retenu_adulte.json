@@ -1,0 +1,22 @@
+{
+ "banc": "T10",
+ "variante": "knn × svm_polynomial",
+ "modele": "svm_polynomial",
+ "imputation": "knn",
+ "plaintes": null,
+ "echelle": null,
+ "selection": null,
+ "transfert": null,
+ "cout_moyen": 0.5247971145175834,
+ "auc": 0.6505029859698535,
+ "sensibilite": 0.9672977624784854,
+ "specificite": 0.041666666666666664,
+ "sens_s90": 0.7865748709122203,
+ "spec_s90": 0.4015151515151515,
+ "alertes_s90": 0.69702434625789,
+ "mcnemar_p": 0.7547764265871044,
+ "spec_s90_p": 0.0,
+ "spec_s90_p_holm": 0.0,
+ "diff_cout": 0.04869251577998197,
+ "cout_p": 0.0033993201359728054
+}

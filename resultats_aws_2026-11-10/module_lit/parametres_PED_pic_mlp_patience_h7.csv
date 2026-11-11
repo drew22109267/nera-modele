@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;vs choix retenu
+patience = 50;2.865;3.51;-0.323;1.029;85.3;0.6;;;identique
+patience = 150 (retenu);2.865;3.51;-0.323;1.029;85.3;1.2;;;— choix retenu
+patience = 300;2.865;3.51;-0.323;1.029;85.3;2.3;;;identique

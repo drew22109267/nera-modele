@@ -1,0 +1,25 @@
+Série du 15/07/2025 au 31/08/2026 (verrou 01/09/2026) · horizon J+1 · 349 jours d'entraînement, 56 de validation
+
+  ✓ 01_serie_occupation.png
+/home/ubuntu/nera/nera-modele/module_lit/visualisations.py:126: Pandas4Warning: DatetimeIndex.dayofweek is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+  jour = torch.tensor(occ.index.dayofweek.to_numpy())          # 0 = lundi … 6 = dimanche
+  ✓ 02_profils.png
+  ✓ 03_autocorrelation.png
+  ✓ 04_correlations.png
+/home/ubuntu/nera/nera-modele/module_lit/visualisations.py:182: Pandas4Warning: DatetimeIndex.dayofweek is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+  jour_cible = torch.tensor(tab.dates_cible.dayofweek.to_numpy())
+  ✓ 05_relations.png
+  ✓ 06_nuage_3d.png
+  ✓ 07_hyperplan_svr_3d.png
+  ✓ 08_surface_svr_rbf_3d.png
+  ✓ 09_convergence.png
+  ✓ 17_importance_variables.png
+  ✓ 10_courbe_apprentissage.png
+  ✓ 11_hyperparametres.png
+  ✓ 12_previsions.png
+  ✓ 13_residus.png
+  ✓ 14_calibration.png
+  ✓ 15_ablation.png
+  ✓ 16_sensibilite.png
+
+Figures écrites dans /home/ubuntu/nera/nera-modele/module_lit/resultats/figures_MEDF_pic
