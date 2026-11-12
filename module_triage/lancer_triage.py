@@ -71,6 +71,7 @@ import pandas as pd
 import torch
 
 import triage  # noqa: F401  (rend le dossier module_lit importable)
+from svr.metriques import holm
 from svr.modeles import Entrainement
 from svr.reprise import Reprise, empreinte
 from traitement import verrou
@@ -169,6 +170,13 @@ class Banc:
             bc = bootstrap_cout(res["y"], pa, pb, self.rapport, res["dates"])    # coût moyen, par jours
             ligne.update({"diff_cout": bc["diff_cout"], "diff_cout_ic95": f"[{bc['ic_bas']} ; {bc['ic_haut']}]",
                           "bootstrap_cout_p": bc["p_valeur"]})
+            if "seuil90" in res and "seuil90" in reference:
+                # Test du critère de sélection : chaque modèle met en rouge au-dessus de SON seuil s₉₀ ; sur les seuls
+                # passages NON graves, « juste » = pas en rouge. McNemar dit si A écarte significativement plus (ou
+                # moins) de non-graves que B, à détection des graves fixée (~90 %).
+                ng = res["y"] != 2
+                t90 = mcnemar_justes((res["p"][:, 2] < res["seuil90"])[ng], (reference["p"][:, 2] < reference["seuil90"])[ng])
+                ligne.update({"spec_s90_b": t90["b"], "spec_s90_c": t90["c"], "spec_s90_p": t90["p_valeur"]})
         self.choix[f"{banc} {variante}"] = res["choix"]
         return ligne
 
@@ -196,6 +204,11 @@ def selectionner(lignes: list[dict]) -> dict:
     en rouge 90 % des graves, appliqué aux mois évalués) ; à égalité, la plus grande AUC de cette question, puis
     le plus petit coût moyen à trois niveaux. La détection des graves reste le premier critère : c'est le
     sous-triage d'un grave qui coûte le plus.
+    Significativité : un candidat ne remplace le modèle principal que si sa spécificité au seuil s₉₀ est plus
+    grande ET que l'écart est significatif (McNemar sur les non-graves, colonne spec_s90_p, p ajustée de Holm
+    < 0,05 sur tous les candidats comparés au principal). Sinon le modèle principal, fixé avant les bancs, est
+    gardé : parmi des dizaines de variantes jugées sur les mêmes mois, la plus grande spécificité est en partie
+    due au hasard (biais du gagnant), comme pour la sélection du module lit.
     Tout vient de la validation mensuelle avant le verrou.
     """
     candidats = [l for l in lignes if l.get("svm") and l.get("imputation") != "suppression_lignes"
@@ -205,10 +218,18 @@ def selectionner(lignes: list[dict]) -> dict:
     def spec(l):
         v = l.get("spec_s90")
         return v if v == v and v is not None else -1.0
+    principal = next((l for l in lignes if l.get("banc") == "principal"), None)
+    testes = [l for l in candidats if l is not principal and l.get("spec_s90_p") is not None]
+    for l, ph in zip(testes, holm([l["spec_s90_p"] for l in testes])):
+        l["spec_s90_p_holm"] = ph
+    if principal is not None:
+        gagnants = [l for l in testes if spec(l) > spec(principal) and l["spec_s90_p_holm"] < 0.05]
+        candidats = gagnants or [principal]
     meilleur = min(candidats, key=lambda l: (-spec(l), -(l.get("auc") or 0), l["cout_moyen"]))
     return {k: meilleur.get(k) for k in ("banc", "variante", "modele", "imputation", "plaintes", "echelle", "selection", "transfert", "cout_moyen", "auc",
                                          "auc_bas", "kappa_pondere", "graves_en_rouge", "graves_sous_tries", "sous_triage", "sur_triage",
-                                         "sensibilite", "specificite", "sens_s90", "spec_s90", "alertes_s90", "mcnemar_p")}
+                                         "sensibilite", "specificite", "sens_s90", "spec_s90", "alertes_s90", "mcnemar_p",
+                                         "spec_s90_p", "spec_s90_p_holm", "diff_cout", "bootstrap_cout_p")}
 
 
 def bancs_du_groupe(b: Banc, bancs: list[str], opts: OptionsVariables, cfg: ConfigTriage,
@@ -632,7 +653,7 @@ def main() -> None:
                     "sur_triage", "rouges", "jaunes", "exactitude", "kappa_pondere", "cout_moyen", "auc_haut", "auc_bas",
                     "spec_sens90", "brier3"] + \
                    [c for c in ("sens_s90", "spec_s90", "alertes_s90") if c in df] + \
-                   [c for c in ("mcnemar_p", "mcnemar_p_vs_cameroun_seul") if c in df]
+                   [c for c in ("mcnemar_p", "diff_cout", "bootstrap_cout_p", "spec_s90_p", "spec_s90_p_holm", "mcnemar_p_vs_cameroun_seul") if c in df]
         rapport.append(en_markdown(df[colonnes].round(3)))
     if len(references) == 2:
         try:

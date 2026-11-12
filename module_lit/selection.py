@@ -10,7 +10,8 @@ Règle (écrite à l'avance, appliquée telle quelle) :
   2. Durées inconnues : pour CE modèle, la méthode dont la perte pinball τ contre la série retenue est la plus petite dans le
      banc croisé P1 × modèles (moyenne sur les horizons) ; à défaut de banc croisé, la méthode retenue (« estimee »).
   3. Avec --regle significatif (défaut), un modèle ou une méthode ne remplace le choix retenu que si le test de
-     Diebold-Mariano (perte pinball τ, correction de Holm) le dit « meilleur » ; sinon le choix retenu, fixé
+     Diebold-Mariano (perte pinball τ, correction de Holm) le dit « meilleur » sur au moins un horizon et
+     « moins bon » sur aucun ; sinon le choix retenu, fixé
      avant les bancs, est gardé. Prendre la plus petite erreur parmi une vingtaine de variantes favoriserait celle
      qui a eu de la chance sur ces jours (biais du gagnant) ; --regle meilleur reste disponible, la
      significativité étant alors seulement indiquée.
@@ -88,7 +89,8 @@ def main() -> None:
     svm = classement[classement["famille"] == "svm"]
     nom_retenu = CATALOGUE[RETENU][0]
     choisi = svm.iloc[0]
-    if a.regle == "significatif" and "meilleur" not in choisi["significatif"]:
+    gagne = lambda verdicts: "meilleur" in verdicts and "moins bon" not in verdicts   # sur les horizons réunis
+    if a.regle == "significatif" and not gagne(choisi["significatif"]):
         choisi = svm[svm["modèle"] == nom_retenu].iloc[0]
     cle = NOM_VERS_CLE.get(choisi["modèle"], RETENU)
 
@@ -103,7 +105,7 @@ def main() -> None:
             moy = c.groupby("cle_imputation").agg(MAE=(critere, "mean"),
                                                    verdict=("vs imputation retenue, même modèle", lambda s: ", ".join(sorted(set(map(str, s))))))
             meilleur = moy["MAE"].idxmin()
-            if a.regle == "meilleur" or "meilleur" in moy.loc[meilleur, "verdict"]:
+            if a.regle == "meilleur" or gagne(moy.loc[meilleur, "verdict"]):
                 imputation = meilleur
             detail_imp = f"MAE moyenne {moy.loc[meilleur, 'MAE']:.3f} ; contre « estimee » pour ce modèle : {moy.loc[meilleur, 'verdict']}"
 

@@ -192,7 +192,7 @@ def _choisir(fabriquer, cal_scores, y_cal, grille):
 def evaluer_transfert(tab: TableauTriage, decoupages: list[Decoupage], pre: Pretraine, cfg: ConfigTransfert,
                       variantes=VARIANTES) -> dict[str, dict]:
     """Pour chaque variante : probabilités hors échantillon sur les mois évalués (même forme que validation.evaluer)."""
-    sortie = {v: {"ys": [], "ps": [], "idx": [], "choix": []} for v in variantes}
+    sortie = {v: {"ys": [], "ps": [], "idx": [], "choix": [], "s90": []} for v in variantes}
     P_tout = pre.phi_de(tab.X)
     f_tout = pre.score(P_tout)
     e = cfg.entrainement
@@ -203,6 +203,12 @@ def evaluer_transfert(tab: TableauTriage, decoupages: list[Decoupage], pre: Pret
         y_app, y_cal = tab.y[app], tab.y[cal]
         if len(torch.unique(y_app)) < 2 or len(torch.unique(y_cal)) < 2:
             continue
+        # Comme validation.evaluer : C choisi sur la 1re moitié de la calibration, Platt et s₉₀ sur la 2de (si chacune a
+        # les deux classes) ; les variantes sans réglage (source seule, source recalibrée) gardent toute la calibration.
+        n_reg = len(cal) // 2
+        separe = (n_reg >= 2 and len(torch.unique(y_cal[:n_reg])) == 2 and len(torch.unique(y_cal[n_reg:])) == 2)
+        reg = slice(0, n_reg) if separe else slice(None)
+        cal_platt = slice(n_reg, None) if separe else slice(None)
         cp, cn = rapport_classes(y_app, "equilibre", 1.0)
         Pa, Pc, Pe = P_tout[app], P_tout[cal], P_tout[ev]
         fa, fc, fe = f_tout[app], f_tout[cal], f_tout[ev]
@@ -248,7 +254,7 @@ def evaluer_transfert(tab: TableauTriage, decoupages: list[Decoupage], pre: Pret
                     fab = lambda C: (SVMAPriori(C * cps, C * cns, e).entrainer(X_, y_, poids=poids), None)
                     sc = lambda m, _, X=Xc_: m.predire(X)
                     pred = lambda m, X=Xe_: m.predire(X)
-                a, C, m, _ = _choisir(fab, sc, y_cal, cfg.grille_C)
+                a, C, m, _ = _choisir(fab, lambda m_, x_, sc=sc: sc(m_, x_)[reg], y_cal[reg], cfg.grille_C)
                 s_cal = sc(m, None)
                 if v == "a_svm":
                     s_ev = m.predire(Le, fe)
@@ -258,16 +264,22 @@ def evaluer_transfert(tab: TableauTriage, decoupages: list[Decoupage], pre: Pret
                     s_ev = pred(m, Pe)
                 else:
                     s_ev = pred(m, Pe)
-                platt = CalibrationPlatt().ajuster(s_cal, y_cal)
+                platt = CalibrationPlatt().ajuster(s_cal[cal_platt], y_cal[cal_platt])
             o = sortie[v]
             o["ps"].append(platt.probabilite(s_ev)); o["ys"].append(tab.y[ev]); o["idx"].append(ev)
-            o["choix"].append({"mois": f"{dec.mois:%Y-%m}", "C": C, "apprentissage": len(app), "calibration": len(cal)})
+            # s₉₀ comme validation.evaluer : sur les passages de la calibration de Platt, ≥ 90 % des graves au-dessus.
+            s_pl, y_pl = (fc, y_cal) if v in ("source_seule", "source_recalibree") else (s_cal[cal_platt], y_cal[cal_platt])
+            p_graves = torch.sort(platt.probabilite(s_pl)[y_pl > 0]).values
+            s90 = float(p_graves[int(math.floor(0.10 * len(p_graves)))])
+            o["s90"].append(torch.full((len(ev),), s90, dtype=TYPE))
+            o["choix"].append({"mois": f"{dec.mois:%Y-%m}", "C": C, "apprentissage": len(app), "calibration": len(cal),
+                                "calibration_partagee": not separe})
     resultats = {}
     for v, o in sortie.items():
         if not o["ys"]:
             continue
         idx = torch.cat(o["idx"])
-        resultats[v] = {"y": torch.cat(o["ys"]), "p": torch.cat(o["ps"]), "indices": idx, "dates": tab.dates[idx.numpy()],
+        resultats[v] = {"y": torch.cat(o["ys"]), "p": torch.cat(o["ps"]), "indices": idx, "seuil90": torch.cat(o["s90"]), "dates": tab.dates[idx.numpy()],
                         "meo": tab.meo[idx], "ids": [tab.ids[i] for i in idx.tolist()] if tab.ids else None,
                         "choix": o["choix"], "groupe": [tab.groupe[i] for i in idx.tolist()]}
     return resultats

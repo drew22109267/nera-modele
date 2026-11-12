@@ -34,8 +34,16 @@ Ce document-ci se concentre sur la logique des choix.
 ## 1. Le problème posé
 
 Chaque soir (le jour t), on veut prévoir le **nombre d'enfants présents à minuit** dans le service de
-pédiatrie le jour t + h, pour h = 1, 3 ou 7 jours. Cette série, notée y_t, est reconstituée à partir des
+pédiatrie le jour t + h, pour h = 1 ou 7 jours (lancer_tout.sh ; J+3 reste possible avec `HORIZONS`). Cette série, notée y_t, est reconstituée à partir des
 registres papier (recensement de minuit, voir outil-saisi, `MATHEMATIQUES.md`, section 1).
+
+**On prévoit l'occupation, pas la demande** (décision du 09/11/2026). L'occupation est bornée par la capacité
+(18 lits utilisables, 20 installés) : un jour où le service est plein, les enfants refusés, transférés ou couchés
+ailleurs n'apparaissent pas dans le registre. La série est donc une demande **censurée** à la capacité, et le
+modèle apprend cette censure. C'est voulu : la question posée est « combien de lits seront occupés », celle du
+gestionnaire. Limite à écrire dans le mémoire : le modèle ne dit pas combien d'enfants auraient eu besoin d'un
+lit les jours de saturation, et sa prévision ne peut guère dépasser la capacité observée. Les jours au plafond
+(part et nombre) sont à décrire dans l'analyse de la série.
 
 Pour un jour t, le modèle reçoit un vecteur x_t de variables connues ce soir-là :
 
@@ -67,7 +75,9 @@ est testé dans le banc D4 (τ de 0,5 à 0,9 et coût moyen pour plusieurs rappo
 | Présence pondérée par le temps | part du jour passée dans le service (heures typiques h_e, h_s, m) | 3 + (h_s − h_e)/24 | m/24 |
 
 Toute la chaîne (prétraitement, entraînement, bancs, validation finale) se lance avec chacune des séries
-(option `--comptage minuit|journee|pondere`), avec des réglages choisis séparément pour chacune. Les formules,
+(option `--comptage`), avec des réglages choisis séparément pour chacune. `lancer_tout.sh` mène **minuit, pic de
+la journée et journalier** ; la présence pondérée a été abandonnée (commit f275965) : elle reste décrite ici pour
+mémoire mais n'est plus lancée. Les formules,
 le pic de la journée (encadré exactement entre minuit et le comptage journalier) et les limites de chaque
 méthode sont dans le dépôt outil-saisi, `MATHEMATIQUES.md`, sections 1.2 à 1.2 quinquies. En bref : le
 recensement de minuit ignore les mises en observation et le jour de sortie ; le comptage journalier compte deux
@@ -88,7 +98,7 @@ On note y la valeur réelle, ŷ la prévision, n le nombre de jours évalués.
 | Perte pinball au quantile τ | (1/n) Σ ρ_τ(y − q̂_τ) | la qualité d'une prévision de quantile : la mesure « juste » pour τ = 0,8 | petite |
 | Couverture à 90 % | part des jours où bas ≤ y ≤ haut | l'intervalle tient-il sa promesse ? | proche de 90 % |
 | Gain sur la persistance | 1 − MAE(modèle) / MAE(« demain = aujourd'hui ») | ce que le modèle apporte de plus que la règle la plus simple | positif |
-| Test de Diebold-Mariano | voir 8.2 | l'écart entre deux modèles est-il réel ou dû au hasard ? | p < 0,05 |
+| Test de Diebold-Mariano | voir 8.2 | l'écart entre deux modèles est-il réel ou dû au hasard ? | p ajustée (Holm) < 0,05 |
 
 La perte pinball s'écrit ρ_τ(r) = τ·r si r ≥ 0 (sous-estimation), (τ − 1)·r si r < 0 (surestimation). Avec
 τ = 0,8, une sous-estimation d'un lit coûte 0,8 et une surestimation d'un lit coûte 0,2.
@@ -338,19 +348,31 @@ validation), et chaque variante est comparée au choix retenu (marqué « retenu
 
 ### 8.2 Le test de Diebold-Mariano, simplement
 
-Deux modèles A et B prévoient les mêmes jours. Chaque jour, on calcule la différence de leurs erreurs
-d_t = |e_t^A| − |e_t^B|. Si les deux modèles se valent, d_t vaut 0 en moyenne. Le test regarde si la
-moyenne observée de d_t est trop éloignée de 0 pour être due au hasard, en tenant compte du fait que des
-prévisions à h jours faites des jours voisins se ressemblent (correction de Harvey, Leybourne et Newbold).
+Deux modèles A et B prévoient les mêmes jours. Chaque jour, on calcule la différence de leurs pertes
+**au quantile décidé** : d_t = ρ_τ(y_t − q̂_τ^A) − ρ_τ(y_t − q̂_τ^B), avec τ = 0,8. Si les deux modèles se
+valent, d_t vaut 0 en moyenne. Le test regarde si la moyenne observée de d_t est trop éloignée de 0 pour être
+due au hasard, en tenant compte du fait que des prévisions à h jours faites des jours voisins se ressemblent
+(correction de Harvey, Leybourne et Newbold).
+
+**Pourquoi la perte pinball et pas l'erreur absolue (correction du 09/11/2026).** La première version
+comparait les **médianes** en erreur absolue. Or le modèle est construit, réglé et sélectionné pour le
+quantile τ = 0,8, qui donne le nombre de lits à prévoir : un modèle peut avoir la meilleure médiane et un
+moins bon quantile 0,8. Le test porte donc sur la quantité décidée. La MAE de la médiane reste affichée dans
+les tableaux, pour information.
+
+**Tests multiples : correction de Holm.** Un banc compare m variantes au choix retenu, donc m tests ; à 5 %
+chacun, on attend 0,05·m « meilleur » par pur hasard (des centaines de tests sur l'ensemble des bancs). Les
+p-valeurs sont ajustées par la méthode de Holm à l'intérieur de chaque banc (une dimension, un horizon) :
+p̃_(k) = max_{j ≤ k} min(1, (m − j + 1)·p_(j)). Les verdicts se lisent sur p̃ (colonne « p Holm »).
 
 ### 8.3 Lire la colonne « vs choix retenu »
 
 | Verdict | Sens | Conséquence |
 |---|---|---|
 | choix retenu | la référence de la comparaison | — |
-| équivalent | différence non significative (p ≥ 0,05) | le choix retenu est défendable ; on peut citer l'alternative comme aussi bonne |
-| moins bon | significativement moins précis (p < 0,05) | argument **pour** le choix retenu |
-| meilleur | significativement plus précis (p < 0,05) | **le choix retenu doit être revu**, et c'est écrit dans la conclusion du tableau |
+| équivalent | différence non significative (p Holm ≥ 0,05) | le choix retenu est défendable ; on peut citer l'alternative comme aussi bonne |
+| moins bon | significativement moins précis (p Holm < 0,05) | argument **pour** le choix retenu |
+| meilleur | significativement plus précis (p Holm < 0,05) | **le choix retenu doit être revu**, et c'est écrit dans la conclusion du tableau |
 | identique | exactement les mêmes prévisions | l'option n'a aucun effet |
 
 Pour D11 (une variable retirée) : « moins bon » veut dire que la variable est **utile** ; « meilleur » veut
@@ -370,10 +392,11 @@ le choix est fixé par la méthode du mémoire et n'est pas mis en compétition 
 
 | Décision | Retenu | Alternatives | Pourquoi | Vérifié par |
 |---|---|---|---|---|
-| Service étudié | pédiatrie | autres services | seul registre disponible sur 27 mois ; les autres services n'ont que 6 mois (transfert, `transfert.py`) | protocole |
+| Service étudié | pédiatrie | autres services | registre le plus long (27 mois) ; la médecine femme (12 mois, 17 lits) sert au transfert (`transfert.py`) | protocole |
+| Grandeur prévue | occupation (présents) | demande (besoin de lits) | question du gestionnaire ; la demande n'est pas observée les jours de saturation (censure à la capacité, limite écrite) | décision du 09/11/2026 |
 | Période de données | juillet 2024 → 31 août 2026 | — | tout ce qui est saisi avant le verrou | protocole |
 | Période de test final | septembre-octobre 2026, verrouillée | 1 mois | 2 mois = test à 1 mois + test après réentraînement ; 1 mois est trop court pour un test fiable | protocole |
-| Cible | présents à minuit, J+1, J+3, J+7 | admissions, sorties | c'est le nombre de lits occupés ; les trois horizons couvrent la décision du lendemain et de la semaine | protocole |
+| Cible | présents (minuit, pic, journalier), J+1, J+7 | admissions, sorties | c'est le nombre de lits occupés ; les trois horizons couvrent la décision du lendemain et de la semaine | protocole |
 | Source des données | registre saisi → NERA → export harmonisé | lecture directe de l'outil | chemin final de production ; même harmonisation pour tous les hôpitaux | protocole |
 | Qualité de saisie | contrôle sur photos (page par page) | — | mesure le bruit des données, limite basse de l'erreur atteignable | contrôle qualité de l'outil |
 
@@ -381,7 +404,7 @@ le choix est fixé par la méthode du mémoire et n'est pas mis en compétition 
 
 | Décision | Retenu | Alternatives | Pourquoi | Banc |
 |---|---|---|---|---|
-| Durées inconnues | estimée (prix, puis issue, puis médiane) | exclure, médiane | exclure sous-estime l'occupation des mois incomplets ; le prix suit la durée (tarif à la journée) | P1 |
+| Durées inconnues | estimée (prix, puis issue, puis médiane) | exclure, médiane, moyenne, médiane par âge, k plus proches voisins, régressions enchaînées, EM, ACP itérative | exclure sous-estime l'occupation des mois incomplets ; le prix suit la durée (tarif à la journée) | P1 |
 | Fenêtre de censure | p95 des durées connues | 14, 30, 60 jours | s'adapte au service au lieu d'un nombre arbitraire | P2 |
 | Convention des jours | série attendue (nuit incertaine = 1 − p) | tout inclusif, tout en nuits | espérance exacte, sans supposer une seule pratique | P3, `sensibilite.py` |
 | Patients reportés | gardés | fusionnés | la fusion n'est sûre qu'une fois confirmée par le service | P4 |
@@ -433,5 +456,6 @@ le choix est fixé par la méthode du mémoire et n'est pas mis en compétition 
 | Schéma de validation | glissante, réentraînement à chaque origine | découpage unique | reproduit l'usage réel, jour après jour | protocole |
 | Période de validation | 6 mois avant le verrou | — | assez de jours pour le test de Diebold-Mariano, en gardant l'essentiel pour apprendre | protocole |
 | Mesure principale | pinball à τ (et MAE pour la médiane) | MAE seule | la pinball juge ce que le modèle doit faire : un quantile | protocole |
-| Test statistique | Diebold-Mariano avec correction HLN | comparer deux chiffres | distingue un vrai gain d'un écart dû au hasard | protocole |
+| Test statistique | Diebold-Mariano sur la perte pinball à τ, correction HLN, p ajustées de Holm par banc | MAE de la médiane, sans correction | teste la quantité décidée ; limite les fausses découvertes parmi des centaines de tests | protocole, révisé le 09/11/2026 |
+| Règle de sélection (`selection.py`) | « significatif » : on ne quitte le choix retenu que si le test le dit meilleur (Holm) sur un horizon et moins bon sur aucun | « meilleur » : la plus petite erreur gagne | parmi des dizaines de variantes jugées sur les mêmes jours, la plus petite erreur est en partie due au hasard (biais du gagnant) | révisé le 09/11/2026 |
 | Sensibilité à la convention des jours | trois séries | une seule | les conclusions ne doivent pas dépendre d'une hypothèse invérifiable | `sensibilite.py` |

@@ -164,13 +164,18 @@ Pour chaque mois M (à partir du troisième mois de données, `--mois-min 2`) :
 
 1. **entraînement** : tous les passages avant le 1er du mois M, rangés dans l'ordre du temps ;
    - les premiers 75 % : **apprentissage** du modèle (et de la préparation des variables) ;
-   - les derniers 25 % : **calibration** : choix des réglages (C ∈ {0,1 ; 1 ; 10}, portée ∈ {0,25 ; 0,5 ; 1 ; 2})
-     par la meilleure AUC, puis ajustement de Platt sur les scores du modèle choisi ;
+   - les derniers 25 %, coupés en deux dans l'ordre du temps :
+     - première moitié, **réglage** : choix des réglages (C ∈ {0,1 ; 1 ; 10}, portée ∈ {0,25 ; 0,5 ; 1 ; 2}) par
+       la meilleure AUC ;
+     - seconde moitié, **calibration** : ajustement de Platt sur les scores du modèle choisi, et seuil s₉₀ ;
 2. **évaluation** : les passages du mois M, jamais vus.
 
-La calibration suit l'apprentissage dans le temps : elle ressemble au mois à prévoir. Le choix des réglages et
-la calibration utilisent les mêmes passages : la probabilité peut en être un peu trop confiante, ce que le
-score de Brier mesure. Rien n'est lu à partir du 01/09/2026 (verrou du test final, `traitement.verrou`).
+La calibration suit l'apprentissage dans le temps : elle ressemble au mois à prévoir. **Révision du
+09/11/2026** : la première version choisissait les réglages et ajustait Platt sur les mêmes passages, ce qui
+rend les probabilités un peu trop confiantes (le meilleur réglage est en partie le plus chanceux sur ces
+passages). Les deux rôles sont maintenant séparés (`ConfigTriage.separer_platt`, et de même dans le
+transfert). Si une moitié n'a qu'une classe, les deux rôles reprennent toute la calibration, et c'est noté
+dans le journal du mois. Rien n'est lu à partir du 01/09/2026 (verrou du test final, `traitement.verrou`).
 
 ## 7. Les mesures
 
@@ -194,6 +199,20 @@ binomiale (b + c, ½).
   χ² à un degré de liberté est le carré d'une loi normale centrée réduite.
 - b + c < 25 : test exact, p = min(1, 2 Σ_{k ≤ min(b, c)} C(b + c, k)/2^{b+c}).
 Exemple : b = 20, c = 10 donne χ² = 81/30 = 2,7 et p ≈ 0,10 : pas de différence significative.
+
+**Limite de McNemar, et deux tests ajoutés.** McNemar compte « priorité juste / fausse », alors qu'un grave mis
+en vert coûte bien plus qu'un non grave mis en jaune (matrice des coûts, rapport r). Chaque comparaison donne
+donc aussi :
+- **le coût apparié** (`triage/ordinal.py`, `bootstrap_cout`) : d_k = c(y_k, a_k) − c(y_k, b_k) par passage,
+  bootstrap **par jours** (les passages d'un même jour ne sont pas indépendants), intervalle à 95 % et p bilatérale
+  (colonnes `diff_cout`, `diff_cout_ic95`, `bootstrap_cout_p`) ;
+- **la spécificité au seuil s₉₀** : chaque modèle met en rouge au-dessus de SON seuil s₉₀ (question « grave ? »,
+  fixé sur la calibration) ; McNemar sur les seuls passages non graves, « juste » = pas en rouge (colonnes
+  `spec_s90_b`, `spec_s90_c`, `spec_s90_p`). C'est le test du critère de sélection.
+
+**Sélection du modèle.** Plus grande spécificité au seuil s₉₀ parmi les SVM des bancs, mais un candidat ne
+remplace le modèle principal que si l'écart est significatif (`spec_s90_p` ajustée de Holm sur tous les
+candidats < 0,05). Sinon le modèle principal est gardé.
 
 ## 8. Registre des décisions
 
