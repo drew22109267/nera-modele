@@ -30,6 +30,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from pathlib import Path
 
+import warnings
 import pandas as pd
 
 FIXES = [(1, 1), (2, 11), (5, 1), (5, 20), (8, 15), (12, 25)]     # (mois, jour)
@@ -50,6 +51,18 @@ def paques(annee: int) -> date:
     return date(annee, mois, jour + 1)
 
 
+_PREVENUS: set[str] = set()
+
+
+def _prevenir_absent(fichier, quoi: str) -> None:
+    """Fichier de calendrier absent : avertissement une seule fois par fichier (le calcul continue sans ces jours)."""
+    if str(fichier) not in _PREVENUS:
+        _PREVENUS.add(str(fichier))
+        warnings.warn(f"{fichier} absent : {quoi} NON pris en compte. Les variables du calendrier en dépendent ; "
+                      "ajouter le fichier (non versionné, dans donnees/) avant tout calcul servant au mémoire.",
+                      stacklevel=3)
+
+
 def feries(annees, supplementaires: str | Path | None = None) -> set[date]:
     """Ensemble des jours fériés des années demandées (+ ceux du fichier, s'il existe)."""
     jours = set()
@@ -57,6 +70,8 @@ def feries(annees, supplementaires: str | Path | None = None) -> set[date]:
         jours |= {date(an, m, j) for m, j in FIXES}
         p = paques(an)
         jours |= {p - timedelta(days=2), p + timedelta(days=39)}   # Vendredi saint, Ascension
+    if supplementaires is not None and not Path(supplementaires).exists():
+        _prevenir_absent(supplementaires, "fériés annoncés (fêtes musulmanes, jours décrétés)")
     if supplementaires is not None and Path(supplementaires).exists():
         autres = pd.read_csv(supplementaires, sep=";", encoding="utf-8-sig")
         jours |= {d.date() for d in pd.to_datetime(autres["date"], format="%Y-%m-%d")}
@@ -69,9 +84,10 @@ def vacances(fichier: str | Path) -> set[date]:
     (colonnes « debut » et « fin », aaaa-mm-jj, d'après les arrêtés MINEDUB/MINESEC).
     En pédiatrie, les vacances changent le rythme des familles (voyages, soins reportés) : comme
     les fériés, elles sont connues à l'avance, donc utilisables sans fuite d'information.
-    Fichier absent : ensemble vide.
+    Fichier absent : ensemble vide, avec un avertissement.
     """
     if not Path(fichier).exists():
+        _prevenir_absent(fichier, "vacances scolaires")
         return set()
     periodes = pd.read_csv(fichier, sep=";", encoding="utf-8-sig")
     jours = set()
