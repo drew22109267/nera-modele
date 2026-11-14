@@ -1,0 +1,26 @@
+2835 passages lus ; 2835 avant le 26/01/2026 (date illisible : 93, valeurs écrites mais illisibles : {'age': 282, 'ta': 76, 'glycemie': 28, 'pouls': 28, 'temperature': 31, 'fr': 1, 'spo2': 7, 'poids': 8, 'decision': 95})
+     groupe  passages  renseigne_age  renseigne_pouls  renseigne_ta_sys  renseigne_temperature  renseigne_fr  renseigne_spo2  renseigne_glycemie  renseigne_poids  grave  non_grave  intermediaire  sans_decision  groupe_deduit  plainte_reconnue
+     adulte      2064          0.938            0.729             0.801                  0.439         0.007           0.029               0.350            0.094    409        688            371            596            127             0.743
+     enfant       626          0.944            0.137             0.118                  0.700         0.019           0.061               0.048            0.460    158        223             67            178             24             0.824
+âge inconnu       145          0.000            0.145             0.172                  0.290         0.007           0.021               0.097            0.076     19         34             15             77              0             0.483
+Sac de mots : 150 mots écrits dans au moins 5 passages avant le 01/01/2026
+
+══════ enfant : 626 passages
+  modèle principal = sélection des bancs : familles + mots × lssvm (T11)
+  modèle principal : graves en rouge 0.586, sous-triage 0.156, sur-triage 0.544, rouges 42.2% / jaunes 50.0% / verts 7.8%, kappa pondéré 0.294, AUC grave 0.704, AUC grave ou moyen 0.669, spécificité à 90 % de sensibilité 0.361
+  probabilités par passage écrites : probabilites_enfant.csv (90 passages)
+
+══════ adulte : 2064 passages
+  modèle principal = sélection des bancs : acp_iterative × svm_polynomial (T10)
+  modèle principal : graves en rouge 0.988, sous-triage 0.003, sur-triage 0.740, rouges 93.6% / jaunes 5.8% / verts 0.6%, kappa pondéré 0.035, AUC grave 0.670, AUC grave ou moyen 0.750, spécificité à 90 % de sensibilité 0.289
+  probabilités par passage écrites : probabilites_adulte.csv (346 passages)
+
+══════ Raccordement enfants + adultes
+  modèles séparés réunis (référence)       passages 436, graves en rouge 0.884, sous-triage 0.034, kappa 0.067
+  modèle commun enfants + adultes          passages 436, graves en rouge 1.000, sous-triage 0.000, kappa 0.000
+  dont enfant : modèle séparé              passages 90, graves en rouge 0.586, sous-triage 0.156, kappa 0.294
+  dont enfant : modèle commun              passages 90, graves en rouge 1.000, sous-triage 0.000, kappa 0.000
+  dont adulte : modèle séparé              passages 346, graves en rouge 0.988, sous-triage 0.003, kappa 0.035
+  dont adulte : modèle commun              passages 346, graves en rouge 1.000, sous-triage 0.000, kappa 0.000
+
+Résultats : resultats/triage/

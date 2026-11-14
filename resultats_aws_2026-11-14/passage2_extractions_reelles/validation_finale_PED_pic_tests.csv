@@ -1,0 +1,27 @@
+﻿horizon;reentrainement;modele_A;modele_B;dm;p_valeur;plus_precis;significatif_5pc;perte;p_valeur_mae
+1;mensuel;0 · saisonnière;0 · persistance;0.735;0.4623;B;False;pinball τ=0.8;0.1078
+1;mensuel;0 · moyenne mobile 7 j;0 · saisonnière;1.828;0.0676;B;False;pinball τ=0.8;0.3569
+1;mensuel;0 · moyenne mobile 7 j;0 · persistance;2.169;0.0301;B;True;pinball τ=0.8;0.0172
+1;mensuel;1 · SVR linéaire;0 · moyenne mobile 7 j;-2.914;0.0036;A;True;pinball τ=0.8;0.0017
+1;mensuel;1 · SVR linéaire;0 · persistance;-1.442;0.1494;A;False;pinball τ=0.8;0.2944
+1;mensuel;2 · SVR RBF;1 · SVR linéaire;1.991;0.0464;B;True;pinball τ=0.8;0.8095
+1;mensuel;2 · SVR RBF;0 · persistance;-0.629;0.5292;A;False;pinball τ=0.8;0.3128
+1;mensuel;3 · SVR quantile RBF;2 · SVR RBF;-1.655;0.098;A;False;pinball τ=0.8;0.5567
+1;mensuel;3 · SVR quantile RBF;0 · persistance;-1.62;0.1053;A;False;pinball τ=0.8;0.3901
+1;mensuel;4 · SVR quantile composite;3 · SVR quantile RBF;0.949;0.3428;B;False;pinball τ=0.8;0.3202
+1;mensuel;4 · SVR quantile composite;0 · persistance;-1.312;0.1896;A;False;pinball τ=0.8;0.707
+1;mensuel;5 · empilement;0 · persistance;-1.473;0.1407;A;False;pinball τ=0.8;0.4634
+1;mensuel;5 · empilement;4 · SVR quantile composite;-1.198;0.231;A;False;pinball τ=0.8;0.5422
+7;mensuel;0 · saisonnière;0 · persistance;-4.209;0.0;A;True;pinball τ=0.8;0.2509
+7;mensuel;0 · moyenne mobile 7 j;0 · saisonnière;1.609;0.1076;B;False;pinball τ=0.8;
+7;mensuel;0 · moyenne mobile 7 j;0 · persistance;0.17;0.8651;B;False;pinball τ=0.8;0.7777
+7;mensuel;1 · SVR linéaire;0 · moyenne mobile 7 j;-2.149;0.0317;A;True;pinball τ=0.8;0.8018
+7;mensuel;1 · SVR linéaire;0 · persistance;-1.574;0.1155;A;False;pinball τ=0.8;0.8208
+7;mensuel;2 · SVR RBF;1 · SVR linéaire;3.521;0.0004;B;True;pinball τ=0.8;
+7;mensuel;2 · SVR RBF;0 · persistance;-1.413;0.1576;A;False;pinball τ=0.8;0.728
+7;mensuel;3 · SVR quantile RBF;2 · SVR RBF;6.485;0.0;B;True;pinball τ=0.8;
+7;mensuel;3 · SVR quantile RBF;0 · persistance;0.423;0.672;B;False;pinball τ=0.8;0.3892
+7;mensuel;4 · SVR quantile composite;3 · SVR quantile RBF;-2.5;0.0124;A;True;pinball τ=0.8;
+7;mensuel;4 · SVR quantile composite;0 · persistance;0.277;0.7821;B;False;pinball τ=0.8;0.4413
+7;mensuel;5 · empilement;0 · persistance;0.494;0.6213;B;False;pinball τ=0.8;0.1387
+7;mensuel;5 · empilement;4 · SVR quantile composite;6.521;0.0;B;True;pinball τ=0.8;

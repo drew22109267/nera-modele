@@ -1,0 +1,20 @@
+════ Service PED (18 lits)
+════ Service MEDF (17 lits)
+── 12:36 conversion_PED
+── 12:36 conversion_MEDF
+   terminé (resultats/journaux/conversion_MEDF.log)
+── 12:36 occupation_MEDF_minuit
+   terminé (resultats/journaux/conversion_PED.log)
+── 12:36 occupation_PED_minuit
+   terminé (resultats/journaux/occupation_MEDF_minuit.log)
+── 12:36 occupation_MEDF_pic
+── 12:36 occupation_MEDF_journee
+   terminé (resultats/journaux/occupation_PED_minuit.log)
+── 12:36 occupation_PED_pic
+── 12:36 occupation_PED_journee
+   terminé (resultats/journaux/occupation_MEDF_pic.log)
+   terminé (resultats/journaux/occupation_MEDF_journee.log)
+   terminé (resultats/journaux/occupation_PED_pic.log)
+   terminé (resultats/journaux/occupation_PED_journee.log)
+── exports réunis : donnees/export_outil_PED_MEDF.csv
+── 12:36 fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/

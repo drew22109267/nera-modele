@@ -1,0 +1,9 @@
+﻿niveau;MAE;RMSE;MAPE_%;biais;sous_estimations_%;couverture_%;largeur_moyenne;pinball_bas;pinball_median;pinball_haut;pinball_tau_0.8;jours_au_dessus_q0.8_%
+0 · persistance;0.665;1.435;22.46;0.107;25.4;;;;;;;
+0 · saisonnière;2.782;3.557;84.77;2.19;18.6;;;;;;;
+0 · moyenne mobile 7 j;1.351;2.222;68.19;0.303;25.4;;;;;;;
+1 · SVR linéaire;1.39;1.672;17.03;1.012;20.3;;;;;;;
+2 · SVR RBF;3.051;3.691;24.4;2.545;22.0;;;;;;;
+3 · SVR quantile RBF;4.42;5.531;37.31;3.968;23.7;42.4;7.57;2.6138;2.2101;0.4591;1.2262;8.5
+4 · SVR quantile composite;3.365;4.051;35.25;2.991;18.6;44.1;8.16;2.1405;1.6827;0.466;0.9754;3.4
+5 · empilement;3.99;4.937;33.89;3.515;23.7;47.5;7.38;1.9249;1.9948;0.3883;1.1228;6.8

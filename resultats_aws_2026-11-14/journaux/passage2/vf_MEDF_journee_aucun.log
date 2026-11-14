@@ -1,0 +1,79 @@
+══ Horizon J+1 — test sur le coffre (origines à partir du 01/09/2026)
+  1 · SVR linéaire…
+  2 · SVR RBF…
+  3 · SVR quantile RBF…
+  4 · SVR quantile composite…
+  modèle sélectionné par les bancs : LS-SVR (moindres carrés), noyau RBF, quantiles LOO…
+                                                                  MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+niveau                                                                                                                                                                                                                            
+0 · persistance                                                 2.490  3.152   16.00 -0.042                47.9           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · saisonnière                                                 3.658  4.410   23.10 -1.184                60.4           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · moyenne mobile 7 j                                          2.841  3.478   18.71  0.035                43.8           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+1 · SVR linéaire                                                2.114  2.626   13.16 -0.783                64.6           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+2 · SVR RBF                                                     2.369  2.903   14.04 -1.714                77.1           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+3 · SVR quantile RBF                                            2.488  3.073   14.52 -1.936                75.0          85.4             9.65       0.3236          1.2439        0.3691           0.8432                    35.4
+4 · SVR quantile composite                                      2.381  2.916   14.03 -1.666                72.9          87.5             9.58       0.3234          1.1907        0.3803           0.8480                    41.7
+sélection · LS-SVR (moindres carrés), noyau RBF, quantiles LOO  2.443  2.972   14.64 -1.831                77.1          83.3             7.22       0.2683          1.2216        0.3900           0.8844                    47.9
+5 · empilement                                                  2.095  2.610   12.76 -0.951                66.7          91.7             9.50       0.2663          1.0473        0.3190           0.7183                    22.9 
+
+                                                                        jours    MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+mois    niveau                                                                                                                                                                                                                                   
+2026-09 0 · persistance                                                    30  2.554  3.148   15.62 -0.031                53.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · saisonnière                                                    30  3.888  4.816   22.01 -2.925                83.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · moyenne mobile 7 j                                             30  2.657  3.365   15.80 -0.229                46.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        1 · SVR linéaire                                                   30  2.192  2.734   13.00 -0.871                70.0           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        2 · SVR RBF                                                        30  2.544  3.043   14.46 -1.918                80.0           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        3 · SVR quantile RBF                                               30  2.746  3.258   15.49 -2.273                76.7          83.3             9.80       0.3574          1.3730        0.3921           0.8624                    43.3
+        4 · SVR quantile composite                                         30  2.571  3.036   14.60 -1.955                76.7          83.3             9.73       0.3569          1.2854        0.4268           0.8792                    53.3
+        sélection · LS-SVR (moindres carrés), noyau RBF, quantiles LOO     30  2.555  3.076   14.54 -1.937                76.7          83.3             7.22       0.2736          1.2774        0.4008           0.9388                    53.3
+        5 · empilement                                                     30  2.187  2.648   12.80 -1.177                76.7          90.0             9.77       0.2953          1.0933        0.3141           0.6848                    23.3
+2026-10 0 · persistance                                                    18  2.385  3.158   16.63 -0.060                38.9           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · saisonnière                                                    18  3.274  3.634   24.93  1.718                22.2           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · moyenne mobile 7 j                                             18  3.148  3.658   23.57  0.475                38.9           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        1 · SVR linéaire                                                   18  1.985  2.437   13.42 -0.635                55.6           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        2 · SVR RBF                                                        18  2.078  2.653   13.35 -1.374                72.2           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        3 · SVR quantile RBF                                               18  2.058  2.739   12.89 -1.374                72.2          88.9             9.40       0.2674          1.0288        0.3307           0.8112                    22.2
+        4 · SVR quantile composite                                         18  2.066  2.704   13.09 -1.185                66.7          94.4             9.33       0.2677          1.0329        0.3028           0.7960                    22.2
+        sélection · LS-SVR (moindres carrés), noyau RBF, quantiles LOO     18  2.258  2.790   14.81 -1.655                77.8          83.3             7.22       0.2595          1.1288        0.3719           0.7938                    38.9
+        5 · empilement                                                     18  1.941  2.545   12.71 -0.575                50.0          94.4             9.06       0.2181          0.9706        0.3271           0.7742                    22.2 
+
+══ Horizon J+7 — test sur le coffre (origines à partir du 01/09/2026)
+  1 · SVR linéaire…
+  2 · SVR RBF…
+  3 · SVR quantile RBF…
+  4 · SVR quantile composite…
+  modèle sélectionné par les bancs : LS-SVR (moindres carrés), noyau RBF, quantiles LOO…
+                                                                  MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+niveau                                                                                                                                                                                                                            
+0 · persistance                                                 3.259  3.790   20.79  0.351                40.5           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · saisonnière                                                 3.420  3.945   22.33 -0.592                54.8           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · moyenne mobile 7 j                                          2.668  3.464   18.10  0.148                52.4           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+1 · SVR linéaire                                                2.833  3.529   16.93 -1.819                71.4           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+2 · SVR RBF                                                     4.348  5.129   25.03 -4.342                97.6           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+3 · SVR quantile RBF                                            3.522  4.306   20.35 -3.071                81.0          81.0            12.16       0.4531          1.7609        0.4176           1.1264                    40.5
+4 · SVR quantile composite                                      4.235  5.006   24.36 -4.060                92.9          78.6            12.41       0.4630          2.1175        0.3998           1.1466                    40.5
+sélection · LS-SVR (moindres carrés), noyau RBF, quantiles LOO  4.993  5.683   29.60 -4.993               100.0          61.9            10.62       0.4965          2.4967        0.8434           1.9913                    69.0
+5 · empilement                                                  2.580  3.228   15.74 -1.203                59.5          85.7             9.40       0.2614          1.2900        0.3299           0.9778                    28.6 
+
+                                                                        jours    MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+mois    niveau                                                                                                                                                                                                                                   
+2026-09 0 · persistance                                                    30  3.623  4.102   22.45  0.290                43.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · saisonnière                                                    30  3.446  3.997   20.71 -1.604                70.0           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · moyenne mobile 7 j                                             30  2.491  3.176   15.93  0.092                53.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        1 · SVR linéaire                                                   30  2.867  3.520   16.38 -2.088                73.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        2 · SVR RBF                                                        30  4.517  5.089   25.95 -4.517               100.0           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        3 · SVR quantile RBF                                               30  3.648  4.413   20.26 -3.539                90.0          80.0            12.18       0.4798          1.8238        0.3836           1.1198                    46.7
+        4 · SVR quantile composite                                         30  4.473  5.118   25.33 -4.473               100.0          76.7            12.51       0.4938          2.2367        0.3857           1.1504                    46.7
+        sélection · LS-SVR (moindres carrés), noyau RBF, quantiles LOO     30  5.075  5.667   29.55 -5.075               100.0          60.0            10.62       0.5005          2.5374        0.8169           1.9850                    73.3
+        5 · empilement                                                     30  2.655  3.281   15.34 -1.489                63.3          86.7             9.29       0.2777          1.3277        0.3261           0.9567                    33.3
+2026-10 0 · persistance                                                    12  2.350  2.866   16.65  0.504                33.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · saisonnière                                                    12  3.353  3.812   26.40  1.937                16.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · moyenne mobile 7 j                                             12  3.111  4.096   23.54  0.290                50.0           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        1 · SVR linéaire                                                   12  2.748  3.551   18.30 -1.148                66.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        2 · SVR RBF                                                        12  3.925  5.229   22.72 -3.905                91.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        3 · SVR quantile RBF                                               12  3.207  4.026   20.58 -1.901                58.3          83.3            12.10       0.3864          1.6034        0.5025           1.1427                    25.0
+        4 · SVR quantile composite                                         12  3.639  4.714   21.94 -3.027                75.0          83.3            12.17       0.3860          1.8195        0.4351           1.1371                    25.0
+        sélection · LS-SVR (moindres carrés), noyau RBF, quantiles LOO     12  4.790  5.723   29.72 -4.790               100.0          66.7            10.62       0.4863          2.3950        0.9096           2.0071                    58.3
+        5 · empilement                                                     12  2.392  3.091   16.74 -0.489                50.0          83.3             9.67       0.2206          1.1959        0.3394           1.0307                    16.7 
+
+Résultats écrits dans /home/ubuntu/nera/nera-modele/module_lit/resultats

@@ -1,0 +1,44 @@
+{
+ "principal modèle principal": {
+  "grave (haut)": [
+   {
+    "mois": "2026-01",
+    "apprentissage": 842,
+    "calibration": 280,
+    "evaluation": 346,
+    "C": 10.0,
+    "portee": 0.5,
+    "C_plus_sur_C_moins": 2.479,
+    "reglage": 140,
+    "platt": 140,
+    "calibration_partagee": false,
+    "auc_calibration": 0.6672,
+    "seuil_s90": 0.1665,
+    "platt_A": -1.2163,
+    "platt_B": 0.5053,
+    "representation": "originales",
+    "imputation": "acp_iterative"
+   }
+  ],
+  "grave ou moyen (bas)": [
+   {
+    "mois": "2026-01",
+    "apprentissage": 842,
+    "calibration": 280,
+    "evaluation": 346,
+    "C": 10.0,
+    "portee": 1.0,
+    "C_plus_sur_C_moins": 0.972,
+    "reglage": 140,
+    "platt": 140,
+    "calibration_partagee": false,
+    "auc_calibration": 0.6673,
+    "seuil_s90": 0.3565,
+    "platt_A": -0.8361,
+    "platt_B": 0.4573,
+    "representation": "originales",
+    "imputation": "acp_iterative"
+   }
+  ]
+ }
+}

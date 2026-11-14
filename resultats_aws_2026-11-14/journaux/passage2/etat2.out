@@ -1,0 +1,20 @@
+debut 2026-11-14 13:08:25
+ok transfert_PED_vers_MEDF_pic 2026-11-14 13:11:18
+ok transfert_PED_vers_MEDF_minuit 2026-11-14 13:11:22
+ok transfert_MEDF_vers_PED_journee 2026-11-14 13:11:28
+ok transfert_PED_vers_MEDF_journee 2026-11-14 13:11:35
+ok transfert_MEDF_vers_PED_pic 2026-11-14 13:11:35
+ok transfert_MEDF_vers_PED_minuit 2026-11-14 13:11:43
+ok vf_PED_journee_mensuel 2026-11-14 13:12:25
+ok vf_PED_journee_aucun 2026-11-14 13:12:30
+ok vf_PED_minuit_aucun 2026-11-14 13:12:36
+ok vf_MEDF_journee_aucun 2026-11-14 13:12:40
+ok vf_MEDF_minuit_aucun 2026-11-14 13:12:42
+ok vf_MEDF_pic_aucun 2026-11-14 13:12:42
+ok vf_PED_minuit_mensuel 2026-11-14 13:12:46
+ok vf_PED_pic_aucun 2026-11-14 13:12:52
+ok vf_PED_pic_mensuel 2026-11-14 13:12:54
+ok vf_MEDF_journee_mensuel 2026-11-14 13:12:55
+ok vf_MEDF_pic_mensuel 2026-11-14 13:12:56
+ok vf_MEDF_minuit_mensuel 2026-11-14 13:13:00
+echecs : 0 2026-11-14 13:13:00

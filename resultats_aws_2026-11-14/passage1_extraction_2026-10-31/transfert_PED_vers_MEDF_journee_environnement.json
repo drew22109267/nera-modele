@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-14T12:36:54",
+  "commande": "transfert.py donnees/export_outil_PED_MEDF.csv --source PED --cibles MEDF --lits PED=18 MEDF=17 --comptage journee --extraction 2026-10-31 --confirmation J'ouvre le coffre pour la validation finale",
+  "python": "3.12.3",
+  "torch": "2.15.0+cpu",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "systeme": "Linux-7.0.0-1014-aws-aarch64-with-glibc2.39",
+  "commit_git": null,
+  "fichiers_modifies_depuis_le_commit": null,
+  "parametres": {
+    "export": "donnees/export_outil_PED_MEDF.csv",
+    "source": "PED",
+    "cibles": [
+      "MEDF"
+    ],
+    "lits": [
+      "PED=18",
+      "MEDF=17"
+    ],
+    "horizons": [
+      1,
+      7
+    ],
+    "tau": 0.8,
+    "niveau": 4,
+    "pas": 14,
+    "minimum_entrainement": 28,
+    "poids_cible": 1,
+    "validation_interne": 56,
+    "extraction": "2026-10-31",
+    "comptage": "journee"
+  }
+}

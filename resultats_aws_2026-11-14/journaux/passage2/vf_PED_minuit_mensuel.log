@@ -1,0 +1,55 @@
+══ Horizon J+1 — test sur le coffre (origines à partir du 01/09/2026)
+  1 · SVR linéaire…
+  2 · SVR RBF…
+  3 · SVR quantile RBF…
+  4 · SVR quantile composite…
+                              MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+niveau                                                                                                                                                                                        
+0 · persistance             1.492  2.113   25.58  0.214                39.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · saisonnière             2.125  2.823   35.96  0.841                35.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · moyenne mobile 7 j      2.066  2.680   33.00  0.183                50.0           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+1 · SVR linéaire            1.547  2.038   24.86  0.598                35.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+2 · SVR RBF                 1.556  2.121   23.43  0.428                35.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+3 · SVR quantile RBF        1.504  2.080   21.84  0.324                39.3          85.7             7.66       0.2973          0.7518        0.2726           0.5655                    14.3
+4 · SVR quantile composite  1.545  2.097   23.04  0.493                35.7          85.7             7.94       0.2914          0.7725        0.2990           0.5778                    10.7
+5 · empilement              1.449  2.017   20.88  0.222                42.9          89.3             7.84       0.2685          0.7246        0.2738           0.5908                     3.6 
+
+                                    jours    MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+mois    niveau                                                                                                                                                                                               
+2026-09 0 · persistance                28  1.492  2.113   25.58  0.214                39.3           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · saisonnière                28  2.125  2.823   35.96  0.841                35.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · moyenne mobile 7 j         28  2.066  2.680   33.00  0.183                50.0           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        1 · SVR linéaire               28  1.547  2.038   24.86  0.598                35.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        2 · SVR RBF                    28  1.556  2.121   23.43  0.428                35.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        3 · SVR quantile RBF           28  1.504  2.080   21.84  0.324                39.3          85.7             7.66       0.2973          0.7518        0.2726           0.5655                    14.3
+        4 · SVR quantile composite     28  1.545  2.097   23.04  0.493                35.7          85.7             7.94       0.2914          0.7725        0.2990           0.5778                    10.7
+        5 · empilement                 28  1.449  2.017   20.88  0.222                42.9          89.3             7.84       0.2685          0.7246        0.2738           0.5908                     3.6 
+
+══ Horizon J+7 — test sur le coffre (origines à partir du 01/09/2026)
+  1 · SVR linéaire…
+  2 · SVR RBF…
+  3 · SVR quantile RBF…
+  4 · SVR quantile composite…
+                              MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+niveau                                                                                                                                                                                        
+0 · persistance             2.578  3.569   39.33  1.225                31.8           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · saisonnière             2.354  3.088   41.97  1.399                22.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+0 · moyenne mobile 7 j      2.322  2.844   42.31  0.822                36.4           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+1 · SVR linéaire            2.633  3.226   49.13  2.279                18.2           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+2 · SVR RBF                 2.783  3.385   53.96  2.283                13.6           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+3 · SVR quantile RBF        3.073  3.643   61.25  2.723                13.6          77.3            10.95       0.3774          1.5367        0.4586           1.1921                     0.0
+4 · SVR quantile composite  2.873  3.413   57.09  2.522                13.6          81.8            10.86       0.3740          1.4365        0.4531           1.1145                     0.0
+5 · empilement              3.279  3.818   67.14  3.065                13.6          86.4            10.77       0.3711          1.6393        0.4451           1.2478                     0.0 
+
+                                    jours    MAE   RMSE  MAPE_%  biais  sous_estimations_%  couverture_%  largeur_moyenne  pinball_bas  pinball_median  pinball_haut  pinball_tau_0.8  jours_au_dessus_q0.8_%
+mois    niveau                                                                                                                                                                                               
+2026-09 0 · persistance                22  2.578  3.569   39.33  1.225                31.8           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · saisonnière                22  2.354  3.088   41.97  1.399                22.7           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        0 · moyenne mobile 7 j         22  2.322  2.844   42.31  0.822                36.4           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        1 · SVR linéaire               22  2.633  3.226   49.13  2.279                18.2           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        2 · SVR RBF                    22  2.783  3.385   53.96  2.283                13.6           NaN              NaN          NaN             NaN           NaN              NaN                     NaN
+        3 · SVR quantile RBF           22  3.073  3.643   61.25  2.723                13.6          77.3            10.95       0.3774          1.5367        0.4586           1.1921                     0.0
+        4 · SVR quantile composite     22  2.873  3.413   57.09  2.522                13.6          81.8            10.86       0.3740          1.4365        0.4531           1.1145                     0.0
+        5 · empilement                 22  3.279  3.818   67.14  3.065                13.6          86.4            10.77       0.3711          1.6393        0.4451           1.2478                     0.0 
+
+Résultats écrits dans /home/ubuntu/nera/nera-modele/module_lit/resultats

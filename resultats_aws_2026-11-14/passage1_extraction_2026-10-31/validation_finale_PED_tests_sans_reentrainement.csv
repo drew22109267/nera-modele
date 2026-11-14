@@ -1,0 +1,27 @@
+﻿horizon;reentrainement;modele_A;modele_B;dm;p_valeur;plus_precis;significatif_5pc;perte;p_valeur_mae
+1;aucun;0 · saisonnière;0 · persistance;4.086;0.0;B;True;pinball τ=0.8;0.0
+1;aucun;0 · moyenne mobile 7 j;0 · persistance;2.052;0.0402;B;True;pinball τ=0.8;0.013
+1;aucun;0 · moyenne mobile 7 j;0 · saisonnière;-1.858;0.0631;A;False;pinball τ=0.8;0.0
+1;aucun;1 · SVR linéaire;0 · persistance;2.947;0.0032;B;True;pinball τ=0.8;0.0
+1;aucun;1 · SVR linéaire;0 · moyenne mobile 7 j;-0.6;0.5483;A;False;pinball τ=0.8;0.0562
+1;aucun;2 · SVR RBF;0 · persistance;5.877;0.0;B;True;pinball τ=0.8;0.0
+1;aucun;2 · SVR RBF;1 · SVR linéaire;7.152;0.0;B;True;pinball τ=0.8;0.0
+1;aucun;3 · SVR quantile RBF;0 · persistance;5.171;0.0;B;True;pinball τ=0.8;0.0
+1;aucun;3 · SVR quantile RBF;2 · SVR RBF;2.543;0.011;B;True;pinball τ=0.8;0.1528
+1;aucun;4 · SVR quantile composite;3 · SVR quantile RBF;6.546;0.0;B;True;pinball τ=0.8;0.0035
+1;aucun;4 · SVR quantile composite;0 · persistance;5.366;0.0;B;True;pinball τ=0.8;0.0
+1;aucun;5 · empilement;0 · persistance;5.074;0.0;B;True;pinball τ=0.8;0.0
+1;aucun;5 · empilement;4 · SVR quantile composite;-5.375;0.0;A;True;pinball τ=0.8;0.0
+7;aucun;0 · saisonnière;0 · persistance;0.921;0.3571;B;False;pinball τ=0.8;0.1586
+7;aucun;0 · moyenne mobile 7 j;0 · persistance;0.765;0.4441;B;False;pinball τ=0.8;0.5413
+7;aucun;0 · moyenne mobile 7 j;0 · saisonnière;-0.62;0.5355;A;False;pinball τ=0.8;0.1511
+7;aucun;1 · SVR linéaire;0 · persistance;1.379;0.1678;B;False;pinball τ=0.8;0.0303
+7;aucun;1 · SVR linéaire;0 · moyenne mobile 7 j;1.242;0.2141;B;False;pinball τ=0.8;0.035
+7;aucun;2 · SVR RBF;0 · persistance;1.627;0.1037;B;False;pinball τ=0.8;0.0306
+7;aucun;2 · SVR RBF;1 · SVR linéaire;2.453;0.0142;B;True;pinball τ=0.8;0.0339
+7;aucun;3 · SVR quantile RBF;0 · persistance;2.651;0.008;B;True;pinball τ=0.8;0.0198
+7;aucun;3 · SVR quantile RBF;2 · SVR RBF;9.948;0.0;B;True;pinball τ=0.8;0.0247
+7;aucun;4 · SVR quantile composite;3 · SVR quantile RBF;-6.32;0.0;A;True;pinball τ=0.8;0.0042
+7;aucun;4 · SVR quantile composite;0 · persistance;2.506;0.0122;B;True;pinball τ=0.8;0.0249
+7;aucun;5 · empilement;0 · persistance;2.776;0.0055;B;True;pinball τ=0.8;0.0128
+7;aucun;5 · empilement;4 · SVR quantile composite;9.331;0.0;B;True;pinball τ=0.8;0.3642

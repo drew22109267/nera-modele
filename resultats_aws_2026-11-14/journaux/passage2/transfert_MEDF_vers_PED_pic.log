@@ -1,0 +1,53 @@
+PED : occupation exploitable du 15/07/2024 au 29/09/2026
+
+══════ Horizon J+1
+
+── PED · 28 jours évalués, 1 origine(s)
+                                                                           MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                                              
+Persistance de la cible                                                  1.366  2.079  0.226         0.6152              NaN                0.0772  0.0772      0.0877      équivalent
+P · modèle propre (cible seule, réglages choisis sur la cible) (retenu)  1.119  1.626  0.191         0.3731             92.9                   NaN     NaN         NaN  — choix retenu
+A · local (cible seule, réglages de la source gelés)                     1.100  1.656  0.261         0.4213             92.9                0.0031  0.0062      0.5705       moins bon
+B · transfert direct (source seule, en taux)                             2.798  3.459  2.687         0.9515             57.1                0.0000  0.0000      0.0000       moins bon
+C · groupé (source + cible ×1, en taux)                                  3.001  3.679  2.883         1.1993             89.3                0.0000  0.0000      0.0000       moins bon
+G1 · modèle unique, période commune (dès le 15/07/2025)                  2.465  3.059  2.063         0.7451             89.3                0.0000  0.0000      0.0000       moins bon
+G2 · modèle unique, toute la période de chaque service                   3.295  3.978  3.196         0.8493             89.3                0.0000  0.0000      0.0000       moins bon
+   réglages du modèle propre (nombre d'origines) : C ×3 / portée ×0,5 : 1
+
+── Total de l'hôpital (MEDF + PED) : 35 lits
+                                                                jours  MAE total (lits)  biais total
+stratégie (services cibles)                                                                         
+Persistance de la cible                                            28             2.750       -1.506
+P · modèle propre (cible seule, réglages choisis sur la cible)     28             2.463       -1.542
+A · local (cible seule, réglages de la source gelés)               28             2.425       -1.472
+B · transfert direct (source seule, en taux)                       28             2.057        0.954
+C · groupé (source + cible ×1, en taux)                            28             2.091        1.151
+G1 · modèle unique, période commune (dès le 15/07/2025)            28             1.990        0.331
+G2 · modèle unique, toute la période de chaque service             28             2.337        1.464
+
+══════ Horizon J+7
+
+── PED · 22 jours évalués, 1 origine(s)
+                                                                           MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                                              
+Persistance de la cible                                                  2.577  3.336  0.801         1.0483              NaN                0.7892  0.7892      0.6087      équivalent
+P · modèle propre (cible seule, réglages choisis sur la cible) (retenu)  2.814  3.455  2.521         1.1428             86.4                   NaN     NaN         NaN  — choix retenu
+A · local (cible seule, réglages de la source gelés)                     2.899  3.513  2.622         1.2140             86.4                0.0000  0.0000      0.0081       moins bon
+B · transfert direct (source seule, en taux)                             5.534  5.998  5.534         1.7168             72.7                0.0000  0.0000         NaN       moins bon
+C · groupé (source + cible ×1, en taux)                                  3.206  3.852  3.053         1.3144             86.4                   NaN     NaN         NaN       identique
+G1 · modèle unique, période commune (dès le 15/07/2025)                  3.319  3.951  3.272         1.3733             86.4                0.0000  0.0000         NaN       moins bon
+G2 · modèle unique, toute la période de chaque service                   3.270  3.921  3.134         1.2989             86.4                   NaN     NaN         NaN       identique
+   réglages du modèle propre (nombre d'origines) : C ×3 / portée ×1 : 1
+
+── Total de l'hôpital (MEDF + PED) : 35 lits
+                                                                jours  MAE total (lits)  biais total
+stratégie (services cibles)                                                                         
+Persistance de la cible                                            22             4.934       -3.447
+P · modèle propre (cible seule, réglages choisis sur la cible)     22             3.250       -1.726
+A · local (cible seule, réglages de la source gelés)               22             3.175       -1.626
+B · transfert direct (source seule, en taux)                       22             2.167        1.286
+C · groupé (source + cible ×1, en taux)                            22             3.013       -1.195
+G1 · modèle unique, période commune (dès le 15/07/2025)            22             2.881       -0.976
+G2 · modèle unique, toute la période de chaque service             22             2.982       -1.114
+
+Tableaux écrits dans /home/ubuntu/nera/nera-modele/module_lit/resultats (transfert_G2 · modèle unique, toute la période de chaque service.md pour le mémoire)
