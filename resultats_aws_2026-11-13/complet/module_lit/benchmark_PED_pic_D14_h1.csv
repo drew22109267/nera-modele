@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);variables;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Toutes les variables (retenu);1.256;1.724;-0.008;0.6302;2.0;19.0;;;;— choix retenu
+Lasso, λ de plus petite erreur;1.268;1.748;0.043;0.6211;32.4;13.1;0.3072;0.597;0.4607;équivalent
+Lasso à un écart-type (λ_1se);1.291;1.761;0.083;0.6205;29.6;11.7;0.2985;0.597;0.0481;équivalent

@@ -1,0 +1,5 @@
+﻿variante;début série;jours coupés en fin;présents moyens;TOM %;écart Little %;MAE propre;pinball τ=0.8 propre;gain / persistance %;MAE retenue;temps (s);pinball τ=0.8 retenue;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Durées connues ≥ 80 %;15/07/2024;4;8.47;47.0;-3.3;2.641;0.9433;32.5;2.641;10.9;0.9433;;;;identique
+Durées connues ≥ 90 % (retenu);15/07/2024;4;8.47;47.0;-3.3;2.641;0.9433;32.5;2.641;13.9;0.9433;;;;— choix retenu
+Durées connues ≥ 95 %;15/07/2024;4;8.47;47.0;-3.3;2.641;0.9433;32.5;2.641;11.7;0.9433;;;;identique
+≥ 90 %, sans rodage au début (premier mois = début réel du registre);01/07/2024;4;8.41;46.7;-3.2;2.659;0.9562;32.1;2.659;11.3;0.9562;0.0991;0.0991;0.3649;équivalent

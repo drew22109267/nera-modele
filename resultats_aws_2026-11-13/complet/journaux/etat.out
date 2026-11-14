@@ -1,0 +1,12 @@
+debut 2026-11-13 13:00:53
+eq nouveau lit fin 13:38:10 code 0
+eq nouveau triage fin 14:41:03 code 0
+complet debut 2026-11-13 15:06:43
+eq ancien triage fin 16:42:13 code 0
+lit 0-10 fin 2026-11-13 17:19:27 code 0
+eq ancien lit fin 19:38:19 code 0
+equivalence fin 2026-11-13 19:38:44
+triage fin 2026-11-13 21:33:45 code 0
+lit 11-12 fin 2026-11-13 21:44:32 code 0
+echecs lit : 0
+FIN 2026-11-13 21:44:48

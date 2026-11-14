@@ -1,0 +1,16 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu;DM p (pinball τ=0.8) vs charge locale;p Holm vs charge locale;vs charge locale (D12-3)
+D12-0 · sans les urgences (même fenêtre) (retenu);2.073;2.43;0.209;0.6869;69.2;;;;— choix retenu;;;
+D12-1 · + passages enfants aux urgences;2.04;2.443;0.028;0.7457;69.2;0.0068;0.0884;0.6408;équivalent;;;
+D12-2 · + enfants graves orientés (décision observée);2.147;2.53;0.032;0.7403;69.2;0.0049;0.0686;0.4378;équivalent;;;
+D12-3 · + charge grave attendue Σ P(grave) (module triage);2.09;2.492;0.023;0.7293;74.4;0.0577;0.577;0.8331;équivalent;;;
+D12-4 · + graves observés + charge;2.167;2.561;-0.087;0.7528;74.4;0.0272;0.2992;0.397;équivalent;;;
+D12-T · + charge du modèle transféré (cible_fourier);2.095;2.516;-0.019;0.7088;71.8;0.2187;0.8541;0.8012;équivalent;0.0374;0.2422;équivalent
+D12-T · + charge du modèle transféré (source_seule);2.075;2.459;0.022;0.7131;74.4;0.1326;0.8541;0.9743;équivalent;0.0553;0.2765;équivalent
+D12-T · + charge du modèle transféré (source_recalibree);2.042;2.478;-0.051;0.6998;69.2;0.471;0.942;0.717;équivalent;0.0097;0.0776;équivalent
+D12-T · + charge du modèle transféré (reunies);2.042;2.452;-0.076;0.7092;71.8;0.1042;0.8541;0.6601;équivalent;0.0964;0.3144;équivalent
+D12-T · + charge du modèle transféré (augmentation);2.066;2.488;-0.097;0.7096;71.8;0.1136;0.8541;0.924;équivalent;0.1205;0.3144;équivalent
+D12-T · + charge du modèle transféré (regularisation_biaisee);2.102;2.513;0.038;0.7162;69.2;0.12;0.8541;0.718;équivalent;0.0346;0.2422;équivalent
+D12-T · + charge du modèle transféré (a_svm);2.06;2.458;0.1;0.72;71.8;0.0949;0.8541;0.8619;équivalent;0.2838;0.3144;équivalent
+D12-T · + charge du modèle transféré (score_source);2.103;2.518;0.058;0.7161;69.2;0.1156;0.8541;0.7136;équivalent;0.0786;0.3144;équivalent
+modèle habituel, tout l'historique de la pédiatrie (sans urgences);1.285;1.814;0.225;0.4353;94.9;0.0121;0.1452;0.0001;équivalent;;;
+persistance;1.504;2.161;-0.151;0.7973;;0.4849;0.942;0.0579;équivalent;;;

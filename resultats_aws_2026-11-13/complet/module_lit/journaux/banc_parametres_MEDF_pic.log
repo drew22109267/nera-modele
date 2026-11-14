@@ -1,0 +1,839 @@
+
+── J+1 · svr4 · C (poids des erreurs)
+   C = 0,1 : 6 s
+   C = 0,3 : 6 s
+   C = 1 : 9 s
+   C = 3 : 9 s
+   C = 10 : 12 s
+   C = 30 : 12 s
+                  MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                
+C = 0,1         2.316  2.737 -0.945         0.7588             91.8        6.3                0.0000  0.0000      0.0000       moins bon
+C = 0,3         1.950  2.323 -0.655         0.6380             91.8        5.7                0.0008  0.0032      0.0000       moins bon
+C = 1           1.620  1.982 -0.465         0.5534             89.1        9.5                0.0517  0.1551      0.0000      équivalent
+C = 3 (retenu)  1.399  1.782 -0.380         0.5262             85.2        8.7                   NaN     NaN         NaN  — choix retenu
+C = 10          1.330  1.729 -0.334         0.5189             79.8       11.7                0.6504  1.0000      0.0241      équivalent
+C = 30          1.338  1.718 -0.305         0.5113             71.0       12.2                0.5309  1.0000      0.2440      équivalent
+
+── J+1 · svr4 · ε (tube, niveaux quantiles)
+   epsilon_quantile = 0 : 8 s
+   epsilon_quantile = 0,25 : 10 s
+   epsilon_quantile = 0,5 : 9 s
+   epsilon_quantile = 1 : 9 s
+                                 MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                               
+epsilon_quantile = 0 (retenu)  1.399  1.782 -0.380         0.5262             85.2        8.3                   NaN     NaN         NaN  — choix retenu
+epsilon_quantile = 0,25        1.414  1.797 -0.451         0.5351             81.4        9.6                0.1630  0.1630      0.1369      équivalent
+epsilon_quantile = 0,5         1.419  1.802 -0.417         0.5656             74.3        8.7                0.0004  0.0008      0.1551       moins bon
+epsilon_quantile = 1           1.474  1.838 -0.377         0.6083             63.9        8.7                0.0000  0.0000      0.0007       moins bon
+
+── J+1 · svr4 · γ₁ (portée, bloc occupation)
+   gamma1 = 0,01 : 8 s
+   gamma1 = 0,02 : 8 s
+   gamma1 = 0,05 : 8 s
+   gamma1 = 0,1 : 6 s
+   gamma1 = 0,2 : 8 s
+   gamma1 = 0,5 : 7 s
+                         MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                       
+gamma1 = 0,01          1.617  1.969 -0.536         0.6585             82.0        8.2                0.0000  0.0000      0.0000       moins bon
+gamma1 = 0,02          1.473  1.829 -0.480         0.5868             81.4        8.3                0.0018  0.0054      0.0234       moins bon
+gamma1 = 0,05          1.394  1.764 -0.433         0.5284             83.1        8.0                0.7752  0.7752      0.7884      équivalent
+gamma1 = 0,1 (retenu)  1.399  1.782 -0.380         0.5262             85.2        6.0                   NaN     NaN         NaN  — choix retenu
+gamma1 = 0,2           1.465  1.861 -0.408         0.5430             83.6        7.6                0.0637  0.1274      0.0005      équivalent
+gamma1 = 0,5           1.628  2.032 -0.453         0.6119             78.1        7.1                0.0000  0.0000      0.0000       moins bon
+
+── J+1 · svr4 · γ₂ (portée, bloc flux et saison)
+   gamma2 = 0,02 : 5 s
+   gamma2 = 0,05 : 7 s
+   gamma2 = 0,1 : 7 s
+   gamma2 = 0,2 : 5 s
+   gamma2 = 0,5 : 6 s
+                          MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                        
+gamma2 = 0,02           1.412  1.829 -0.400         0.4995             91.3        5.4                0.0067  0.0183      0.4622        meilleur
+gamma2 = 0,05 (retenu)  1.399  1.782 -0.380         0.5262             85.2        7.3                   NaN     NaN         NaN  — choix retenu
+gamma2 = 0,1            1.419  1.790 -0.378         0.5383             80.3        7.0                0.0924  0.0924      0.1629      équivalent
+gamma2 = 0,2            1.496  1.878 -0.389         0.5673             76.0        5.0                0.0038  0.0152      0.0041       moins bon
+gamma2 = 0,5            1.503  1.911 -0.378         0.5717             78.1        5.9                0.0061  0.0183      0.0062       moins bon
+
+── J+1 · svr4 · τ (quantile décisionnel)
+   tau = 0,5 : 4 s
+   tau = 0,6 : 6 s
+   tau = 0,7 : 5 s
+   tau = 0,8 : 7 s
+   tau = 0,9 : 4 s
+                      MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                    
+tau = 0,5           1.399  1.782 -0.380         0.8134             85.2        4.1                   0.0     0.0         NaN       moins bon
+tau = 0,6           1.406  1.788 -0.393         0.8207             85.2        5.7                   0.0     0.0      0.0238       moins bon
+tau = 0,7           1.398  1.782 -0.381         0.8133             85.2        5.5                   0.0     0.0      0.3173       moins bon
+tau = 0,8 (retenu)  1.399  1.782 -0.380         0.5262             85.2        6.7                   NaN     NaN         NaN  — choix retenu
+tau = 0,9           1.399  1.782 -0.380         0.8134             85.2        4.1                   0.0     0.0         NaN       moins bon
+
+── J+1 · svr4 · η₀ (taux d'apprentissage d'Adam)
+   taux = 0,005 : 7 s
+   taux = 0,01 : 6 s
+   taux = 0,02 : 7 s
+   taux = 0,05 : 7 s
+   taux = 0,1 : 6 s
+   taux = 0,2 : 7 s
+                        MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                      
+taux = 0,005          1.396  1.779 -0.366         0.5152             86.9        6.6                0.0237  0.0948      0.2572      équivalent
+taux = 0,01           1.398  1.781 -0.374         0.5225             85.2        6.4                0.0832  0.2496      0.4637      équivalent
+taux = 0,02           1.398  1.782 -0.376         0.5259             85.2        7.5                0.4204  0.4204      0.7700      équivalent
+taux = 0,05 (retenu)  1.399  1.782 -0.380         0.5262             85.2        6.6                   NaN     NaN         NaN  — choix retenu
+taux = 0,1            1.398  1.782 -0.386         0.5254             85.2        5.6                0.0988  0.2496      0.9120      équivalent
+taux = 0,2            1.402  1.786 -0.391         0.5247             84.7        6.8                0.0185  0.0925      0.0334      équivalent
+
+── J+1 · svr4 · nombre maximal d'itérations
+   iterations = 300 : 1 s
+   iterations = 1000 : 2 s
+   iterations = 3000 : 6 s
+   iterations = 6000 : 10 s
+                              MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                            
+iterations = 300            1.396  1.781 -0.378         0.5158             86.9        0.6                0.0187  0.0374      0.0420        meilleur
+iterations = 1000           1.398  1.782 -0.381         0.5254             85.2        2.0                0.2321  0.2321      0.2927      équivalent
+iterations = 3000 (retenu)  1.399  1.782 -0.380         0.5262             85.2        6.2                   NaN     NaN         NaN  — choix retenu
+iterations = 6000           1.399  1.783 -0.380         0.5258             85.2        9.7                0.0001  0.0003      0.5967        meilleur
+
+── J+1 · svr4 · T (décroissance du pas ; aucune = pas constant)
+   decroissance = aucune : 7 s
+   decroissance = 100 : 6 s
+   decroissance = 500 : 7 s
+   decroissance = 2000 : 6 s
+                               MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                             
+decroissance = aucune        1.397  1.781 -0.376         0.5251             84.7        7.0                0.0124  0.0248      0.0887        meilleur
+decroissance = 100           1.399  1.783 -0.377         0.5260             85.2        5.6                0.3160  0.3160      0.6751      équivalent
+decroissance = 500 (retenu)  1.399  1.782 -0.380         0.5262             85.2        6.9                   NaN     NaN         NaN  — choix retenu
+decroissance = 2000          1.398  1.783 -0.381         0.5249             85.2        5.7                0.0030  0.0090      0.9270        meilleur
+
+── J+1 · svr4 · part des pas moyennée (Polyak ; 0 = aucune)
+   moyenne_polyak = 0 : 5 s
+   moyenne_polyak = 0,25 : 9 s
+   moyenne_polyak = 0,5 : 9 s
+   moyenne_polyak = 0,75 : 6 s
+                                 MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                               
+moyenne_polyak = 0             1.399  1.783 -0.381         0.5262             85.2        5.3                   NaN     NaN      0.1143       identique
+moyenne_polyak = 0,25          1.399  1.782 -0.380         0.5262             85.2        8.6                   NaN     NaN         NaN       identique
+moyenne_polyak = 0,5 (retenu)  1.399  1.782 -0.380         0.5262             85.2        9.0                   NaN     NaN         NaN  — choix retenu
+moyenne_polyak = 0,75          1.399  1.782 -0.380         0.5262             85.2        5.9                   NaN     NaN         NaN       identique
+
+── J+1 · svr4 · tolérance d'arrêt anticipé
+   tolerance = 1e-05 : 2 s
+   tolerance = 1e-07 : 7 s
+   tolerance = 1e-09 : 7 s
+                              MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                            
+tolerance = 1e-05           1.397  1.780 -0.374         0.5241             85.2        1.8                0.1591  0.3182      0.5205      équivalent
+tolerance = 1e-07 (retenu)  1.399  1.782 -0.380         0.5262             85.2        7.1                   NaN     NaN         NaN  — choix retenu
+tolerance = 1e-09           1.398  1.782 -0.379         0.5262             85.2        7.4                0.5701  0.5701      0.3376      équivalent
+
+── J+1 · svr4 · direction préconditionnée α + Cg
+   preconditionne = True : 7 s
+   preconditionne = False : 7 s
+                                  MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                
+preconditionne = True (retenu)  1.399  1.782 -0.380         0.5262             85.2        6.6                   NaN     NaN         NaN  — choix retenu
+preconditionne = False          1.410  1.797 -0.399         0.5180             85.2        7.0                0.0056  0.0056      0.0576        meilleur
+
+── J+1 · svr4 · optimiseur
+   optimiseur = adam : 5 s
+   optimiseur = momentum : 6 s
+   optimiseur = sgd : 7 s
+                              MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                            
+optimiseur = adam (retenu)  1.399  1.782 -0.380         0.5262             85.2        5.3                   NaN     NaN         NaN  — choix retenu
+optimiseur = momentum       1.732  2.109 -0.362         0.5504             91.8        5.6                0.2822  0.2822         0.0      équivalent
+optimiseur = sgd            1.924  2.253 -0.530         0.4878             86.3        6.7                0.0764  0.1528         0.0      équivalent
+
+── J+1 · svr2 · C
+   C = 0,1 : 0 s
+   C = 0,3 : 1 s
+   C = 1 : 1 s
+   C = 3 : 2 s
+   C = 10 : 1 s
+   C = 30 : 1 s
+                  MAE   RMSE  biais  pinball τ=0.8  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                               
+C = 0,1         2.187  2.578 -0.784         1.3284        0.4                0.0000  0.0000      0.0000       moins bon
+C = 0,3         1.809  2.166 -0.555         1.0710        0.5                0.0000  0.0000      0.0000       moins bon
+C = 1           1.516  1.871 -0.461         0.8966        1.2                0.0000  0.0000      0.0000       moins bon
+C = 3 (retenu)  1.341  1.708 -0.406         0.7926        1.5                   NaN     NaN         NaN  — choix retenu
+C = 10          1.302  1.669 -0.333         0.7509        0.9                0.0173  0.0346      0.1464        meilleur
+C = 30          1.328  1.692 -0.247         0.7378        1.1                0.0717  0.0717      0.7744      équivalent
+
+── J+1 · svr2 · ε (tube ε-insensible, en lits)
+   epsilon = 0 : 1 s
+   epsilon = 0,25 : 1 s
+   epsilon = 0,5 : 1 s
+   epsilon = 1 : 1 s
+   epsilon = 2 : 2 s
+                          MAE   RMSE  biais  pinball τ=0.8  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                       
+epsilon = 0             1.318  1.677 -0.425         0.7867        1.1                0.5607  0.5607      0.1508      équivalent
+epsilon = 0,25          1.321  1.687 -0.412         0.7839        1.4                0.2264  0.4528      0.0571      équivalent
+epsilon = 0,5 (retenu)  1.341  1.708 -0.406         0.7926        1.1                   NaN     NaN         NaN  — choix retenu
+epsilon = 1             1.374  1.729 -0.407         0.8094        1.1                0.0907  0.2721      0.0236      équivalent
+epsilon = 2             1.502  1.819 -0.540         0.9129        1.8                0.0000  0.0000      0.0000       moins bon
+
+── J+1 · svr2 · γ (portée du noyau RBF)
+   gamma = 0,005 : 1 s
+   gamma = 0,01 : 2 s
+   gamma = 0,02 : 2 s
+   gamma = 0,05 : 2 s
+   gamma = 0,1 : 1 s
+   gamma = 0,2 : 2 s
+   gamma = 0,5 : 1 s
+                         MAE   RMSE  biais  pinball τ=0.8  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                      
+gamma = 0,005          1.471  1.818 -0.431         0.8645        1.0                0.0001  0.0003      0.0000       moins bon
+gamma = 0,01           1.367  1.721 -0.412         0.8072        1.6                0.1295  0.2590      0.1152      équivalent
+gamma = 0,02 (retenu)  1.341  1.708 -0.406         0.7926        1.8                   NaN     NaN         NaN  — choix retenu
+gamma = 0,05           1.414  1.783 -0.366         0.8168        1.8                0.1524  0.2590      0.0191      équivalent
+gamma = 0,1            1.566  1.977 -0.425         0.9108        1.4                0.0000  0.0000      0.0000       moins bon
+gamma = 0,2            1.788  2.240 -0.541         1.0562        1.5                0.0000  0.0000      0.0000       moins bon
+gamma = 0,5            2.207  2.680 -0.793         1.3417        1.1                0.0000  0.0000      0.0000       moins bon
+
+── J+1 · foret · nombre d'arbres
+   arbres = 25 : 2 s
+   arbres = 50 : 3 s
+   arbres = 100 : 3 s
+   arbres = 300 : 9 s
+   arbres = 500 : 13 s
+                         MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                       
+arbres = 25            1.445  1.830 -0.295         0.5142             93.4        1.8                0.3007     1.0      0.5759      équivalent
+arbres = 50            1.452  1.832 -0.296         0.4994             94.5        3.1                0.7844     1.0      0.1884      équivalent
+arbres = 100           1.432  1.820 -0.260         0.5016             93.4        3.5                0.9938     1.0      0.9334      équivalent
+arbres = 300 (retenu)  1.431  1.816 -0.285         0.5017             94.0        9.1                   NaN     NaN         NaN  — choix retenu
+arbres = 500           1.439  1.825 -0.287         0.5035             94.0       12.9                0.5805     1.0      0.1990      équivalent
+
+── J+1 · foret · profondeur maximale
+   profondeur_foret = 3 : 2 s
+   profondeur_foret = 5 : 4 s
+   profondeur_foret = 8 : 9 s
+   profondeur_foret = 12 : 9 s
+   profondeur_foret = 20 : 9 s
+                                  MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                
+profondeur_foret = 3            1.593  1.961 -0.421         0.5075             97.8        1.9                0.7297     1.0      0.0000      équivalent
+profondeur_foret = 5            1.489  1.870 -0.340         0.5053             94.5        3.8                0.6285     1.0      0.0008      équivalent
+profondeur_foret = 8            1.438  1.818 -0.290         0.5006             94.5        8.9                0.8572     1.0      0.6043      équivalent
+profondeur_foret = 12 (retenu)  1.431  1.816 -0.285         0.5017             94.0        8.9                   NaN     NaN         NaN  — choix retenu
+profondeur_foret = 20           1.409  1.814 -0.273         0.5028             94.5        8.9                0.8240     1.0      0.0250      équivalent
+
+── J+1 · foret · taille minimale d'une feuille
+   min_feuille = 2 : 17 s
+   min_feuille = 5 : 7 s
+   min_feuille = 10 : 6 s
+   min_feuille = 20 : 3 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+min_feuille = 2           1.412  1.801 -0.258         0.5027             94.0       16.9                0.8832     1.0      0.2243      équivalent
+min_feuille = 5 (retenu)  1.431  1.816 -0.285         0.5017             94.0        7.1                   NaN     NaN         NaN  — choix retenu
+min_feuille = 10          1.465  1.845 -0.329         0.4946             94.0        5.8                0.3882     1.0      0.0279      équivalent
+min_feuille = 20          1.512  1.884 -0.362         0.4998             95.6        2.8                0.8833     1.0      0.0045      équivalent
+
+── J+1 · foret · part des variables tirées par nœud
+   part_variables = 0,15 : 10 s
+   part_variables = 0,333333 : 10 s
+   part_variables = 0,5 : 9 s
+   part_variables = 1 : 9 s
+                                      MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                    
+part_variables = 0,15               1.593  1.954 -0.381         0.5168             97.3        9.7                0.1757  0.5271      0.0000      équivalent
+part_variables = 0,333333 (retenu)  1.431  1.816 -0.285         0.5017             94.0       10.0                   NaN     NaN         NaN  — choix retenu
+part_variables = 0,5                1.404  1.811 -0.262         0.5030             94.0        8.8                0.8589  0.9100      0.1157      équivalent
+part_variables = 1                  1.324  1.774 -0.256         0.4907             92.3        9.0                0.4550  0.9100      0.0043      équivalent
+
+── J+1 · boosting · nombre d'étapes
+   etapes = 50 : 2 s
+   etapes = 100 : 3 s
+   etapes = 300 : 7 s
+   etapes = 600 : 14 s
+                         MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                       
+etapes = 50            1.463  1.841 -0.445         0.5197             90.2        1.9                0.1418  0.1556      0.0017      équivalent
+etapes = 100           1.373  1.776 -0.390         0.5292             80.9        3.2                0.0778  0.1556      0.1524      équivalent
+etapes = 300 (retenu)  1.340  1.759 -0.323         0.5542             71.0        6.5                   NaN     NaN         NaN  — choix retenu
+etapes = 600           1.350  1.762 -0.317         0.5743             68.3       14.2                0.0059  0.0177      0.3817       moins bon
+
+── J+1 · boosting · taux ν (shrinkage)
+   taux_boosting = 0,01 : 6 s
+   taux_boosting = 0,05 : 6 s
+   taux_boosting = 0,1 : 6 s
+   taux_boosting = 0,2 : 5 s
+                                 MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                               
+taux_boosting = 0,01           1.429  1.817 -0.412         0.5310             86.3        6.4                0.2437  0.3468      0.0106      équivalent
+taux_boosting = 0,05 (retenu)  1.340  1.759 -0.323         0.5542             71.0        5.5                   NaN     NaN         NaN  — choix retenu
+taux_boosting = 0,1            1.357  1.781 -0.379         0.5794             67.2        5.6                0.0679  0.2037      0.5354      équivalent
+taux_boosting = 0,2            1.468  1.877 -0.368         0.5797             65.0        5.3                0.1734  0.3468      0.0009      équivalent
+
+── J+1 · boosting · profondeur des arbres
+   profondeur_boosting = 1 : 2 s
+   profondeur_boosting = 2 : 3 s
+   profondeur_boosting = 3 : 6 s
+   profondeur_boosting = 5 : 12 s
+                                    MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                  
+profondeur_boosting = 1           1.337  1.765 -0.333         0.5066             83.6        2.5                0.0305  0.0915      0.9223      équivalent
+profondeur_boosting = 2           1.320  1.749 -0.360         0.5340             78.1        3.1                0.1850  0.1850      0.3759      équivalent
+profondeur_boosting = 3 (retenu)  1.340  1.759 -0.323         0.5542             71.0        5.7                   NaN     NaN         NaN  — choix retenu
+profondeur_boosting = 5           1.357  1.760 -0.325         0.5803             64.5       12.5                0.0724  0.1448      0.5071      équivalent
+
+── J+1 · boosting · part du sous-échantillon
+   sous_echantillon = 0,5 : 8 s
+   sous_echantillon = 0,8 : 8 s
+   sous_echantillon = 1 : 10 s
+                                   MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                 
+sous_echantillon = 0,5           1.318  1.719 -0.317         0.5603             69.9        8.2                0.7172    0.76      0.4617      équivalent
+sous_echantillon = 0,8 (retenu)  1.340  1.759 -0.323         0.5542             71.0        8.1                   NaN     NaN         NaN  — choix retenu
+sous_echantillon = 1             1.365  1.794 -0.368         0.5674             70.5        9.5                0.3800    0.76      0.3410      équivalent
+
+── J+1 · mlp · architecture (neurones par couche)
+   couches = 8 : 1 s
+   couches = 32 : 1 s
+   couches = 32×16 : 1 s
+   couches = 64×32 : 1 s
+   couches = 32×16×8 : 1 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+couches = 8               1.535  1.912 -0.515         0.7548             73.8        1.5                0.0000  0.0000      0.0285       moins bon
+couches = 32              1.381  1.775 -0.541         0.5049             84.2        1.1                0.0877  0.2631      0.0000      équivalent
+couches = 32×16 (retenu)  1.675  2.004 -0.910         0.5466             84.7        0.8                   NaN     NaN         NaN  — choix retenu
+couches = 64×32           1.306  1.693 -0.419         0.5161             89.6        1.4                0.3814  0.3942      0.0000      équivalent
+couches = 32×16×8         1.503  1.870 -0.581         0.5842             79.8        1.4                0.1971  0.3942      0.0047      équivalent
+
+── J+1 · mlp · taux d'apprentissage
+   taux_reseau = 0,001 : 2 s
+   taux_reseau = 0,003 : 2 s
+   taux_reseau = 0,01 : 1 s
+   taux_reseau = 0,03 : 1 s
+                               MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                             
+taux_reseau = 0,001          1.790  2.117 -0.818         0.6184             75.4        2.3                0.0001  0.0003      0.0122       moins bon
+taux_reseau = 0,003          1.819  2.145 -0.917         0.6109             77.6        1.7                0.0001  0.0003      0.0000       moins bon
+taux_reseau = 0,01 (retenu)  1.675  2.004 -0.910         0.5466             84.7        1.4                   NaN     NaN         NaN  — choix retenu
+taux_reseau = 0,03           1.546  1.889 -0.806         0.5848             88.5        1.1                0.0442  0.0442      0.0063       moins bon
+
+── J+1 · mlp · pénalité L2 λ
+   lambda_ = 0 : 1 s
+   lambda_ = 0,0001 : 1 s
+   lambda_ = 0,001 : 1 s
+   lambda_ = 0,01 : 1 s
+   lambda_ = 0,1 : 2 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+lambda_ = 0               1.666  1.991 -0.916         0.5563             84.7        1.2                0.1494  0.5976      0.4464      équivalent
+lambda_ = 0,0001          1.644  1.982 -0.859         0.5403             85.8        1.3                0.2370  0.5976      0.0058      équivalent
+lambda_ = 0,001 (retenu)  1.675  2.004 -0.910         0.5466             84.7        0.9                   NaN     NaN         NaN  — choix retenu
+lambda_ = 0,01            1.547  1.874 -0.730         0.5700             75.4        1.0                0.1534  0.5976      0.0001      équivalent
+lambda_ = 0,1             1.514  1.856 -0.760         0.5268             85.2        2.1                0.5317  0.5976      0.0122      équivalent
+
+── J+1 · mlp · époques maximales
+   epoques = 300 : 1 s
+   epoques = 800 : 1 s
+   epoques = 1500 : 2 s
+   epoques = 3000 : 1 s
+                           MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                         
+epoques = 300            1.675  2.004  -0.91         0.5466             84.7        1.0                   NaN     NaN         NaN       identique
+epoques = 800            1.675  2.004  -0.91         0.5466             84.7        1.2                   NaN     NaN         NaN       identique
+epoques = 1500 (retenu)  1.675  2.004  -0.91         0.5466             84.7        1.5                   NaN     NaN         NaN  — choix retenu
+epoques = 3000           1.675  2.004  -0.91         0.5466             84.7        1.4                   NaN     NaN         NaN       identique
+
+── J+1 · mlp · patience de l'arrêt anticipé
+   patience = 50 : 1 s
+   patience = 150 : 1 s
+   patience = 300 : 1 s
+                           MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                         
+patience = 50            1.675  2.004  -0.91         0.5466             84.7        0.6                   NaN     NaN         NaN       identique
+patience = 150 (retenu)  1.675  2.004  -0.91         0.5466             84.7        1.2                   NaN     NaN         NaN  — choix retenu
+patience = 300           1.675  2.004  -0.91         0.5466             84.7        1.5                   NaN     NaN         NaN       identique
+
+── J+1 · mlp · nombre d'initialisations moyennées
+   graines = 1 : 1 s
+   graines = 3 : 1 s
+   graines = 5 : 2 s
+                        MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                      
+graines = 1           1.515  1.877 -0.717         0.5845             82.0        0.6                0.2258  0.4516      0.0123      équivalent
+graines = 3 (retenu)  1.675  2.004 -0.910         0.5466             84.7        1.3                   NaN     NaN         NaN  — choix retenu
+graines = 5           1.717  2.062 -1.045         0.5345             86.9        1.9                0.4090  0.4516      0.1398      équivalent
+
+── J+1 · lstm · taille de l'état caché H
+   cache_lstm = 4 : 9 s
+   cache_lstm = 8 : 8 s
+   cache_lstm = 16 : 10 s
+   cache_lstm = 32 : 11 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+cache_lstm = 4            1.462  1.820 -0.563         0.5443             72.1        9.2                0.0771  0.0771      0.1354      équivalent
+cache_lstm = 8            1.502  1.886 -0.674         0.5858             71.6        7.5                0.0003  0.0009      0.0103       moins bon
+cache_lstm = 16 (retenu)  1.413  1.769 -0.528         0.5125             75.4        9.5                   NaN     NaN         NaN  — choix retenu
+cache_lstm = 32           1.424  1.804 -0.571         0.5638             74.9       11.5                0.0079  0.0158      0.6987       moins bon
+
+── J+1 · lstm · taux d'apprentissage
+   taux_reseau = 0,003 : 15 s
+   taux_reseau = 0,01 : 7 s
+   taux_reseau = 0,03 : 7 s
+                               MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                             
+taux_reseau = 0,003          1.403  1.759 -0.513         0.5259             73.2       14.6                0.2376  0.4682      0.6120      équivalent
+taux_reseau = 0,01 (retenu)  1.413  1.769 -0.528         0.5125             75.4        7.1                   NaN     NaN         NaN  — choix retenu
+taux_reseau = 0,03           1.358  1.713 -0.485         0.5286             69.9        6.6                0.2341  0.4682      0.0216      équivalent
+
+── J+1 · lstm · pénalité L2 λ
+   lambda_ = 0 : 5 s
+   lambda_ = 0,001 : 8 s
+   lambda_ = 0,01 : 15 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+lambda_ = 0               1.505  1.859 -0.682         0.5315             76.5        5.5                0.1130  0.2260      0.0001      équivalent
+lambda_ = 0,001 (retenu)  1.413  1.769 -0.528         0.5125             75.4        7.5                   NaN     NaN         NaN  — choix retenu
+lambda_ = 0,01            1.383  1.752 -0.436         0.5100             73.2       15.1                0.8329  0.8329      0.2346      équivalent
+
+── J+1 · variables · jours d'occupation passée en entrée
+   retards = 3 : 5 s
+   retards = 5 : 5 s
+   retards = 7 : 5 s
+   retards = 10 : 5 s
+   retards = 14 : 6 s
+   retards = 21 : 6 s
+                        MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                      
+retards = 3           1.391  1.794 -0.388         0.5086             84.7        5.1                0.2685  0.5370      0.8129      équivalent
+retards = 5           1.432  1.832 -0.426         0.5239             82.0        4.7                0.8485  0.8485      0.1785      équivalent
+retards = 7 (retenu)  1.399  1.782 -0.380         0.5262             85.2        4.8                   NaN     NaN         NaN  — choix retenu
+retards = 10          1.480  1.884 -0.410         0.5565             81.4        4.8                0.0038  0.0114      0.0006       moins bon
+retards = 14          1.587  2.007 -0.510         0.6023             79.8        6.2                0.0000  0.0000      0.0000       moins bon
+retards = 21          1.774  2.139 -0.635         0.7472             73.8        5.8                0.0000  0.0000      0.0000       moins bon
+
+── J+7 · svr4 · C (poids des erreurs)
+   C = 0,1 : 4 s
+   C = 0,3 : 5 s
+   C = 1 : 4 s
+   C = 3 : 5 s
+   C = 10 : 5 s
+   C = 30 : 5 s
+                    MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                  
+C = 0,1           2.717  3.201 -1.094         0.8752             91.0        3.7                0.6837   1.000      0.6189      équivalent
+C = 0,3 (retenu)  2.698  3.166 -0.978         0.8824             89.8        4.5                   NaN     NaN         NaN  — choix retenu
+C = 1             2.604  3.052 -0.847         0.8956             91.0        3.5                0.6841   1.000      0.0747      équivalent
+C = 3             2.571  3.031 -0.833         0.9776             84.2        4.7                0.2854   0.935      0.1249      équivalent
+C = 10            2.524  3.065 -1.118         1.0791             80.8        4.9                0.1870   0.935      0.2342      équivalent
+C = 30            2.599  3.187 -1.267         1.0925             72.3        4.8                0.2154   0.935      0.6214      équivalent
+
+── J+7 · svr4 · ε (tube, niveaux quantiles)
+   epsilon_quantile = 0 : 5 s
+   epsilon_quantile = 0,25 : 7 s
+   epsilon_quantile = 0,5 : 4 s
+   epsilon_quantile = 1 : 6 s
+                                 MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                               
+epsilon_quantile = 0 (retenu)  2.698  3.166 -0.978         0.8824             89.8        4.6                   NaN     NaN         NaN  — choix retenu
+epsilon_quantile = 0,25        2.704  3.174 -0.942         0.8953             88.1        6.5                0.2327  0.6981      0.6903      équivalent
+epsilon_quantile = 0,5         2.698  3.166 -0.934         0.8912             86.4        3.8                0.6262  0.6981      0.9838      équivalent
+epsilon_quantile = 1           2.670  3.127 -0.912         0.9243             80.8        5.5                0.2896  0.6981      0.2117      équivalent
+
+── J+7 · svr4 · γ₁ (portée, bloc occupation)
+   gamma1 = 0,01 : 4 s
+   gamma1 = 0,02 : 6 s
+   gamma1 = 0,05 : 3 s
+   gamma1 = 0,1 : 5 s
+   gamma1 = 0,2 : 6 s
+   gamma1 = 0,5 : 4 s
+                         MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                       
+gamma1 = 0,01          2.696  3.168 -0.990         0.8917             89.8        4.5                0.4000     1.0      0.7762      équivalent
+gamma1 = 0,02          2.695  3.167 -0.989         0.8905             89.3        6.2                0.4553     1.0      0.6487      équivalent
+gamma1 = 0,05          2.695  3.166 -0.989         0.8888             88.7        2.7                0.5418     1.0      0.6458      équivalent
+gamma1 = 0,1 (retenu)  2.698  3.166 -0.978         0.8824             89.8        5.1                   NaN     NaN         NaN  — choix retenu
+gamma1 = 0,2           2.697  3.155 -0.974         0.8864             91.0        5.6                0.5406     1.0      0.9759      équivalent
+gamma1 = 0,5           2.684  3.135 -0.994         0.8846             89.8        4.1                0.8718     1.0      0.7263      équivalent
+
+── J+7 · svr4 · γ₂ (portée, bloc flux et saison)
+   gamma2 = 0,02 : 6 s
+   gamma2 = 0,05 : 4 s
+   gamma2 = 0,1 : 2 s
+   gamma2 = 0,2 : 7 s
+   gamma2 = 0,5 : 4 s
+                          MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                        
+gamma2 = 0,02           2.710  3.173 -1.047         0.8766             91.5        5.8                0.7072     1.0      0.7194      équivalent
+gamma2 = 0,05 (retenu)  2.698  3.166 -0.978         0.8824             89.8        3.9                   NaN     NaN         NaN  — choix retenu
+gamma2 = 0,1            2.671  3.132 -0.945         0.8909             89.3        2.4                0.5377     1.0      0.2316      équivalent
+gamma2 = 0,2            2.655  3.109 -0.958         0.8861             88.7        6.7                0.7881     1.0      0.0859      équivalent
+gamma2 = 0,5            2.686  3.148 -1.052         0.8763             88.7        4.2                0.7642     1.0      0.6724      équivalent
+
+── J+7 · svr4 · τ (quantile décisionnel)
+   tau = 0,5 : 5 s
+   tau = 0,6 : 5 s
+   tau = 0,7 : 4 s
+   tau = 0,8 : 7 s
+   tau = 0,9 : 4 s
+                      MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                    
+tau = 0,5           2.698  3.166 -0.978         1.6423             89.8        4.6                0.0011  0.0044         NaN       moins bon
+tau = 0,6           2.698  3.166 -0.978         1.6423             89.8        5.3                0.0011  0.0044         NaN       moins bon
+tau = 0,7           2.698  3.166 -0.978         1.6423             89.8        4.0                0.0011  0.0044         NaN       moins bon
+tau = 0,8 (retenu)  2.698  3.166 -0.978         0.8824             89.8        6.8                   NaN     NaN         NaN  — choix retenu
+tau = 0,9           2.698  3.166 -0.978         1.6423             89.8        4.3                0.0011  0.0044         NaN       moins bon
+
+── J+7 · svr4 · η₀ (taux d'apprentissage d'Adam)
+   taux = 0,005 : 6 s
+   taux = 0,01 : 5 s
+   taux = 0,02 : 5 s
+   taux = 0,05 : 5 s
+   taux = 0,1 : 4 s
+   taux = 0,2 : 5 s
+                        MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                      
+taux = 0,005          2.698  3.165 -0.977         0.8872             90.4        6.3                0.2939  0.7944      0.9808      équivalent
+taux = 0,01           2.697  3.164 -0.979         0.8887             89.8        4.5                0.2325  0.7944      0.8518      équivalent
+taux = 0,02           2.695  3.163 -0.981         0.8901             89.8        4.8                0.1986  0.7944      0.0570      équivalent
+taux = 0,05 (retenu)  2.698  3.166 -0.978         0.8824             89.8        5.0                   NaN     NaN         NaN  — choix retenu
+taux = 0,1            2.695  3.163 -0.982         0.8848             91.5        4.5                0.2166  0.7944      0.1391      équivalent
+taux = 0,2            2.695  3.163 -0.981         0.8918             91.5        4.7                0.0960  0.4800      0.1549      équivalent
+
+── J+7 · svr4 · nombre maximal d'itérations
+   iterations = 300 : 1 s
+   iterations = 1000 : 2 s
+   iterations = 3000 : 6 s
+   iterations = 6000 : 7 s
+                              MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                            
+iterations = 300            2.696  3.163 -0.979         0.8764             92.1        1.3                0.6051     1.0      0.1289      équivalent
+iterations = 1000           2.698  3.166 -0.978         0.8825             91.5        2.0                0.9789     1.0      0.8810      équivalent
+iterations = 3000 (retenu)  2.698  3.166 -0.978         0.8824             89.8        5.8                   NaN     NaN         NaN  — choix retenu
+iterations = 6000           2.698  3.166 -0.978         0.8824             89.8        6.7                   NaN     NaN         NaN       identique
+
+── J+7 · svr4 · T (décroissance du pas ; aucune = pas constant)
+   decroissance = aucune : 4 s
+   decroissance = 100 : 6 s
+   decroissance = 500 : 4 s
+   decroissance = 2000 : 5 s
+                               MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                             
+decroissance = aucune        2.696  3.164 -0.981         0.8934             89.8        4.0                0.1362  0.3546      0.3383      équivalent
+decroissance = 100           2.696  3.164 -0.982         0.8892             90.4        5.5                0.1690  0.3546      0.1175      équivalent
+decroissance = 500 (retenu)  2.698  3.166 -0.978         0.8824             89.8        3.7                   NaN     NaN         NaN  — choix retenu
+decroissance = 2000          2.695  3.163 -0.986         0.8936             89.8        5.1                0.1182  0.3546      0.3544      équivalent
+
+── J+7 · svr4 · part des pas moyennée (Polyak ; 0 = aucune)
+   moyenne_polyak = 0 : 5 s
+   moyenne_polyak = 0,25 : 6 s
+   moyenne_polyak = 0,5 : 5 s
+   moyenne_polyak = 0,75 : 4 s
+                                 MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                               
+moyenne_polyak = 0             2.698  3.166 -0.978         0.8824             89.8        5.0                0.8188  0.8188         NaN      équivalent
+moyenne_polyak = 0,25          2.698  3.166 -0.978         0.8824             89.8        5.6                   NaN     NaN         NaN       identique
+moyenne_polyak = 0,5 (retenu)  2.698  3.166 -0.978         0.8824             89.8        4.7                   NaN     NaN         NaN  — choix retenu
+moyenne_polyak = 0,75          2.698  3.166 -0.978         0.8824             89.8        3.9                   NaN     NaN         NaN       identique
+
+── J+7 · svr4 · tolérance d'arrêt anticipé
+   tolerance = 1e-05 : 2 s
+   tolerance = 1e-07 : 5 s
+   tolerance = 1e-09 : 6 s
+                              MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                            
+tolerance = 1e-05           2.696  3.162 -0.979         0.8809             89.8        2.4                0.3879  0.3879      0.2278      équivalent
+tolerance = 1e-07 (retenu)  2.698  3.166 -0.978         0.8824             89.8        5.1                   NaN     NaN         NaN  — choix retenu
+tolerance = 1e-09           2.695  3.163 -0.984         0.8938             89.8        6.2                0.0908  0.1816      0.3620      équivalent
+
+── J+7 · svr4 · direction préconditionnée α + Cg
+   preconditionne = True : 6 s
+   preconditionne = False : 7 s
+                                  MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                
+preconditionne = True (retenu)  2.698  3.166 -0.978         0.8824             89.8        5.9                   NaN     NaN         NaN  — choix retenu
+preconditionne = False          2.698  3.165 -0.977         0.8859             90.4        7.0                0.2365  0.2365      0.9032      équivalent
+
+── J+7 · svr4 · optimiseur
+   optimiseur = adam : 6 s
+   optimiseur = momentum : 3 s
+   optimiseur = sgd : 5 s
+                              MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                            
+optimiseur = adam (retenu)  2.698  3.166 -0.978         0.8824             89.8        5.9                   NaN     NaN         NaN  — choix retenu
+optimiseur = momentum       2.698  3.166 -0.976         0.8949             89.8        2.5                0.0853  0.1706      0.7004      équivalent
+optimiseur = sgd            2.696  3.161 -0.963         0.8930             90.4        5.0                0.1400  0.1706      0.6985      équivalent
+
+── J+7 · svr2 · C
+   C = 0,1 : 1 s
+   C = 0,3 : 1 s
+   C = 1 : 1 s
+   C = 3 : 1 s
+   C = 10 : 1 s
+   C = 30 : 1 s
+                  MAE   RMSE  biais  pinball τ=0.8  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                               
+C = 0,1         2.707  3.177 -1.019         1.6594        0.6                0.3736  1.0000      0.1001      équivalent
+C = 0,3         2.674  3.134 -0.912         1.6106        0.6                0.5918  1.0000      0.0909      équivalent
+C = 1           2.595  3.048 -0.850         1.5522        1.2                0.7954  1.0000      0.3104      équivalent
+C = 3 (retenu)  2.534  3.011 -0.998         1.5663        1.0                   NaN     NaN         NaN  — choix retenu
+C = 10          2.533  3.076 -1.184         1.6219        0.9                0.2358  0.9432      0.9923      équivalent
+C = 30          2.592  3.242 -1.356         1.7029        1.0                0.1223  0.6115      0.6102      équivalent
+
+── J+7 · svr2 · ε (tube ε-insensible, en lits)
+   epsilon = 0 : 2 s
+   epsilon = 0,25 : 2 s
+   epsilon = 0,5 : 2 s
+   epsilon = 1 : 1 s
+   epsilon = 2 : 1 s
+                          MAE   RMSE  biais  pinball τ=0.8  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                       
+epsilon = 0             2.519  3.006 -0.830         1.5087        2.1                0.0081  0.0243      0.6072        meilleur
+epsilon = 0,25          2.511  2.989 -0.897         1.5247        2.0                0.0020  0.0080      0.1929        meilleur
+epsilon = 0,5 (retenu)  2.534  3.011 -0.998         1.5663        1.9                   NaN     NaN         NaN  — choix retenu
+epsilon = 1             2.550  3.051 -1.109         1.6079        1.4                0.1251  0.1251      0.6178      équivalent
+epsilon = 2             2.628  3.136 -1.187         1.6700        1.2                0.0551  0.1102      0.1242      équivalent
+
+── J+7 · svr2 · γ (portée du noyau RBF)
+   gamma = 0,005 : 1 s
+   gamma = 0,01 : 1 s
+   gamma = 0,02 : 1 s
+   gamma = 0,05 : 2 s
+   gamma = 0,1 : 2 s
+   gamma = 0,2 : 1 s
+   gamma = 0,5 : 1 s
+                         MAE   RMSE  biais  pinball τ=0.8  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                      
+gamma = 0,005          2.753  3.245 -0.950         1.6618        0.7                0.2732   1.000      0.0131      équivalent
+gamma = 0,01           2.749  3.253 -0.997         1.6737        0.8                0.1790   0.895      0.0064      équivalent
+gamma = 0,02           2.704  3.197 -1.033         1.6616        0.8                0.0965   0.579      0.0026      équivalent
+gamma = 0,05 (retenu)  2.534  3.011 -0.998         1.5663        1.6                   NaN     NaN         NaN  — choix retenu
+gamma = 0,1            2.532  3.030 -1.015         1.5708        1.8                0.9119   1.000      0.9680      équivalent
+gamma = 0,2            2.615  3.100 -1.051         1.6231        1.3                0.3664   1.000      0.2813      équivalent
+gamma = 0,5            2.635  3.061 -0.936         1.5982        1.3                0.7358   1.000      0.3724      équivalent
+
+── J+7 · foret · nombre d'arbres
+   arbres = 25 : 1 s
+   arbres = 50 : 1 s
+   arbres = 100 : 3 s
+   arbres = 300 : 10 s
+   arbres = 500 : 17 s
+                         MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                       
+arbres = 25            2.703  3.202 -1.054         0.9356             88.1        1.0                0.0192  0.0768      0.0015      équivalent
+arbres = 50            2.698  3.180 -1.028         0.9139             87.0        1.3                0.3055  0.9165      0.0028      équivalent
+arbres = 100           2.630  3.108 -1.035         0.9032             88.7        3.5                0.4882  0.9764      0.0293      équivalent
+arbres = 300 (retenu)  2.604  3.082 -0.997         0.8950             89.3       10.0                   NaN     NaN         NaN  — choix retenu
+arbres = 500           2.585  3.080 -1.009         0.8921             88.7       16.6                0.7132  0.9764      0.0866      équivalent
+
+── J+7 · foret · profondeur maximale
+   profondeur_foret = 3 : 2 s
+   profondeur_foret = 5 : 5 s
+   profondeur_foret = 8 : 6 s
+   profondeur_foret = 12 : 10 s
+   profondeur_foret = 20 : 11 s
+                                  MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                
+profondeur_foret = 3            2.665  3.139 -1.094         0.8599             92.7        1.8                0.4531  1.0000      0.2884      équivalent
+profondeur_foret = 5            2.618  3.112 -1.066         0.8883             91.5        5.0                0.6878  1.0000      0.7111      équivalent
+profondeur_foret = 8            2.591  3.085 -1.038         0.8972             89.3        6.0                0.8602  1.0000      0.5104      équivalent
+profondeur_foret = 12 (retenu)  2.604  3.082 -0.997         0.8950             89.3       10.2                   NaN     NaN         NaN  — choix retenu
+profondeur_foret = 20           2.626  3.111 -1.011         0.9196             89.3       10.8                0.0214  0.0856      0.3742      équivalent
+
+── J+7 · foret · taille minimale d'une feuille
+   min_feuille = 2 : 18 s
+   min_feuille = 5 : 9 s
+   min_feuille = 10 : 6 s
+   min_feuille = 20 : 3 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+min_feuille = 2           2.620  3.128 -0.991         0.9078             90.4       18.2                0.1531  0.3567      0.3575      équivalent
+min_feuille = 5 (retenu)  2.604  3.082 -0.997         0.8950             89.3        8.9                   NaN     NaN         NaN  — choix retenu
+min_feuille = 10          2.573  3.064 -0.993         0.8747             91.5        6.2                0.1189  0.3567      0.4076      équivalent
+min_feuille = 20          2.580  3.068 -0.978         0.8644             93.8        3.0                0.3468  0.3567      0.6662      équivalent
+
+── J+7 · foret · part des variables tirées par nœud
+   part_variables = 0,15 : 7 s
+   part_variables = 0,333333 : 10 s
+   part_variables = 0,5 : 11 s
+   part_variables = 1 : 11 s
+                                      MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                    
+part_variables = 0,15               2.592  3.066 -0.999         0.8890             90.4        7.1                0.8164  0.8164      0.7356      équivalent
+part_variables = 0,333333 (retenu)  2.604  3.082 -0.997         0.8950             89.3       10.1                   NaN     NaN         NaN  — choix retenu
+part_variables = 0,5                2.630  3.137 -1.039         0.9174             88.7       10.9                0.0754  0.2262      0.1354      équivalent
+part_variables = 1                  2.613  3.128 -1.059         0.9267             89.8       11.2                0.1837  0.3674      0.8072      équivalent
+
+── J+7 · boosting · nombre d'étapes
+   etapes = 50 : 1 s
+   etapes = 100 : 3 s
+   etapes = 300 : 8 s
+   etapes = 600 : 14 s
+                         MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                       
+etapes = 50            2.645  3.178 -0.993         1.0269             80.2        1.4                0.0129  0.0279      0.0932        meilleur
+etapes = 100           2.641  3.191 -1.099         1.0940             75.1        3.1                0.0110  0.0279      0.0041        meilleur
+etapes = 300 (retenu)  2.734  3.275 -1.202         1.2295             64.4        7.6                   NaN     NaN         NaN  — choix retenu
+etapes = 600           2.781  3.334 -1.266         1.3201             58.2       13.8                0.0093  0.0279      0.0402       moins bon
+
+── J+7 · boosting · taux ν (shrinkage)
+   taux_boosting = 0,01 : 6 s
+   taux_boosting = 0,05 : 8 s
+   taux_boosting = 0,1 : 9 s
+   taux_boosting = 0,2 : 7 s
+                                 MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                               
+taux_boosting = 0,01           2.693  3.234 -1.068         1.0084             79.1        6.2                0.0097  0.0291      0.4137        meilleur
+taux_boosting = 0,05 (retenu)  2.734  3.275 -1.202         1.2295             64.4        8.1                   NaN     NaN         NaN  — choix retenu
+taux_boosting = 0,1            2.825  3.396 -1.274         1.3111             61.6        9.3                0.0958  0.1302      0.1810      équivalent
+taux_boosting = 0,2            2.969  3.558 -1.370         1.3384             57.1        6.5                0.0651  0.1302      0.0091      équivalent
+
+── J+7 · boosting · profondeur des arbres
+   profondeur_boosting = 1 : 4 s
+   profondeur_boosting = 2 : 5 s
+   profondeur_boosting = 3 : 9 s
+   profondeur_boosting = 5 : 15 s
+                                    MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                  
+profondeur_boosting = 1           2.709  3.258 -1.185         1.0012             85.3        3.7                0.0106  0.0212      0.6081        meilleur
+profondeur_boosting = 2           2.735  3.277 -1.125         1.1172             74.0        5.5                0.0037  0.0111      0.9793        meilleur
+profondeur_boosting = 3 (retenu)  2.734  3.275 -1.202         1.2295             64.4        8.8                   NaN     NaN         NaN  — choix retenu
+profondeur_boosting = 5           2.770  3.312 -1.134         1.2213             52.5       14.5                0.8326  0.8326      0.5995      équivalent
+
+── J+7 · boosting · part du sous-échantillon
+   sous_echantillon = 0,5 : 6 s
+   sous_echantillon = 0,8 : 5 s
+   sous_echantillon = 1 : 8 s
+                                   MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                                 
+sous_echantillon = 0,5           2.833  3.403 -1.388         1.2266             61.6        6.4                0.9125  0.9125      0.1123      équivalent
+sous_echantillon = 0,8 (retenu)  2.734  3.275 -1.202         1.2295             64.4        5.5                   NaN     NaN         NaN  — choix retenu
+sous_echantillon = 1             2.753  3.303 -1.146         1.1512             69.5        8.3                0.1750  0.3500      0.5982      équivalent
+
+── J+7 · mlp · architecture (neurones par couche)
+   couches = 8 : 1 s
+   couches = 32 : 1 s
+   couches = 32×16 : 1 s
+   couches = 64×32 : 2 s
+   couches = 32×16×8 : 2 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+couches = 8               3.133  3.720 -1.740         1.5655             67.8        0.7                0.0019  0.0076      0.9215       moins bon
+couches = 32              3.332  3.937 -1.692         0.9843             84.7        1.0                0.7676  0.7676      0.1461      équivalent
+couches = 32×16 (retenu)  3.120  3.681 -1.402         0.9601             81.9        1.1                   NaN     NaN         NaN  — choix retenu
+couches = 64×32           3.306  3.872 -2.060         1.1835             90.4        1.7                0.0550  0.1650      0.4018      équivalent
+couches = 32×16×8         2.735  3.247 -1.006         0.8915             79.7        1.6                0.1662  0.3324      0.0003      équivalent
+
+── J+7 · mlp · taux d'apprentissage
+   taux_reseau = 0,001 : 2 s
+   taux_reseau = 0,003 : 2 s
+   taux_reseau = 0,01 : 1 s
+   taux_reseau = 0,03 : 1 s
+                               MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                             
+taux_reseau = 0,001          3.174  3.717 -1.143         1.1156             65.5        2.3                0.0104  0.0312      0.5015       moins bon
+taux_reseau = 0,003          3.193  3.745 -1.309         1.1134             76.3        1.9                0.0394  0.0788      0.3676      équivalent
+taux_reseau = 0,01 (retenu)  3.120  3.681 -1.402         0.9601             81.9        1.3                   NaN     NaN         NaN  — choix retenu
+taux_reseau = 0,03           3.144  3.680 -1.445         0.9750             84.7        0.8                0.6461  0.6461      0.6282      équivalent
+
+── J+7 · mlp · pénalité L2 λ
+   lambda_ = 0 : 1 s
+   lambda_ = 0,0001 : 1 s
+   lambda_ = 0,001 : 1 s
+   lambda_ = 0,01 : 1 s
+   lambda_ = 0,1 : 3 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+lambda_ = 0               3.152  3.717 -1.391         0.9606             83.6        0.9                0.9539  1.0000      0.1819      équivalent
+lambda_ = 0,0001          3.150  3.713 -1.412         0.9583             83.6        1.3                0.8195  1.0000      0.1287      équivalent
+lambda_ = 0,001 (retenu)  3.120  3.681 -1.402         0.9601             81.9        1.4                   NaN     NaN         NaN  — choix retenu
+lambda_ = 0,01            3.126  3.680 -1.436         1.0411             80.2        1.2                0.0059  0.0236      0.9044       moins bon
+lambda_ = 0,1             2.796  3.312 -1.208         0.9076             82.5        2.6                0.5427  1.0000      0.0391      équivalent
+
+── J+7 · mlp · époques maximales
+   epoques = 300 : 1 s
+   epoques = 800 : 1 s
+   epoques = 1500 : 1 s
+   epoques = 3000 : 1 s
+                          MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                        
+epoques = 300            3.12  3.681 -1.402         0.9601             81.9        1.1                   NaN     NaN         NaN       identique
+epoques = 800            3.12  3.681 -1.402         0.9601             81.9        1.3                   NaN     NaN         NaN       identique
+epoques = 1500 (retenu)  3.12  3.681 -1.402         0.9601             81.9        1.3                   NaN     NaN         NaN  — choix retenu
+epoques = 3000           3.12  3.681 -1.402         0.9601             81.9        1.4                   NaN     NaN         NaN       identique
+
+── J+7 · mlp · patience de l'arrêt anticipé
+   patience = 50 : 1 s
+   patience = 150 : 1 s
+   patience = 300 : 2 s
+                          MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                        
+patience = 50            3.12  3.681 -1.402         0.9601             81.9        0.9                   NaN     NaN         NaN       identique
+patience = 150 (retenu)  3.12  3.681 -1.402         0.9601             81.9        1.4                   NaN     NaN         NaN  — choix retenu
+patience = 300           3.12  3.681 -1.402         0.9601             81.9        2.3                   NaN     NaN         NaN       identique
+
+── J+7 · mlp · nombre d'initialisations moyennées
+   graines = 1 : 0 s
+   graines = 3 : 1 s
+   graines = 5 : 1 s
+                        MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                      
+graines = 1           3.038  3.619 -1.355         0.9535             91.5        0.4                0.9217  0.9217      0.3893      équivalent
+graines = 3 (retenu)  3.120  3.681 -1.402         0.9601             81.9        0.8                   NaN     NaN         NaN  — choix retenu
+graines = 5           3.097  3.650 -1.443         0.9132             79.7        1.1                0.0655  0.1310      0.5936      équivalent
+
+── J+7 · lstm · taille de l'état caché H
+   cache_lstm = 4 : 4 s
+   cache_lstm = 8 : 6 s
+   cache_lstm = 16 : 8 s
+   cache_lstm = 32 : 9 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+cache_lstm = 4            2.912  3.456 -1.159         1.2320             61.0        4.1                0.0497  0.0994      0.0019      équivalent
+cache_lstm = 8            3.028  3.555 -1.390         1.4562             61.0        5.9                0.0010  0.0030      0.0036       moins bon
+cache_lstm = 16 (retenu)  3.389  3.983 -1.914         1.0421             67.8        7.9                   NaN     NaN         NaN  — choix retenu
+cache_lstm = 32           3.300  3.833 -2.034         1.0238             78.0        8.7                0.7979  0.7979      0.3779      équivalent
+
+── J+7 · lstm · taux d'apprentissage
+   taux_reseau = 0,003 : 10 s
+   taux_reseau = 0,01 : 7 s
+   taux_reseau = 0,03 : 6 s
+                               MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                             
+taux_reseau = 0,003          3.264  3.828 -1.868         1.0802             65.0        9.7                0.1797  0.3594      0.0375      équivalent
+taux_reseau = 0,01 (retenu)  3.389  3.983 -1.914         1.0421             67.8        7.3                   NaN     NaN         NaN  — choix retenu
+taux_reseau = 0,03           3.464  4.056 -1.937         1.0768             69.5        5.6                0.6764  0.6764      0.1820      équivalent
+
+── J+7 · lstm · pénalité L2 λ
+   lambda_ = 0 : 6 s
+   lambda_ = 0,001 : 6 s
+   lambda_ = 0,01 : 10 s
+                            MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                          
+lambda_ = 0               3.359  3.947 -1.972         1.0122             67.8        6.2                0.2464  0.2464      0.3549      équivalent
+lambda_ = 0,001 (retenu)  3.389  3.983 -1.914         1.0421             67.8        6.0                   NaN     NaN         NaN  — choix retenu
+lambda_ = 0,01            3.364  3.953 -1.853         1.1287             66.1       10.4                0.0013  0.0026      0.5451       moins bon
+
+── J+7 · variables · jours d'occupation passée en entrée
+   retards = 3 : 4 s
+   retards = 5 : 6 s
+   retards = 7 : 5 s
+   retards = 10 : 4 s
+   retards = 14 : 6 s
+   retards = 21 : 4 s
+                        MAE   RMSE  biais  pinball τ=0.8  couverture 90 %  temps (s)  DM p (pinball τ=0.8)  p Holm  DM p (MAE) vs choix retenu
+variante                                                                                                                                      
+retards = 3           2.694  3.164 -0.992         0.8884             89.8        3.8                0.5723     1.0      0.5163      équivalent
+retards = 5           2.694  3.164 -0.991         0.8872             90.4        6.0                0.6401     1.0      0.4935      équivalent
+retards = 7 (retenu)  2.698  3.166 -0.978         0.8824             89.8        4.6                   NaN     NaN         NaN  — choix retenu
+retards = 10          2.711  3.174 -0.990         0.8780             90.4        4.2                0.7656     1.0      0.3613      équivalent
+retards = 14          2.717  3.186 -1.003         0.8837             89.8        5.8                0.9591     1.0      0.2882      équivalent
+retards = 21          2.764  3.248 -1.041         0.8843             89.3        3.8                0.9429     1.0      0.0503      équivalent
+
+Rapport : /home/ubuntu/nera/nera-modele/module_lit/resultats/parametres_MEDF_pic.md
+reprise : 0 résultat(s) relu(s), 286 calculé(s) — resultats/reprise/parametres_MEDF_pic

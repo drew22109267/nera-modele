@@ -1,0 +1,4 @@
+﻿periode;jours;admissions;sorties;journees_hospitalisation;TOM_%;TOM_bas_%;TOM_haut_%;occupation_max;jours_en_sureffectif;DMS_nuits;rotation_lits;intervalle_rotation_jours;deces;mortalite_%
+2025;170;394;308.31;1633.55;56.5;53.4;61.4;19.22;6;3.82;18.14;4.08;3.0;0.97
+2026;243;666;603.69;2945.44;71.3;66.7;74.1;19.4;7;3.97;35.51;1.96;6.0;0.99
+Total;413;1060;912.0;4578.99;65.2;61.2;68.9;19.4;13;3.92;53.65;2.68;9.0;0.99

@@ -1,0 +1,4 @@
+groupe,passages,renseigne_age,renseigne_pouls,renseigne_ta_sys,renseigne_temperature,renseigne_fr,renseigne_spo2,renseigne_glycemie,renseigne_poids,grave,non_grave,intermediaire,sans_decision,groupe_deduit,plainte_reconnue
+adulte,1622,0.943,0.706,0.781,0.425,0.006,0.028,0.335,0.076,326,534,262,500,93,0.727
+enfant,512,0.951,0.135,0.098,0.695,0.021,0.068,0.033,0.461,129,182,47,154,19,0.836
+âge inconnu,127,0.0,0.142,0.173,0.299,0.008,0.024,0.094,0.047,15,29,14,69,0,0.457

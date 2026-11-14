@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+decroissance = aucune;1.397;1.781;-0.376;0.5251;84.7;7.0;0.0124;0.0248;0.0887;meilleur
+decroissance = 100;1.399;1.783;-0.377;0.526;85.2;5.6;0.316;0.316;0.6751;équivalent
+decroissance = 500 (retenu);1.399;1.782;-0.38;0.5262;85.2;6.9;;;;— choix retenu
+decroissance = 2000;1.398;1.783;-0.381;0.5249;85.2;5.7;0.003;0.009;0.927;meilleur

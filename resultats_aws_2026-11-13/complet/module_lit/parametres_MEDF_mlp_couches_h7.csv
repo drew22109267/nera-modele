@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+couches = 8;3.034;3.698;-1.536;1.5033;66.7;0.9;0.0073;0.0292;0.6412;moins bon
+couches = 32;3.647;4.292;-1.999;1.2134;80.8;0.7;0.1078;0.2826;0.0006;équivalent
+couches = 32×16 (retenu);3.087;3.692;-1.262;1.0586;79.1;1.1;;;;— choix retenu
+couches = 64×32;3.127;3.69;-1.606;1.1762;89.3;1.0;0.0942;0.2826;0.751;équivalent
+couches = 32×16×8;2.789;3.336;-0.88;1.0051;78.5;1.3;0.2704;0.2826;0.0001;équivalent

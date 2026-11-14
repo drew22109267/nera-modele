@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Croissante (tout le passé) (retenu);1.336;1.823;0.039;0.4993;89.1;11.1;;;;— choix retenu
+Glissante : 365 derniers jours;1.439;1.872;-0.022;0.5536;78.1;6.7;0.0092;0.0092;0.0047;moins bon
+Glissante : 180 derniers jours;1.886;2.362;0.325;0.7014;73.2;5.0;0.0;0.0;0.0;moins bon
+Glissante : 90 derniers jours;2.306;2.848;0.273;0.883;69.9;4.5;0.0;0.0;0.0;moins bon

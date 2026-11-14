@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+graines = 1;1.416;1.895;0.087;0.5335;82.5;0.4;0.0012;0.0024;0.0128;moins bon
+graines = 3 (retenu);1.314;1.761;-0.045;0.4678;90.7;0.9;;;;— choix retenu
+graines = 5;1.323;1.768;-0.03;0.4719;88.5;1.5;0.6287;0.6287;0.5695;équivalent

@@ -1,0 +1,4 @@
+﻿variante;début série;jours coupés en fin;présents moyens;TOM %;écart Little %;MAE propre;pinball τ=0.8 propre;gain / persistance %;MAE retenue;temps (s);pinball τ=0.8 retenue;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Aucune coupe;15/07/2025;0;9.73;57.2;-3.6;2.046;0.725;-14.2;2.046;4.8;0.725;;;;identique
+7 derniers jours retirés;15/07/2025;7;9.71;57.1;-3.7;2.046;0.725;-14.2;2.046;5.8;0.725;;;;identique
+p95 du délai d'inscription (retenu);15/07/2025;0;9.73;57.2;-3.6;2.046;0.725;-14.2;2.046;6.0;0.725;;;;— choix retenu

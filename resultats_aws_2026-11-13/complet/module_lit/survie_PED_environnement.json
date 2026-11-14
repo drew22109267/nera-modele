@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-13T15:14:33",
+  "commande": "modele_survie.py donnees/export_outil_PED.csv --service PED --lits 18 --causes",
+  "python": "3.12.3",
+  "torch": "2.15.0+cpu",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "systeme": "Linux-7.0.0-1014-aws-aarch64-with-glibc2.39",
+  "commit_git": null,
+  "fichiers_modifies_depuis_le_commit": null,
+  "parametres": {
+    "export": "donnees/export_outil_PED.csv",
+    "service": "PED",
+    "lits": 18,
+    "C": 0.01,
+    "jours_calibration": 60,
+    "debut_validation": null,
+    "iterations": 3000,
+    "causes": true,
+    "extraction": null
+  }
+}

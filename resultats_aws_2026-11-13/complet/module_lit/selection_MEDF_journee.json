@@ -1,0 +1,12 @@
+{
+ "service": "MEDF",
+ "comptage": "journee",
+ "regle": "significatif",
+ "modele": "lssvr_rbf",
+ "nom_modele": "LS-SVR (moindres carrés), noyau RBF, quantiles LOO",
+ "pinball_moyen": 0.8402,
+ "significatif_vs_retenu": "meilleur, équivalent",
+ "imputation": "estimee",
+ "detail_imputation": "MAE moyenne 0.779 ; contre « estimee » pour ce modèle : — référence",
+ "meilleur_toutes_familles": "SARIMA(2,0,0)(1,0,0)7 (ordre choisi sur l'apprentissage)"
+}

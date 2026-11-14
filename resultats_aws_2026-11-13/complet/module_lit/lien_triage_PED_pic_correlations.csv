@@ -1,0 +1,89 @@
+﻿signal des urgences (jour d);service (jour d+k);k (jours);jours;spearman;IC95_bas;IC95_haut;p_valeur
+passages enfants aux urgences;admissions;0;111;0.001;-0.204;0.155;0.9987
+passages enfants aux urgences;admissions;1;111;0.145;-0.079;0.287;0.2402
+passages enfants aux urgences;admissions;2;111;0.241;0.025;0.397;0.0444
+passages enfants aux urgences;admissions;3;111;-0.0;-0.225;0.206;1.0
+passages enfants aux urgences;presents;0;111;-0.093;-0.29;0.051;0.4608
+passages enfants aux urgences;presents;1;111;0.04;-0.188;0.198;0.7546
+passages enfants aux urgences;presents;2;111;0.171;-0.077;0.327;0.154
+passages enfants aux urgences;presents;3;111;0.131;-0.112;0.288;0.2937
+enfants graves orientés (décision observée);admissions;0;111;0.006;-0.213;0.181;0.9465
+enfants graves orientés (décision observée);admissions;1;111;0.174;-0.061;0.335;0.1436
+enfants graves orientés (décision observée);admissions;2;111;0.084;-0.121;0.234;0.5
+enfants graves orientés (décision observée);admissions;3;111;0.053;-0.131;0.211;0.6658
+enfants graves orientés (décision observée);presents;0;111;-0.05;-0.236;0.073;0.6292
+enfants graves orientés (décision observée);presents;1;111;0.093;-0.156;0.248;0.3512
+enfants graves orientés (décision observée);presents;2;111;0.183;-0.082;0.338;0.0679
+enfants graves orientés (décision observée);presents;3;111;0.218;0.008;0.365;0.0352
+charge grave attendue Σ P(grave) (modèle de triage);admissions;0;99;-0.072;-0.24;0.077;0.5927
+charge grave attendue Σ P(grave) (modèle de triage);admissions;1;99;0.117;-0.081;0.294;0.3681
+charge grave attendue Σ P(grave) (modèle de triage);admissions;2;99;-0.039;-0.258;0.231;0.7755
+charge grave attendue Σ P(grave) (modèle de triage);admissions;3;99;0.033;-0.172;0.262;0.8185
+charge grave attendue Σ P(grave) (modèle de triage);presents;0;99;-0.155;-0.29;-0.013;0.1893
+charge grave attendue Σ P(grave) (modèle de triage);presents;1;99;-0.033;-0.189;0.116;0.7715
+charge grave attendue Σ P(grave) (modèle de triage);presents;2;99;-0.019;-0.244;0.209;0.8864
+charge grave attendue Σ P(grave) (modèle de triage);presents;3;99;-0.015;-0.209;0.23;0.9138
+charge Σ P(grave), modèle transféré (cible_fourier);admissions;0;99;-0.079;-0.249;0.043;0.5718
+charge Σ P(grave), modèle transféré (cible_fourier);admissions;1;99;0.121;-0.072;0.293;0.3616
+charge Σ P(grave), modèle transféré (cible_fourier);admissions;2;99;0.023;-0.194;0.237;0.8943
+charge Σ P(grave), modèle transféré (cible_fourier);admissions;3;99;0.055;-0.164;0.263;0.7076
+charge Σ P(grave), modèle transféré (cible_fourier);presents;0;99;-0.172;-0.357;-0.017;0.1214
+charge Σ P(grave), modèle transféré (cible_fourier);presents;1;99;-0.034;-0.224;0.116;0.795
+charge Σ P(grave), modèle transféré (cible_fourier);presents;2;99;-0.009;-0.233;0.174;0.9413
+charge Σ P(grave), modèle transféré (cible_fourier);presents;3;99;0.027;-0.202;0.25;0.8342
+charge Σ P(grave), modèle transféré (source_seule);admissions;0;99;-0.119;-0.303;0.016;0.376
+charge Σ P(grave), modèle transféré (source_seule);admissions;1;99;0.119;-0.104;0.312;0.3721
+charge Σ P(grave), modèle transféré (source_seule);admissions;2;99;0.135;-0.067;0.335;0.3068
+charge Σ P(grave), modèle transféré (source_seule);admissions;3;99;0.081;-0.108;0.266;0.5587
+charge Σ P(grave), modèle transféré (source_seule);presents;0;99;-0.1;-0.29;0.047;0.3825
+charge Σ P(grave), modèle transféré (source_seule);presents;1;99;-0.049;-0.248;0.111;0.6632
+charge Σ P(grave), modèle transféré (source_seule);presents;2;99;0.052;-0.183;0.251;0.641
+charge Σ P(grave), modèle transféré (source_seule);presents;3;99;0.117;-0.111;0.323;0.3042
+charge Σ P(grave), modèle transféré (source_recalibree);admissions;0;99;-0.129;-0.291;-0.013;0.3473
+charge Σ P(grave), modèle transféré (source_recalibree);admissions;1;99;0.115;-0.12;0.327;0.4138
+charge Σ P(grave), modèle transféré (source_recalibree);admissions;2;99;0.128;-0.068;0.337;0.3564
+charge Σ P(grave), modèle transféré (source_recalibree);admissions;3;99;0.061;-0.112;0.235;0.6671
+charge Σ P(grave), modèle transféré (source_recalibree);presents;0;99;-0.137;-0.317;0.007;0.2311
+charge Σ P(grave), modèle transféré (source_recalibree);presents;1;99;-0.048;-0.237;0.099;0.6815
+charge Σ P(grave), modèle transféré (source_recalibree);presents;2;99;0.051;-0.152;0.228;0.6697
+charge Σ P(grave), modèle transféré (source_recalibree);presents;3;99;0.104;-0.11;0.315;0.3825
+charge Σ P(grave), modèle transféré (reunies);admissions;0;99;-0.045;-0.254;0.08;0.7428
+charge Σ P(grave), modèle transféré (reunies);admissions;1;99;0.16;-0.095;0.361;0.201
+charge Σ P(grave), modèle transféré (reunies);admissions;2;99;0.031;-0.184;0.242;0.812
+charge Σ P(grave), modèle transféré (reunies);admissions;3;99;0.014;-0.178;0.197;0.9178
+charge Σ P(grave), modèle transféré (reunies);presents;0;99;-0.072;-0.307;0.085;0.5431
+charge Σ P(grave), modèle transféré (reunies);presents;1;99;0.027;-0.254;0.229;0.8225
+charge Σ P(grave), modèle transféré (reunies);presents;2;99;0.06;-0.195;0.264;0.6162
+charge Σ P(grave), modèle transféré (reunies);presents;3;99;0.066;-0.184;0.269;0.5757
+charge Σ P(grave), modèle transféré (augmentation);admissions;0;99;-0.071;-0.256;0.05;0.611
+charge Σ P(grave), modèle transféré (augmentation);admissions;1;99;0.133;-0.12;0.338;0.3029
+charge Σ P(grave), modèle transféré (augmentation);admissions;2;99;0.047;-0.163;0.268;0.7272
+charge Σ P(grave), modèle transféré (augmentation);admissions;3;99;-0.001;-0.196;0.207;0.9961
+charge Σ P(grave), modèle transféré (augmentation);presents;0;99;-0.106;-0.315;0.048;0.3864
+charge Σ P(grave), modèle transféré (augmentation);presents;1;99;0.007;-0.23;0.191;0.9634
+charge Σ P(grave), modèle transféré (augmentation);presents;2;99;0.049;-0.192;0.251;0.7115
+charge Σ P(grave), modèle transféré (augmentation);presents;3;99;0.03;-0.2;0.252;0.8277
+charge Σ P(grave), modèle transféré (regularisation_biaisee);admissions;0;99;-0.1;-0.284;0.035;0.4687
+charge Σ P(grave), modèle transféré (regularisation_biaisee);admissions;1;99;0.141;-0.074;0.334;0.2911
+charge Σ P(grave), modèle transféré (regularisation_biaisee);admissions;2;99;0.063;-0.142;0.299;0.6501
+charge Σ P(grave), modèle transféré (regularisation_biaisee);admissions;3;99;0.063;-0.137;0.255;0.6488
+charge Σ P(grave), modèle transféré (regularisation_biaisee);presents;0;99;-0.133;-0.337;0.014;0.248
+charge Σ P(grave), modèle transféré (regularisation_biaisee);presents;1;99;-0.044;-0.245;0.118;0.7089
+charge Σ P(grave), modèle transféré (regularisation_biaisee);presents;2;99;0.017;-0.221;0.227;0.8812
+charge Σ P(grave), modèle transféré (regularisation_biaisee);presents;3;99;0.068;-0.146;0.287;0.5757
+charge Σ P(grave), modèle transféré (a_svm);admissions;0;99;-0.093;-0.278;0.038;0.5039
+charge Σ P(grave), modèle transféré (a_svm);admissions;1;99;0.108;-0.117;0.294;0.4452
+charge Σ P(grave), modèle transféré (a_svm);admissions;2;99;0.08;-0.124;0.315;0.5862
+charge Σ P(grave), modèle transféré (a_svm);admissions;3;99;0.057;-0.138;0.257;0.6984
+charge Σ P(grave), modèle transféré (a_svm);presents;0;99;-0.116;-0.297;0.025;0.3016
+charge Σ P(grave), modèle transféré (a_svm);presents;1;99;-0.032;-0.221;0.117;0.7781
+charge Σ P(grave), modèle transféré (a_svm);presents;2;99;0.039;-0.186;0.241;0.7363
+charge Σ P(grave), modèle transféré (a_svm);presents;3;99;0.086;-0.132;0.317;0.453
+charge Σ P(grave), modèle transféré (score_source);admissions;0;99;-0.096;-0.266;0.033;0.4869
+charge Σ P(grave), modèle transféré (score_source);admissions;1;99;0.134;-0.078;0.334;0.3172
+charge Σ P(grave), modèle transféré (score_source);admissions;2;99;0.056;-0.144;0.298;0.705
+charge Σ P(grave), modèle transféré (score_source);admissions;3;99;0.043;-0.15;0.248;0.7559
+charge Σ P(grave), modèle transféré (score_source);presents;0;99;-0.143;-0.33;0.013;0.252
+charge Σ P(grave), modèle transféré (score_source);presents;1;99;-0.036;-0.223;0.127;0.7755
+charge Σ P(grave), modèle transféré (score_source);presents;2;99;0.022;-0.217;0.244;0.8642
+charge Σ P(grave), modèle transféré (score_source);presents;3;99;0.062;-0.149;0.304;0.6175

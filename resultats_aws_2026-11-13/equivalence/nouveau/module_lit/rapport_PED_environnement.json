@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-13T13:00:55",
+  "commande": "/home/ubuntu/nera/outil-saisi/traitement/rapport_occupation.py donnees/export_outil_PED.csv --service PED --lits 18 --inconnues estimee --fenetre-censure p95 --rodage-debut --comptage minuit --scenarios-lits 15 16 17 18 19 20",
+  "python": "3.12.3",
+  "torch": "2.15.0+cpu",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "systeme": "Linux-7.0.0-1014-aws-aarch64-with-glibc2.39",
+  "commit_git": null,
+  "fichiers_modifies_depuis_le_commit": null,
+  "parametres": {
+    "export": "donnees/export_outil_PED.csv",
+    "service": "PED",
+    "lits": 18,
+    "lits_fichier": null,
+    "scenarios_lits": [
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "reports": "garder",
+    "fenetre_censure": "p95",
+    "inconnues": "estimee",
+    "rodage_debut": true,
+    "comptage": "minuit",
+    "heure_entree": 12.0,
+    "heure_sortie": 13.0,
+    "duree_meme_jour": 8.0,
+    "seuil_duree": 0.9
+  }
+}

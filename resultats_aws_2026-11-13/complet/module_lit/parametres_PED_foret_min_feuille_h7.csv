@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+min_feuille = 2;2.796;3.409;-0.142;0.986;92.1;19.3;0.6805;1.0;0.2894;équivalent
+min_feuille = 5 (retenu);2.756;3.353;-0.183;0.9926;91.5;10.7;;;;— choix retenu
+min_feuille = 10;2.77;3.399;-0.164;0.9728;92.1;6.2;0.158;0.474;0.7109;équivalent
+min_feuille = 20;2.782;3.4;-0.09;0.9876;93.8;3.7;0.8508;1.0;0.5135;équivalent

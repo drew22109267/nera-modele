@@ -1,0 +1,29 @@
+﻿famille;modèle;pinball_moyen;MAE_moyenne;horizons;significatif
+svm;SVR quantile RBF (niveau 3);0.70315;2.0484999999999998;2;équivalent
+svm;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;0.7064;2.052;2;équivalent
+svm;SVR quantile composite (niveau 4, retenu);0.711;2.046;2;— choix retenu
+autre (D1);SVR quantile composite (niveau 4);0.711;2.046;2;— choix retenu
+svm;SVR quantile, noyau laplacien;0.7199500000000001;2.083;2;équivalent
+svm;SVR quantile, noyau polynomial (degré 2);0.73465;2.0389999999999997;2;équivalent
+autre (D1);C · perceptron multicouche quantile;0.7484;2.0895;2;équivalent
+autre (D1);D · LSTM quantile;0.7752;2.161;2;équivalent
+autre (D1);B · gradient boosting quantile;0.7757499999999999;2.122;2;équivalent
+autre (D1);SARIMA(2,1,1)(1,0,0)7 (ordre choisi sur l'apprentissage);0.776;2.2205000000000004;2;équivalent
+autre (D1);E · XGBoost quantile (second ordre);0.77675;2.1395;2;moins bon, équivalent
+autre (D1);AR(p) par AIC;0.7847999999999999;2.1799999999999997;2;équivalent
+autre (D1);A · forêt aléatoire quantile;0.7899499999999999;2.1835;2;moins bon, équivalent
+autre (D1);Moyenne historique;0.96115;2.7560000000000002;2;moins bon, équivalent
+autre (D1);Holt-Winters additif amorti;0.9839499999999999;2.7225;2;moins bon
+autre (D1);Lissage saisonnier sans tendance;0.9839499999999999;2.7225;2;moins bon
+autre (D1);Holt-Winters multiplicatif amorti;0.9904499999999999;2.7904999999999998;2;moins bon
+autre (D1);Lissage exponentiel simple;0.9928999999999999;2.763;2;moins bon
+autre (D1);Méthode Thêta;0.9928999999999999;2.762;2;moins bon
+autre (D1);Holt amorti;0.9928999999999999;2.763;2;moins bon
+autre (D1);Holt linéaire;1.00865;2.8115;2;moins bon
+svm;SVR RBF (niveau 2);1.01405;2.0325;2;moins bon, équivalent
+autre (D1);Régression ridge (λ = 1);1.0442;2.0605;2;moins bon, équivalent
+svm;SVR linéaire (niveau 1);1.06335;2.0555;2;moins bon, équivalent
+autre (D1);Holt-Winters additif, grille fixée avant la validation;1.13295;2.3705;2;moins bon, équivalent
+autre (D1);Persistance;1.3343;2.763;2;moins bon
+autre (D1);Saisonnière hebdomadaire;1.42355;3.0585;2;moins bon, équivalent
+autre (D1);Moyenne mobile 7 j;1.5128;3.14;2;moins bon

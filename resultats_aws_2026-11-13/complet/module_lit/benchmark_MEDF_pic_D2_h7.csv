@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Linéaire;3.099;3.693;-1.446;1.9835;1.5;0.003;0.006;0.0;moins bon
+RBF (γ = 0.05);2.534;3.011;-0.998;1.5663;1.1;0.5305;0.5305;0.9714;équivalent
+Composite occupation / flux et saison (β appris) (retenu);2.536;3.03;-1.079;1.5917;1.7;;;;— choix retenu

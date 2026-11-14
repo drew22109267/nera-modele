@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+part_variables = 0,15;2.871;3.424;-0.124;0.9922;92.7;10.7;0.3481;1.0;0.4739;équivalent
+part_variables = 0,333333 (retenu);2.847;3.387;-0.195;1.0049;90.4;11.6;;;;— choix retenu
+part_variables = 0,5;2.865;3.393;-0.23;1.0034;88.7;11.8;0.875;1.0;0.3283;équivalent
+part_variables = 1;2.853;3.374;-0.253;1.0044;88.1;12.6;0.9775;1.0;0.8843;équivalent

@@ -1,0 +1,29 @@
+﻿famille;modèle;pinball_moyen;MAE_moyenne;horizons;significatif
+autre (D1);AR(p) par AIC;0.7078;2.2055;2;équivalent
+autre (D1);SARIMA(1,0,0)(1,0,0)7 (ordre choisi sur l'apprentissage);0.7199;2.2095000000000002;2;meilleur, équivalent
+svm;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;0.7626;2.235;2;meilleur, équivalent
+autre (D1);A · forêt aléatoire quantile;0.7908;2.2954999999999997;2;équivalent
+svm;SVR quantile, noyau polynomial (degré 2);0.79945;2.2575000000000003;2;équivalent
+svm;SVR quantile RBF (niveau 3);0.81195;2.3295000000000003;2;équivalent
+svm;SVR quantile composite (niveau 4, retenu);0.8171999999999999;2.33;2;— choix retenu
+autre (D1);SVR quantile composite (niveau 4);0.8171999999999999;2.33;2;— choix retenu
+svm;SVR quantile, noyau laplacien;0.8225;2.355;2;équivalent
+autre (D1);Holt amorti;0.8389;2.3515;2;équivalent
+autre (D1);Lissage exponentiel simple;0.8389;2.3515;2;équivalent
+autre (D1);Méthode Thêta;0.8389;2.3535;2;équivalent
+autre (D1);Holt linéaire;0.83895;2.3515;2;équivalent
+autre (D1);Holt-Winters additif amorti;0.84175;2.3585;2;équivalent
+autre (D1);Lissage saisonnier sans tendance;0.8419;2.338;2;équivalent
+autre (D1);Holt-Winters multiplicatif amorti;0.8466499999999999;2.364;2;équivalent
+autre (D1);Moyenne historique;0.8601;2.8434999999999997;2;moins bon, équivalent
+autre (D1);C · perceptron multicouche quantile;0.88935;2.5245;2;équivalent
+autre (D1);D · LSTM quantile;0.955;2.6390000000000002;2;équivalent
+autre (D1);E · XGBoost quantile (second ordre);0.9621;2.37;2;équivalent
+autre (D1);B · gradient boosting quantile;0.97555;2.3605;2;équivalent
+autre (D1);Holt-Winters additif, grille fixée avant la validation;1.066;2.14;2;moins bon, équivalent
+autre (D1);Persistance;1.185;2.364;2;moins bon, équivalent
+autre (D1);Moyenne mobile 7 j;1.2221;2.4535;2;moins bon, équivalent
+autre (D1);Saisonnière hebdomadaire;1.26865;2.55;2;moins bon, équivalent
+svm;SVR RBF (niveau 2);1.32495;2.2405;2;moins bon
+svm;SVR linéaire (niveau 1);1.39115;2.35;2;moins bon
+autre (D1);Régression ridge (λ = 1);1.4652;2.3834999999999997;2;moins bon

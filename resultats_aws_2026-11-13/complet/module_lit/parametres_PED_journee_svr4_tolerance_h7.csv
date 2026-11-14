@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+tolerance = 1e-05;3.231;3.952;-0.326;1.0573;84.2;3.3;0.0296;0.0592;0.1504;équivalent
+tolerance = 1e-07 (retenu);3.227;3.949;-0.331;1.0548;84.2;6.3;;;;— choix retenu
+tolerance = 1e-09;3.227;3.948;-0.334;1.0547;84.7;10.4;0.9496;0.9496;0.649;équivalent

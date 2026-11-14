@@ -1,0 +1,3 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+preconditionne = True (retenu);2.698;3.166;-0.978;0.8824;89.8;5.9;;;;— choix retenu
+preconditionne = False;2.698;3.165;-0.977;0.8859;90.4;7.0;0.2365;0.2365;0.9032;équivalent

@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+iterations = 300;3.062;3.673;-1.108;1.0016;89.8;1.6;0.1122;0.2182;0.0505;équivalent
+iterations = 1000;3.066;3.677;-1.108;1.0406;89.8;2.5;0.1091;0.2182;0.1502;équivalent
+iterations = 3000 (retenu);3.066;3.677;-1.108;1.0456;89.8;4.2;;;;— choix retenu
+iterations = 6000;3.066;3.677;-1.108;1.0456;89.8;4.5;;;0.146;identique

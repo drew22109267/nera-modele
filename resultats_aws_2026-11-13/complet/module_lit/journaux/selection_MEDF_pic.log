@@ -1,0 +1,40 @@
+# Sélection — MEDF_pic
+
+Règle : significatif. Critère : perte pinball au quantile décisionnel, moyenne sur les horizons.
+
+**SVM retenu : LS-SVR (moindres carrés), noyau RBF, quantiles LOO** (pinball moyen 0.6677 ; contre le choix d'origine : meilleur, équivalent).
+
+**Durées inconnues : estimee** (MAE moyenne 0.779 ; contre « estimee » pour ce modèle : — référence).
+
+Meilleur modèle toutes familles confondues : SARIMA(2,0,0)(1,0,0)7 (ordre choisi sur l'apprentissage).
+
+| variante | famille | modèle | pinball_moyen | MAE_moyenne | horizons | significatif |
+|---|---|---|---|---|---|---|
+| 18 | autre (D1) | SARIMA(2,0,0)(1,0,0)7 (ordre choisi sur l'apprentissage) | 0.627 | 1.92 | 2 | équivalent |
+| 1 | autre (D1) | AR(p) par AIC | 0.6347 | 1.919 | 2 | équivalent |
+| 21 | svm | LS-SVR (moindres carrés), noyau RBF, quantiles LOO | 0.6677 | 1.925 | 2 | meilleur, équivalent |
+| 27 | svm | SVR quantile, noyau polynomial (degré 2) | 0.6802 | 1.9695 | 2 | meilleur, équivalent |
+| 0 | autre (D1) | A · forêt aléatoire quantile | 0.6984 | 2.0175 | 2 | équivalent |
+| 24 | svm | SVR quantile RBF (niveau 3) | 0.7006 | 2.071 | 2 | équivalent |
+| 25 | svm | SVR quantile composite (niveau 4, retenu) | 0.7043 | 2.0485 | 2 | — choix retenu |
+| 19 | autre (D1) | SVR quantile composite (niveau 4) | 0.7043 | 2.0485 | 2 | — choix retenu |
+| 26 | svm | SVR quantile, noyau laplacien | 0.7198 | 2.1695 | 2 | moins bon, équivalent |
+| 6 | autre (D1) | Holt amorti | 0.7358 | 1.988 | 2 | équivalent |
+| 7 | autre (D1) | Holt linéaire | 0.7358 | 1.988 | 2 | équivalent |
+| 8 | autre (D1) | Holt-Winters additif amorti | 0.7358 | 1.988 | 2 | équivalent |
+| 10 | autre (D1) | Holt-Winters multiplicatif amorti | 0.7358 | 1.988 | 2 | équivalent |
+| 11 | autre (D1) | Lissage exponentiel simple | 0.7358 | 1.988 | 2 | équivalent |
+| 12 | autre (D1) | Lissage saisonnier sans tendance | 0.7358 | 1.988 | 2 | équivalent |
+| 15 | autre (D1) | Méthode Thêta | 0.7358 | 1.986 | 2 | équivalent |
+| 3 | autre (D1) | C · perceptron multicouche quantile | 0.7534 | 2.3975 | 2 | équivalent |
+| 4 | autre (D1) | D · LSTM quantile | 0.7773 | 2.401 | 2 | équivalent |
+| 13 | autre (D1) | Moyenne historique | 0.8244 | 2.83 | 2 | moins bon, équivalent |
+| 5 | autre (D1) | E · XGBoost quantile (second ordre) | 0.8826 | 2.114 | 2 | équivalent |
+| 2 | autre (D1) | B · gradient boosting quantile | 0.8918 | 2.037 | 2 | équivalent |
+| 9 | autre (D1) | Holt-Winters additif, grille fixée avant la validation | 0.9201 | 1.8535 | 2 | équivalent |
+| 16 | autre (D1) | Persistance | 0.9951 | 1.988 | 2 | équivalent |
+| 14 | autre (D1) | Moyenne mobile 7 j | 1.1347 | 2.2855 | 2 | moins bon, équivalent |
+| 20 | autre (D1) | Saisonnière hebdomadaire | 1.1755 | 2.3705 | 2 | moins bon, équivalent |
+| 22 | svm | SVR RBF (niveau 2) | 1.1795 | 1.9375 | 2 | moins bon |
+| 23 | svm | SVR linéaire (niveau 1) | 1.2926 | 2.0965 | 2 | moins bon |
+| 17 | autre (D1) | Régression ridge (λ = 1) | 1.3506 | 2.1415 | 2 | moins bon |

@@ -1,0 +1,67 @@
+﻿horizon;famille;paramètre;valeur retenue;meilleure valeur (MAE);amplitude MAE %;verdict
+1;svr4;C (poids des erreurs);3;10;29.2;défendable
+1;svr4;ε (tube, niveaux quantiles);0;0,5;1.5;défendable
+1;svr4;γ₁ (portée, bloc occupation);0,1;0,05;10.6;défendable
+1;svr4;γ₂ (portée, bloc flux et saison);0,05;0,02;4.8;défendable
+1;svr4;τ (quantile décisionnel);0,8;0,5;0.1;défendable
+1;svr4;η₀ (taux d'apprentissage d'Adam);0,05;0,005;0.2;à revoir : 0,005, 0,01, 0,02
+1;svr4;nombre maximal d'itérations;3000;300;0.1;à revoir : 300, 1000, 6000
+1;svr4;"T (décroissance du pas ; aucune = pas constant)";500;aucune;0.1;défendable
+1;svr4;"part des pas moyennée (Polyak ; 0 = aucune)";0,5;0;0.0;défendable
+1;svr4;tolérance d'arrêt anticipé;1e-07;1e-05;0.1;à revoir : 1e-05
+1;svr4;direction préconditionnée α + Cg;True;True (retenu);0.1;défendable
+1;svr4;optimiseur;adam;adam (retenu);25.1;défendable
+1;svr2;C;3;10;37.0;défendable
+1;svr2;ε (tube ε-insensible, en lits);1;1 (retenu);4.1;défendable
+1;svr2;γ (portée du noyau RBF);0,02;0,02 (retenu);39.3;défendable
+1;foret;nombre d'arbres;300;25;2.6;défendable
+1;foret;profondeur maximale;12;8;3.9;défendable
+1;foret;taille minimale d'une feuille;5;10;1.3;défendable
+1;foret;part des variables tirées par nœud;0,333333;0,5;7.5;à revoir : 0,5
+1;boosting;nombre d'étapes;300;100;4.4;à revoir : 50, 100
+1;boosting;taux ν (shrinkage);0,05;0,01;7.7;à revoir : 0,01
+1;boosting;profondeur des arbres;3;1;7.1;à revoir : 1, 2
+1;boosting;part du sous-échantillon;0,8;1;4.4;défendable
+1;mlp;architecture (neurones par couche);32×16;64×32;9.8;défendable
+1;mlp;taux d'apprentissage;0,01;0,03;10.6;défendable
+1;mlp;pénalité L2 λ;0,001;0,01;4.3;défendable
+1;mlp;époques maximales;1500;300;0.0;défendable
+1;mlp;patience de l'arrêt anticipé;150;50;0.0;défendable
+1;mlp;nombre d'initialisations moyennées;3;1;5.6;défendable
+1;lstm;taille de l'état caché H;16;4;2.9;défendable
+1;lstm;taux d'apprentissage;0,01;0,003;1.6;défendable
+1;lstm;pénalité L2 λ;0,001;0,01;2.4;défendable
+1;variables;jours d'occupation passée en entrée;7;3;13.6;défendable
+7;svr4;C (poids des erreurs);0,3;10;4.6;défendable
+7;svr4;ε (tube, niveaux quantiles);0;0,25;0.5;défendable
+7;svr4;γ₁ (portée, bloc occupation);0,02;0,1;0.9;défendable
+7;svr4;γ₂ (portée, bloc flux et saison);0,05;0,2;2.4;défendable
+7;svr4;τ (quantile décisionnel);0,8;0,5;0.0;défendable
+7;svr4;η₀ (taux d'apprentissage d'Adam);0,05;0,005;0.1;défendable
+7;svr4;nombre maximal d'itérations;3000;3000 (retenu);0.0;défendable
+7;svr4;"T (décroissance du pas ; aucune = pas constant)";500;100;0.0;défendable
+7;svr4;"part des pas moyennée (Polyak ; 0 = aucune)";0,5;0;0.0;défendable
+7;svr4;tolérance d'arrêt anticipé;1e-07;1e-05;0.0;défendable
+7;svr4;direction préconditionnée α + Cg;True;True (retenu);0.0;défendable
+7;svr4;optimiseur;adam;adam (retenu);0.0;défendable
+7;svr2;C;3;3 (retenu);2.4;défendable
+7;svr2;ε (tube ε-insensible, en lits);0,5;0;1.7;défendable
+7;svr2;γ (portée du noyau RBF);0,05;0,2;6.7;défendable
+7;foret;nombre d'arbres;300;25;1.0;défendable
+7;foret;profondeur maximale;12;12 (retenu);1.1;défendable
+7;foret;taille minimale d'une feuille;5;2;1.9;défendable
+7;foret;part des variables tirées par nœud;0,333333;1;2.6;défendable
+7;boosting;nombre d'étapes;300;50;5.8;à revoir : 50, 100
+7;boosting;taux ν (shrinkage);0,05;0,01;8.4;à revoir : 0,01
+7;boosting;profondeur des arbres;3;2;1.7;à revoir : 1, 2
+7;boosting;part du sous-échantillon;0,8;0,8 (retenu);1.6;défendable
+7;mlp;architecture (neurones par couche);32×16;32×16×8;27.8;défendable
+7;mlp;taux d'apprentissage;0,01;0,003;2.4;défendable
+7;mlp;pénalité L2 λ;0,001;0,1;10.3;défendable
+7;mlp;époques maximales;1500;300;0.0;défendable
+7;mlp;patience de l'arrêt anticipé;150;50;1.4;défendable
+7;mlp;nombre d'initialisations moyennées;3;3 (retenu);2.3;défendable
+7;lstm;taille de l'état caché H;16;4;12.5;défendable
+7;lstm;taux d'apprentissage;0,01;0,003;0.2;défendable
+7;lstm;pénalité L2 λ;0,001;0,01;2.3;défendable
+7;variables;jours d'occupation passée en entrée;7;14;1.3;à revoir : 3

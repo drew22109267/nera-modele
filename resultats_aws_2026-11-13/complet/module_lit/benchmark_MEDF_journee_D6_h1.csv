@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+z-score : (x − moyenne)/écart-type (retenu);1.852;2.358;-0.712;1.1395;1.8;;;;— choix retenu
+Robuste : (x − médiane)/(Q3 − Q1);1.892;2.374;-0.708;1.1581;2.0;0.0895;0.0895;0.0167;équivalent
+Min-max : (x − min)/(max − min);2.454;2.96;-0.863;1.4858;0.8;0.0;0.0;0.0;moins bon
+Aucune mise à l'échelle;2.317;2.887;-0.878;1.422;2.0;0.0;0.0;0.0;moins bon

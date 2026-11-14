@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-13T18:58:52",
+  "commande": "benchmark_choix.py --service PED --horizons 1 7 --comptage minuit",
+  "python": "3.12.3",
+  "torch": "2.15.0+cpu",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "systeme": "Linux-7.0.0-1014-aws-aarch64-with-glibc2.39",
+  "commit_git": null,
+  "fichiers_modifies_depuis_le_commit": null,
+  "parametres": {
+    "service": "PED",
+    "horizons": [
+      1,
+      7
+    ],
+    "tau": 0.8,
+    "pas": 28,
+    "debut_validation": null,
+    "dimensions": [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5",
+      "D6",
+      "D7",
+      "D8",
+      "D9",
+      "D11",
+      "D13",
+      "D14"
+    ],
+    "recherche": false,
+    "rapide": false,
+    "recommencer": false,
+    "comptage": "minuit"
+  }
+}

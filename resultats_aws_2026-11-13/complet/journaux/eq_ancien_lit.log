@@ -1,0 +1,17 @@
+════ Service PED (18 lits)
+── 13:00 conversion_PED
+   terminé (resultats/journaux/conversion_PED.log)
+── 13:00 occupation_PED_minuit
+   terminé (resultats/journaux/occupation_PED_minuit.log)
+── 13:12 niveaux_PED_minuit
+--- relance 15:06:43 apres arret accidentel ---
+════ Service PED (18 lits)
+── 15:06 conversion_PED
+   terminé (resultats/journaux/conversion_PED.log)
+── 15:06 occupation_PED_minuit
+   terminé (resultats/journaux/occupation_PED_minuit.log)
+── 15:06 niveaux_PED_minuit
+   terminé (resultats/journaux/niveaux_PED_minuit.log)
+── 18:58 banc_choix_PED_minuit
+   terminé (resultats/journaux/banc_choix_PED_minuit.log)
+── 19:38 fini. Rapports : resultats/*.md · tableaux : resultats/*.csv · figures : resultats/figures_*/

@@ -1,0 +1,6 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+gamma2 = 0,02;2.043;2.565;-0.703;0.7574;86.9;7.2;0.3643;0.7286;0.0593;équivalent
+gamma2 = 0,05 (retenu);2.004;2.51;-0.745;0.7759;86.3;7.4;;;;— choix retenu
+gamma2 = 0,1;1.976;2.479;-0.706;0.7839;84.7;5.8;0.4834;0.7286;0.071;équivalent
+gamma2 = 0,2;2.026;2.528;-0.708;0.8069;85.2;7.6;0.0914;0.3656;0.4791;équivalent
+gamma2 = 0,5;2.104;2.619;-0.696;0.8046;85.8;6.6;0.2163;0.6489;0.016;équivalent

@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+optimiseur = adam (retenu);2.719;3.246;-0.904;0.9447;87.6;4.8;;;;— choix retenu
+optimiseur = momentum;2.719;3.246;-0.905;0.945;87.6;3.4;0.5874;0.667;0.4259;équivalent
+optimiseur = sgd;2.719;3.247;-0.905;0.945;87.6;4.5;0.3335;0.667;0.9651;équivalent

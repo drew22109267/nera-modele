@@ -1,0 +1,21 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Toutes les variables (retenu);1.819;2.344;-0.024;0.9167;5.8;;;;— choix retenu
+Sans occ_j-0;1.978;2.483;-0.034;0.9992;5.2;0.0173;0.3114;0.011;équivalent
+Sans occ_j-1;1.817;2.338;-0.024;0.9155;6.4;0.8713;1.0;0.8524;équivalent
+Sans occ_j-2;1.822;2.355;-0.045;0.9244;5.5;0.3261;1.0;0.8285;équivalent
+Sans occ_j-3;1.828;2.356;-0.022;0.9206;5.2;0.5437;1.0;0.3629;équivalent
+Sans occ_j-4;1.816;2.339;-0.037;0.919;6.2;0.4636;1.0;0.5022;équivalent
+Sans occ_j-5;1.812;2.344;-0.035;0.9165;5.2;0.9644;1.0;0.2678;équivalent
+Sans occ_j-6;1.794;2.323;-0.035;0.9072;6.4;0.1467;1.0;0.024;équivalent
+Sans adm_3j;1.829;2.35;-0.007;0.9168;6.5;0.992;1.0;0.4659;équivalent
+Sans adm_7j;1.813;2.344;-0.031;0.9158;4.6;0.8195;1.0;0.3371;équivalent
+Sans sorties_7j;1.829;2.364;-0.024;0.9215;7.3;0.5612;1.0;0.4636;équivalent
+Sans cible_jour_0;1.821;2.347;-0.037;0.9218;4.6;0.057;0.969;0.6683;équivalent
+Sans cible_jour_1;1.819;2.333;-0.043;0.9223;5.7;0.4623;1.0;0.9732;équivalent
+Sans cible_jour_2;1.818;2.343;-0.032;0.9186;6.1;0.2294;1.0;0.7028;équivalent
+Sans cible_jour_3;1.817;2.34;-0.032;0.9178;6.3;0.4255;1.0;0.3151;équivalent
+Sans cible_jour_4;1.83;2.347;-0.001;0.9152;6.4;0.8189;1.0;0.3769;équivalent
+Sans cible_jour_5;1.831;2.345;-0.002;0.9159;6.6;0.8938;1.0;0.228;équivalent
+Sans cible_jour_6;1.834;2.359;-0.041;0.9292;5.9;0.0873;1.0;0.1909;équivalent
+Sans mois_sin;1.845;2.37;-0.024;0.9296;5.6;0.0894;1.0;0.03;équivalent
+Sans mois_cos;1.811;2.351;0.063;0.8865;6.0;0.0021;0.0399;0.6435;meilleur

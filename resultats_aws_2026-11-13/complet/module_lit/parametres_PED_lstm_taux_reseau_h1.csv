@@ -1,0 +1,4 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+taux_reseau = 0,003;1.848;2.421;0.009;0.674;90.2;12.8;0.8824;0.8824;0.3109;équivalent
+taux_reseau = 0,01 (retenu);1.83;2.405;0.038;0.6753;88.5;7.6;;;;— choix retenu
+taux_reseau = 0,03;1.863;2.429;0.012;0.6656;86.3;6.1;0.4031;0.8062;0.134;équivalent

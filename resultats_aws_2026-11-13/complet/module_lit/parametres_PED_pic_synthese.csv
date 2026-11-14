@@ -1,0 +1,67 @@
+﻿horizon;famille;paramètre;valeur retenue;meilleure valeur (MAE);amplitude MAE %;verdict
+1;svr4;C (poids des erreurs);3;10;73.7;défendable
+1;svr4;ε (tube, niveaux quantiles);0,25;0,5;2.1;défendable
+1;svr4;γ₁ (portée, bloc occupation);0,02;0,02 (retenu);11.8;défendable
+1;svr4;γ₂ (portée, bloc flux et saison);0,2;0,1;11.3;défendable
+1;svr4;τ (quantile décisionnel);0,8;0,5;0.1;défendable
+1;svr4;η₀ (taux d'apprentissage d'Adam);0,05;0,2;0.4;défendable
+1;svr4;nombre maximal d'itérations;3000;1000;0.1;défendable
+1;svr4;"T (décroissance du pas ; aucune = pas constant)";500;aucune;0.1;défendable
+1;svr4;"part des pas moyennée (Polyak ; 0 = aucune)";0,5;0;0.0;défendable
+1;svr4;tolérance d'arrêt anticipé;1e-07;1e-05;0.0;défendable
+1;svr4;direction préconditionnée α + Cg;True;True (retenu);1.6;défendable
+1;svr4;optimiseur;adam;adam (retenu);72.9;défendable
+1;svr2;C;3;3 (retenu);53.1;défendable
+1;svr2;ε (tube ε-insensible, en lits);0,5;0,25;8.0;défendable
+1;svr2;γ (portée du noyau RBF);0,02;0,02 (retenu);67.2;défendable
+1;foret;nombre d'arbres;300;50;1.5;défendable
+1;foret;profondeur maximale;12;20;10.2;défendable
+1;foret;taille minimale d'une feuille;5;2;3.5;à revoir : 2
+1;foret;part des variables tirées par nœud;0,333333;0,5;6.4;défendable
+1;boosting;nombre d'étapes;300;600;9.2;défendable
+1;boosting;taux ν (shrinkage);0,05;0,05 (retenu);8.1;défendable
+1;boosting;profondeur des arbres;3;3 (retenu);6.2;défendable
+1;boosting;part du sous-échantillon;0,8;0,5;2.8;défendable
+1;mlp;architecture (neurones par couche);32×16;8;6.3;défendable
+1;mlp;taux d'apprentissage;0,01;0,001;2.4;défendable
+1;mlp;pénalité L2 λ;0,001;0,01;5.6;défendable
+1;mlp;époques maximales;1500;300;0.0;défendable
+1;mlp;patience de l'arrêt anticipé;150;50;0.2;défendable
+1;mlp;nombre d'initialisations moyennées;3;3 (retenu);7.8;défendable
+1;lstm;taille de l'état caché H;16;4;2.8;défendable
+1;lstm;taux d'apprentissage;0,01;0,03;1.6;défendable
+1;lstm;pénalité L2 λ;0,001;0,01;1.1;défendable
+1;variables;jours d'occupation passée en entrée;7;5;3.8;défendable
+7;svr4;C (poids des erreurs);0,3;1;17.4;défendable
+7;svr4;ε (tube, niveaux quantiles);0;0,25;0.8;défendable
+7;svr4;γ₁ (portée, bloc occupation);0,02;0,01;2.1;défendable
+7;svr4;γ₂ (portée, bloc flux et saison);0,2;0,2 (retenu);3.1;défendable
+7;svr4;τ (quantile décisionnel);0,8;0,5;0.0;défendable
+7;svr4;η₀ (taux d'apprentissage d'Adam);0,05;0,02;0.1;défendable
+7;svr4;nombre maximal d'itérations;3000;1000;0.0;défendable
+7;svr4;"T (décroissance du pas ; aucune = pas constant)";500;aucune;0.0;défendable
+7;svr4;"part des pas moyennée (Polyak ; 0 = aucune)";0,5;0;0.0;défendable
+7;svr4;tolérance d'arrêt anticipé;1e-07;1e-09;0.1;défendable
+7;svr4;direction préconditionnée α + Cg;True;True (retenu);0.4;défendable
+7;svr4;optimiseur;adam;momentum;0.1;défendable
+7;svr2;C;0,3;0,1;15.1;défendable
+7;svr2;ε (tube ε-insensible, en lits);1;0,5;0.4;défendable
+7;svr2;γ (portée du noyau RBF);0,2;0,5;2.8;défendable
+7;foret;nombre d'arbres;300;50;2.5;défendable
+7;foret;profondeur maximale;12;3;1.5;défendable
+7;foret;taille minimale d'une feuille;5;10;2.4;défendable
+7;foret;part des variables tirées par nœud;0,333333;0,333333 (retenu);0.8;défendable
+7;boosting;nombre d'étapes;300;50;2.9;défendable
+7;boosting;taux ν (shrinkage);0,05;0,01;2.0;défendable
+7;boosting;profondeur des arbres;3;2;1.5;défendable
+7;boosting;part du sous-échantillon;0,8;0,5;0.4;défendable
+7;mlp;architecture (neurones par couche);32×16;32×16×8;2.1;défendable
+7;mlp;taux d'apprentissage;0,01;0,003;1.1;défendable
+7;mlp;pénalité L2 λ;0,001;0;1.4;défendable
+7;mlp;époques maximales;1500;300;0.0;défendable
+7;mlp;patience de l'arrêt anticipé;150;50;0.0;défendable
+7;mlp;nombre d'initialisations moyennées;3;5;2.1;défendable
+7;lstm;taille de l'état caché H;16;4;5.4;défendable
+7;lstm;taux d'apprentissage;0,01;0,003;2.2;défendable
+7;lstm;pénalité L2 λ;0,001;0,01;2.5;défendable
+7;variables;jours d'occupation passée en entrée;7;3;0.8;défendable

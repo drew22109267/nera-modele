@@ -1,0 +1,8 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Persistance de la cible;2.26;2.892;0.003;1.129;;0.0;0.0;0.0;moins bon
+P · modèle propre (cible seule, réglages choisis sur la cible) (retenu);1.862;2.377;0.395;0.6982;88.3;;;;— choix retenu
+A · local (cible seule, réglages de la source gelés);1.894;2.391;0.348;0.719;88.3;0.034;0.0394;0.1919;moins bon
+B · transfert direct (source seule, en taux);2.41;2.97;1.072;0.8563;83.8;0.0;0.0;0.0;moins bon
+C · groupé (source + cible ×1, en taux);2.435;3.019;1.019;0.8014;87.8;0.0;0.0;0.0;moins bon
+G1 · modèle unique, période commune (dès le 15/07/2025);2.223;2.807;0.226;0.7514;87.8;0.0197;0.0394;0.0;moins bon
+G2 · modèle unique, toute la période de chaque service;2.489;3.083;1.119;0.7847;87.8;0.0;0.0;0.0;moins bon

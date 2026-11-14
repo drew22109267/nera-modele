@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+epsilon_quantile = 0 (retenu);2.698;3.166;-0.978;0.8824;89.8;4.6;;;;— choix retenu
+epsilon_quantile = 0,25;2.704;3.174;-0.942;0.8953;88.1;6.5;0.2327;0.6981;0.6903;équivalent
+epsilon_quantile = 0,5;2.698;3.166;-0.934;0.8912;86.4;3.8;0.6262;0.6981;0.9838;équivalent
+epsilon_quantile = 1;2.67;3.127;-0.912;0.9243;80.8;5.5;0.2896;0.6981;0.2117;équivalent

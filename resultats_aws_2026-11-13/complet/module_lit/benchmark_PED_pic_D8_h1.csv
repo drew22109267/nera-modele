@@ -1,0 +1,7 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;temps (s);J final;pas effectués;arrêt;solution gardée;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Adam + Polyak + préconditionnement + décroissance η (retenu);1.265;1.734;0.015;0.6279;1.1;1826.81;3000;3000 pas atteints;meilleur point rencontré;;;;— choix retenu
+Adam sans moyenne de Polyak;1.265;1.734;0.015;0.6279;1.2;1826.81;3000;3000 pas atteints;meilleur point rencontré;;;;identique
+Adam sans préconditionnement;1.291;1.758;0.037;0.6345;1.6;1884.28;3000;3000 pas atteints;meilleur point rencontré;0.3391;0.3391;0.0341;équivalent
+Adam sans décroissance de η;1.266;1.736;0.012;0.6297;1.1;1827.66;3000;3000 pas atteints;meilleur point rencontré;0.0068;0.0136;0.1752;moins bon
+Momentum;2.764;3.324;-0.019;1.3876;0.9;4529.01;3000;3000 pas atteints;meilleur point rencontré;0.0;0.0;0.0;moins bon
+Descente de gradient simple;2.764;3.324;-0.019;1.3876;1.1;4529.01;3000;3000 pas atteints;meilleur point rencontré;0.0;0.0;0.0;moins bon

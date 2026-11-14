@@ -1,0 +1,19 @@
+  8 date(s) d'entrée corrigée(s), à reporter dans l'outil : donnees/corrections_dates_PED.csv
+    N° 10 enregistré le 05/01/2025 : entrée 02/01/2026 → 02/01/2025 (année −1)
+    N° 4 enregistré le 02/12/2025 : entrée 28/12/2025 → 28/11/2025 (mois −1)
+    N° 5 enregistré le 02/12/2025 : entrée 28/12/2025 → 28/11/2025 (mois −1)
+    N° 20 enregistré le 02/01/2026 : entrée 02/02/2026 → 02/01/2026 (mois −1)
+    N° 21 enregistré le 02/01/2026 : entrée 02/02/2026 → 02/01/2026 (mois −1)
+    N° 15 enregistré le 06/01/2026 : entrée 04/01/2025 → 04/01/2026 (année +1)
+    N° 16 enregistré le 06/01/2026 : entrée 04/01/2025 → 04/01/2026 (année +1)
+    N° 51 enregistré le 13/02/2026 : entrée 12/02/2023 → 13/02/2026 (date d'enregistrement)
+  lignes_lues : 2203
+  lignes_converties : 2193
+  rejets : 10
+  detail_rejets : [(801, "date de sortie antérieure à la date d'entrée"), (1505, "date de sortie antérieure à la date d'entrée"), (1595, "date de sortie antérieure à la date d'entrée"), (2163, "date d'entrée absente ou illisible, sans date d'enregistrement"), (2166, "date d'entrée absente ou illisible, sans date d'enregistrement"), (2168, "date d'entrée absente ou illisible, sans date d'enregistrement"), (2174, "date d'entrée absente ou illisible, sans date d'enregistrement"), (2182, "date d'entrée absente ou illisible, sans date d'enregistrement"), (2183, "date d'entrée absente ou illisible, sans date d'enregistrement"), (2200, "date d'entrée absente ou illisible, sans date d'enregistrement")]
+  entree_deduite : 44
+  duree_ignoree : 28
+  sortie_trop_longue : 4
+  sortie_calculee : 240
+  dates_corrigees : 8
+Écrit : donnees/export_outil_PED.csv

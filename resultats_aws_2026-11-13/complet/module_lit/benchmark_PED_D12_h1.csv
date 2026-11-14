@@ -1,0 +1,16 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu;DM p (pinball τ=0.8) vs charge locale;p Holm vs charge locale;vs charge locale (D12-3)
+D12-0 · sans les urgences (même fenêtre) (retenu);2.33;2.943;-0.025;0.7773;82.1;;;;— choix retenu;;;
+D12-1 · + passages enfants aux urgences;2.302;2.913;0.012;0.7715;82.1;0.643;1.0;0.7306;équivalent;;;
+D12-2 · + enfants graves orientés (décision observée);2.269;2.843;0.021;0.7815;82.1;0.8077;1.0;0.484;équivalent;;;
+D12-3 · + charge grave attendue Σ P(grave) (module triage);2.316;2.944;0.116;0.7814;82.1;0.8338;1.0;0.8702;équivalent;;;
+D12-4 · + graves observés + charge;2.264;2.841;0.001;0.7948;82.1;0.4599;1.0;0.4957;équivalent;;;
+D12-T · + charge du modèle transféré (cible_fourier);2.3;2.898;0.052;0.7784;82.1;0.9431;1.0;0.7366;équivalent;0.7288;1.0;équivalent
+D12-T · + charge du modèle transféré (source_seule);2.334;2.949;0.018;0.7721;82.1;0.7798;1.0;0.9582;équivalent;0.3954;1.0;équivalent
+D12-T · + charge du modèle transféré (source_recalibree);2.285;2.89;0.059;0.7543;82.1;0.1719;1.0;0.5982;équivalent;0.0248;0.1488;équivalent
+D12-T · + charge du modèle transféré (reunies);2.299;2.891;-0.056;0.7866;82.1;0.5955;1.0;0.6904;équivalent;0.4309;1.0;équivalent
+D12-T · + charge du modèle transféré (augmentation);2.304;2.895;-0.046;0.7938;82.1;0.4125;1.0;0.7654;équivalent;0.0184;0.144;équivalent
+D12-T · + charge du modèle transféré (regularisation_biaisee);2.327;2.935;0.137;0.7787;82.1;0.9309;1.0;0.9736;équivalent;0.6691;1.0;équivalent
+D12-T · + charge du modèle transféré (a_svm);2.275;2.893;0.142;0.7574;82.1;0.235;1.0;0.5461;équivalent;0.018;0.144;équivalent
+D12-T · + charge du modèle transféré (score_source);2.32;2.935;0.154;0.7818;82.1;0.7986;1.0;0.9152;équivalent;0.934;1.0;équivalent
+modèle habituel, tout l'historique de la pédiatrie (sans urgences);1.995;2.473;0.187;0.6318;92.3;0.2129;1.0;0.1574;équivalent;;;
+persistance;2.254;2.677;-0.203;1.188;;0.0268;0.3752;0.8291;équivalent;;;

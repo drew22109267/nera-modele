@@ -1,0 +1,5 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+epoques = 300;2.116;2.577;-1.156;0.8087;80.9;1.3;;;;identique
+epoques = 800;2.116;2.577;-1.156;0.8087;80.9;1.3;;;;identique
+epoques = 1500 (retenu);2.116;2.577;-1.156;0.8087;80.9;0.9;;;;— choix retenu
+epoques = 3000;2.116;2.577;-1.156;0.8087;80.9;0.9;;;;identique

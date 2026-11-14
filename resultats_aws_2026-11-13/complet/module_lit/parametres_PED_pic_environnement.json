@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-13T15:44:47",
+  "commande": "benchmark_parametres.py --service PED --horizons 1 7 --comptage pic",
+  "python": "3.12.3",
+  "torch": "2.15.0+cpu",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "systeme": "Linux-7.0.0-1014-aws-aarch64-with-glibc2.39",
+  "commit_git": null,
+  "fichiers_modifies_depuis_le_commit": null,
+  "parametres": {
+    "service": "PED_pic",
+    "horizons": [
+      1,
+      7
+    ],
+    "tau": 0.8,
+    "pas": 28,
+    "familles": [
+      "svr4",
+      "svr2",
+      "foret",
+      "boosting",
+      "mlp",
+      "lstm",
+      "variables"
+    ],
+    "rapide": false,
+    "recommencer": false,
+    "comptage": "pic"
+  }
+}

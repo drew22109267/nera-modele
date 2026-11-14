@@ -1,0 +1,3 @@
+﻿variante;début série;jours coupés en fin;présents moyens;TOM %;écart Little %;MAE propre;pinball τ=0.8 propre;gain / persistance %;MAE retenue;temps (s);pinball τ=0.8 retenue;DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+Gardés tels quels (retenu);15/07/2025;0;9.73;57.2;-3.6;2.037;0.7217;-13.5;2.037;5.5;0.7217;;;;— choix retenu
+Lignes d'apprentissage qui les touchent exclues;15/07/2025;0;9.73;57.2;-3.6;2.04;0.709;-13.6;2.04;6.7;0.709;0.0098;0.0098;0.851;meilleur

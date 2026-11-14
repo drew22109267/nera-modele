@@ -1,0 +1,8 @@
+﻿stratégie (services cibles);jours;MAE total (lits);biais total
+Persistance de la cible;322;5.248;-0.818
+P · modèle propre (cible seule, réglages choisis sur la cible);322;4.497;-0.246
+A · local (cible seule, réglages de la source gelés);322;4.682;-0.195
+B · transfert direct (source seule, en taux);322;4.81;1.083
+C · groupé (source + cible ×1, en taux);322;4.669;0.354
+G1 · modèle unique, période commune (dès le 15/07/2025);322;4.79;-0.494
+G2 · modèle unique, toute la période de chaque service;322;4.67;0.349

@@ -1,0 +1,83 @@
+Occupation moyenne par scénario : basse 10.40 · attendue 11.09 · haute 11.71
+
+══ Horizon J+1
+  [basse] 1 · SVR linéaire…
+  [basse] 2 · SVR RBF…
+  [basse] 3 · SVR quantile RBF…
+  [basse] 4 · SVR quantile composite…
+  [basse] meilleur — MAE : 1 · SVR linéaire · pinball τ=0.8 : 5 · empilement
+  [attendue] 1 · SVR linéaire…
+  [attendue] 2 · SVR RBF…
+  [attendue] 3 · SVR quantile RBF…
+  [attendue] 4 · SVR quantile composite…
+  [attendue] meilleur — MAE : 1 · SVR linéaire · pinball τ=0.8 : 5 · empilement
+  [haute] 1 · SVR linéaire…
+  [haute] 2 · SVR RBF…
+  [haute] 3 · SVR quantile RBF…
+  [haute] 4 · SVR quantile composite…
+  [haute] meilleur — MAE : 1 · SVR linéaire · pinball τ=0.8 : 3 · SVR quantile RBF
+
+  Gain sur la persistance (%), critère MAE :
+scenario                    basse  attendue  haute
+niveau                                            
+0 · persistance               0.0       0.0    0.0
+1 · SVR linéaire              8.0       6.4    7.9
+2 · SVR RBF                   0.4       0.4    3.1
+3 · SVR quantile RBF        -14.2      -8.2   -0.2
+4 · SVR quantile composite   -4.4      -3.9    1.1
+5 · empilement                4.0       4.2    5.9
+  ! gain qui change de signe : 4 · SVR quantile composite
+
+  Gain sur la persistance (%), critère pinball :
+scenario                    basse  attendue  haute
+niveau                                            
+0 · persistance               0.0       0.0    0.0
+1 · SVR linéaire             -8.7     -10.4   -7.7
+2 · SVR RBF                 -20.6     -19.7  -13.2
+3 · SVR quantile RBF         14.5      23.2   32.0
+4 · SVR quantile composite   23.0      24.2   30.0
+5 · empilement               28.6      30.3   31.9
+
+  → conclusion SENSIBLE à la convention des jours
+
+══ Horizon J+7
+  [basse] 1 · SVR linéaire…
+  [basse] 2 · SVR RBF…
+  [basse] 3 · SVR quantile RBF…
+  [basse] 4 · SVR quantile composite…
+  [basse] meilleur — MAE : 2 · SVR RBF · pinball τ=0.8 : 5 · empilement
+  [attendue] 1 · SVR linéaire…
+  [attendue] 2 · SVR RBF…
+  [attendue] 3 · SVR quantile RBF…
+  [attendue] 4 · SVR quantile composite…
+  [attendue] meilleur — MAE : 2 · SVR RBF · pinball τ=0.8 : 3 · SVR quantile RBF
+  [haute] 1 · SVR linéaire…
+  [haute] 2 · SVR RBF…
+  [haute] 3 · SVR quantile RBF…
+  [haute] 4 · SVR quantile composite…
+  [haute] meilleur — MAE : 2 · SVR RBF · pinball τ=0.8 : 3 · SVR quantile RBF
+
+  Gain sur la persistance (%), critère MAE :
+scenario                    basse  attendue  haute
+niveau                                            
+0 · persistance               0.0       0.0    0.0
+1 · SVR linéaire             -5.9      -6.6   -2.5
+2 · SVR RBF                   4.7       5.9   12.7
+3 · SVR quantile RBF         -1.5      -1.6    7.8
+4 · SVR quantile composite    0.4      -0.3    7.3
+5 · empilement               -1.5       1.2    4.8
+  ! gain qui change de signe : 3 · SVR quantile RBF, 4 · SVR quantile composite, 5 · empilement
+
+  Gain sur la persistance (%), critère pinball :
+scenario                    basse  attendue  haute
+niveau                                            
+0 · persistance               0.0       0.0    0.0
+1 · SVR linéaire            -37.5     -39.0  -31.8
+2 · SVR RBF                 -23.6     -21.7  -11.3
+3 · SVR quantile RBF         28.2      39.2   47.6
+4 · SVR quantile composite   28.6      37.8   47.0
+5 · empilement               36.2      33.7   36.8
+
+  → conclusion SENSIBLE à la convention des jours
+
+Résultats écrits dans /home/ubuntu/nera/nera-modele/module_lit/resultats

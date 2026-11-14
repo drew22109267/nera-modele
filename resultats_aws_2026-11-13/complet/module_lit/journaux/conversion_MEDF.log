@@ -1,0 +1,10 @@
+  lignes_lues : 1289
+  lignes_converties : 1234
+  rejets : 55
+  detail_rejets : [(45, "date d'entrée absente ou illisible, sans date d'enregistrement"), (46, "date d'entrée absente ou illisible, sans date d'enregistrement"), (47, "date d'entrée absente ou illisible, sans date d'enregistrement"), (127, "date d'entrée absente ou illisible, sans date d'enregistrement"), (128, "date d'entrée absente ou illisible, sans date d'enregistrement"), (135, "date d'entrée absente ou illisible, sans date d'enregistrement"), (138, "date d'entrée absente ou illisible, sans date d'enregistrement"), (169, "date d'entrée absente ou illisible, sans date d'enregistrement"), (170, "date d'entrée absente ou illisible, sans date d'enregistrement"), (171, "date d'entrée absente ou illisible, sans date d'enregistrement"), (172, "date d'entrée absente ou illisible, sans date d'enregistrement"), (173, "date de sortie antérieure à la date d'entrée"), (313, "date d'entrée absente ou illisible, sans date d'enregistrement"), (383, "date d'entrée absente ou illisible, sans date d'enregistrement"), (394, "date d'entrée absente ou illisible, sans date d'enregistrement"), (410, "date d'entrée absente ou illisible, sans date d'enregistrement"), (453, "date d'entrée absente ou illisible, sans date d'enregistrement"), (483, "date d'entrée absente ou illisible, sans date d'enregistrement"), (499, "date d'entrée absente ou illisible, sans date d'enregistrement"), (506, "date d'entrée absente ou illisible, sans date d'enregistrement")]
+  entree_deduite : 0
+  duree_ignoree : 46
+  sortie_trop_longue : 0
+  sortie_calculee : 175
+  dates_corrigees : 0
+Écrit : donnees/export_outil_MEDF.csv

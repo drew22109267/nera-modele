@@ -1,0 +1,7 @@
+﻿variante;MAE;RMSE;biais;pinball τ=0.8;couverture 90 %;temps (s);DM p (pinball τ=0.8);p Holm;DM p (MAE);vs choix retenu
+retards = 3;1.873;2.328;-0.459;0.664;86.3;4.2;0.0968;0.2904;0.0713;équivalent
+retards = 5;1.941;2.387;-0.491;0.6791;84.7;5.0;0.383;0.766;0.9981;équivalent
+retards = 7 (retenu);1.941;2.361;-0.495;0.6897;85.8;5.0;;;;— choix retenu
+retards = 10;1.981;2.435;-0.446;0.6978;85.2;5.2;0.6121;0.766;0.2784;équivalent
+retards = 14;2.04;2.529;-0.68;0.7687;83.1;6.8;0.0004;0.0016;0.066;moins bon
+retards = 21;2.137;2.586;-0.712;0.8706;76.5;5.5;0.0;0.0;0.0023;moins bon

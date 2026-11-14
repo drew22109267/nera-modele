@@ -1,0 +1,145 @@
+﻿imputation;modèle;famille;cle_imputation;cle_modele;pinball τ=0.8 retenue;MAE retenue;MAE propre;pinball τ=0.8 propre;temps (s);DM p vs paire retenue;DM p vs imputation retenue, même modèle;p Holm vs paire retenue;vs paire retenue;p Holm vs imputation retenue, même modèle;vs imputation retenue, même modèle
+SoftImpute (norme nucléaire);LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;softimpute;lssvr_rbf;0.6482;1.864;1.884;0.6676;0.5;0.0088;0.3062;0.9592;équivalent;1.0;équivalent
+Loi normale multivariée par EM;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;em;lssvr_rbf;0.6511;1.868;1.863;0.6637;0.5;0.0165;0.3009;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;regression;lssvr_rbf;0.652;1.874;1.864;0.6664;0.4;0.0194;0.3251;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;knn;lssvr_rbf;0.6525;1.881;1.894;0.6643;0.5;0.0194;0.7242;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;acp_iterative;lssvr_rbf;0.6531;1.868;1.907;0.6917;0.3;0.0116;0.8943;1.0;équivalent;1.0;équivalent
+Moyenne du service;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;moyenne;lssvr_rbf;0.6533;1.882;1.869;0.6771;0.5;0.0231;0.812;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;mediane_age;lssvr_rbf;0.6533;1.882;1.869;0.6771;0.7;0.0231;0.812;1.0;équivalent;1.0;équivalent
+Médiane du service;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;mediane;lssvr_rbf;0.6533;1.882;1.869;0.6771;0.4;0.0231;0.812;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);C · perceptron multicouche quantile;concurrent;regression;mlp;0.6554;1.868;1.894;0.6729;1.6;0.0849;0.4783;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;estimee;lssvr_rbf;0.6555;1.853;1.853;0.6555;0.6;0.0265;;1.0;équivalent;;— référence
+ACP itérative (rang faible);C · perceptron multicouche quantile;concurrent;acp_iterative;mlp;0.661;1.945;1.993;0.7064;1.1;0.09;0.9663;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;C · perceptron multicouche quantile;concurrent;em;mlp;0.6613;1.887;1.92;0.6806;1.4;0.1082;0.9702;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;C · perceptron multicouche quantile;concurrent;estimee;mlp;0.6618;1.887;1.887;0.6618;2.2;0.12;;1.0;équivalent;;— référence
+XGBoost (avec le diagnostic);SVR quantile, noyau polynomial (degré 2);svm;xgboost;svr_q_polynomial;0.6618;1.901;1.888;0.6799;7.7;0.041;0.1861;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);C · perceptron multicouche quantile;concurrent;knn;mlp;0.6636;1.86;1.875;0.6732;2.1;0.1176;0.883;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;SVR quantile, noyau polynomial (degré 2);svm;hybride;svr_q_polynomial;0.6643;1.911;1.887;0.677;7.3;0.0615;0.3094;1.0;équivalent;1.0;équivalent
+SoftImpute (norme nucléaire);C · perceptron multicouche quantile;concurrent;softimpute;mlp;0.6654;1.84;1.881;0.6823;1.8;0.1371;0.7477;1.0;équivalent;1.0;équivalent
+SoftImpute (norme nucléaire);SVR quantile, noyau polynomial (degré 2);svm;softimpute;svr_q_polynomial;0.6672;1.848;1.86;0.69;9.2;0.0566;0.2392;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);SVR quantile, noyau polynomial (degré 2);svm;regression;svr_q_polynomial;0.6687;1.871;1.865;0.6871;7.0;0.1032;0.1453;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);SVR quantile RBF (niveau 3);svm;acp_iterative;svr_q_rbf;0.6687;1.966;1.975;0.7036;3.4;0.037;0.1595;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;SVR quantile, noyau polynomial (degré 2);svm;em;svr_q_polynomial;0.6687;1.881;1.868;0.6816;6.3;0.0945;0.2103;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);D · LSTM quantile;concurrent;xgboost;lstm;0.6702;1.9;1.882;0.6958;8.9;0.1366;0.4097;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;xgboost;lssvr_rbf;0.6707;1.931;1.87;0.6797;0.4;0.1944;0.313;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;D · LSTM quantile;concurrent;em;lstm;0.672;1.897;1.903;0.6816;10.3;0.1789;0.193;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);SVR quantile, noyau polynomial (degré 2);svm;acp_iterative;svr_q_polynomial;0.6733;1.93;1.927;0.692;7.3;0.1898;0.8893;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;hybride;lssvr_rbf;0.6734;1.931;1.871;0.676;0.3;0.2536;0.2552;1.0;équivalent;1.0;équivalent
+Médiane du service;SVR quantile, noyau polynomial (degré 2);svm;mediane;svr_q_polynomial;0.6748;1.855;1.841;0.6974;6.8;0.1093;0.8983;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;SVR quantile, noyau polynomial (degré 2);svm;mediane_age;svr_q_polynomial;0.6748;1.855;1.841;0.6974;12.4;0.1093;0.8983;1.0;équivalent;1.0;équivalent
+Moyenne du service;SVR quantile, noyau polynomial (degré 2);svm;moyenne;svr_q_polynomial;0.6748;1.855;1.841;0.6974;6.0;0.1093;0.8983;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;SVR quantile, noyau polynomial (degré 2);svm;estimee;svr_q_polynomial;0.6759;1.873;1.873;0.6759;10.4;0.1622;;1.0;équivalent;;— référence
+SoftImpute (norme nucléaire);D · LSTM quantile;concurrent;softimpute;lstm;0.6775;1.837;1.871;0.6977;13.0;0.2843;0.6387;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);SVR quantile, noyau polynomial (degré 2);svm;knn;svr_q_polynomial;0.6776;1.883;1.873;0.6849;9.9;0.1578;0.8585;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);D · LSTM quantile;concurrent;acp_iterative;lstm;0.6784;1.947;1.904;0.679;9.3;0.3121;0.8776;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;D · LSTM quantile;concurrent;hybride;lstm;0.6808;1.901;1.885;0.699;9.6;0.3727;0.9651;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;D · LSTM quantile;concurrent;estimee;lstm;0.6814;1.855;1.855;0.6814;18.0;0.3532;;1.0;équivalent;;— référence
+Régressions enchaînées (ridge, principe de MICE);D · LSTM quantile;concurrent;regression;lstm;0.6815;1.895;1.906;0.6992;9.0;0.3527;0.9787;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;D · LSTM quantile;concurrent;mediane_age;lstm;0.6826;1.843;1.856;0.6977;15.3;0.3927;0.9066;1.0;équivalent;1.0;équivalent
+Moyenne du service;D · LSTM quantile;concurrent;moyenne;lstm;0.6826;1.843;1.856;0.6977;15.2;0.3927;0.9066;1.0;équivalent;1.0;équivalent
+Médiane du service;D · LSTM quantile;concurrent;mediane;lstm;0.6826;1.843;1.856;0.6977;8.7;0.3927;0.9066;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);D · LSTM quantile;concurrent;knn;lstm;0.6842;1.849;1.842;0.6967;12.4;0.4096;0.7722;1.0;équivalent;1.0;équivalent
+Médiane du service;C · perceptron multicouche quantile;concurrent;mediane;mlp;0.6847;1.904;1.921;0.6992;0.9;0.5103;0.1333;1.0;équivalent;1.0;équivalent
+Moyenne du service;C · perceptron multicouche quantile;concurrent;moyenne;mlp;0.6847;1.904;1.921;0.6992;2.0;0.5103;0.1333;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;C · perceptron multicouche quantile;concurrent;mediane_age;mlp;0.6847;1.904;1.921;0.6992;1.9;0.5103;0.1333;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);SVR quantile RBF (niveau 3);svm;knn;svr_q_rbf;0.6862;1.944;1.932;0.6923;6.1;0.0705;0.574;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;SVR quantile RBF (niveau 3);svm;em;svr_q_rbf;0.6868;1.952;1.937;0.696;4.4;0.0753;0.3592;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;SVR quantile RBF (niveau 3);svm;mediane_age;svr_q_rbf;0.687;1.941;1.94;0.7099;5.6;0.1439;0.6466;1.0;équivalent;1.0;équivalent
+Moyenne du service;SVR quantile RBF (niveau 3);svm;moyenne;svr_q_rbf;0.687;1.941;1.94;0.7099;4.1;0.1439;0.6466;1.0;équivalent;1.0;équivalent
+Médiane du service;SVR quantile RBF (niveau 3);svm;mediane;svr_q_rbf;0.687;1.941;1.94;0.7099;3.2;0.1439;0.6466;1.0;équivalent;1.0;équivalent
+SoftImpute (norme nucléaire);SVR quantile RBF (niveau 3);svm;softimpute;svr_q_rbf;0.6871;1.937;1.951;0.7058;3.2;0.0825;0.5416;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);SVR quantile RBF (niveau 3);svm;regression;svr_q_rbf;0.6893;1.953;1.939;0.701;5.8;0.1416;0.7088;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);C · perceptron multicouche quantile;concurrent;xgboost;mlp;0.6897;1.932;1.935;0.6897;1.6;0.6865;0.1573;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;SVR quantile RBF (niveau 3);svm;estimee;svr_q_rbf;0.6909;1.932;1.932;0.6909;6.5;0.1391;;1.0;équivalent;;— référence
+SoftImpute (norme nucléaire);SVR quantile composite (niveau 4, retenu);svm;softimpute;svr_q_composite;0.6925;1.944;1.954;0.7131;5.3;0.1247;0.1247;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);SVR quantile, noyau laplacien;svm;acp_iterative;svr_q_laplacien;0.6926;2.053;2.083;0.75;4.5;0.6125;0.1684;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;A · forêt aléatoire quantile;concurrent;hybride;foret;0.6947;2.034;1.978;0.7014;16.7;0.7913;0.3241;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);A · forêt aléatoire quantile;concurrent;xgboost;foret;0.6968;2.063;1.987;0.6934;16.8;0.8461;0.4313;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);A · forêt aléatoire quantile;concurrent;acp_iterative;foret;0.6972;1.976;1.992;0.7095;18.6;0.8409;0.619;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);SVR quantile RBF (niveau 3);svm;xgboost;svr_q_rbf;0.6977;1.966;1.93;0.6867;2.6;0.7394;0.5689;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;SVR quantile RBF (niveau 3);svm;hybride;svr_q_rbf;0.698;1.962;1.92;0.6849;3.1;0.7774;0.5766;1.0;équivalent;1.0;équivalent
+Médiane du service;SVR quantile composite (niveau 4, retenu);svm;mediane;svr_q_composite;0.6986;1.964;1.955;0.7221;6.8;0.6463;0.6463;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;SVR quantile composite (niveau 4, retenu);svm;mediane_age;svr_q_composite;0.6986;1.964;1.955;0.7221;9.3;0.6463;0.6463;1.0;équivalent;1.0;équivalent
+Moyenne du service;SVR quantile composite (niveau 4, retenu);svm;moyenne;svr_q_composite;0.6986;1.964;1.955;0.7221;8.3;0.6463;0.6463;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);SVR quantile composite (niveau 4, retenu);svm;regression;svr_q_composite;0.6987;1.972;1.968;0.7113;9.1;0.3456;0.3456;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);SVR quantile composite (niveau 4, retenu);svm;acp_iterative;svr_q_composite;0.699;2.009;2.001;0.7223;11.1;0.8403;0.8403;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;SVR quantile composite (niveau 4, retenu);svm;em;svr_q_composite;0.6991;1.977;1.971;0.707;6.4;0.3878;0.3878;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);E · XGBoost quantile (second ordre);concurrent;acp_iterative;xgboost;0.6995;2.016;2.038;0.778;10.1;0.8952;0.1939;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);SVR quantile composite (niveau 4, retenu);svm;knn;svr_q_composite;0.6998;1.966;1.937;0.7073;14.9;0.7854;0.7854;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;C · perceptron multicouche quantile;concurrent;hybride;mlp;0.701;1.932;1.924;0.6952;1.7;0.9704;0.0706;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;SVR quantile composite (niveau 4, retenu);svm;estimee;svr_q_composite;0.7022;1.958;1.958;0.7022;12.7;;;;— référence;;— référence
+Hybride : prix, sinon XGBoost;SVR quantile composite (niveau 4, retenu);svm;hybride;svr_q_composite;0.7064;2.014;1.982;0.7003;6.7;0.7393;0.7393;1.0;équivalent;1.0;équivalent
+Médiane du service;A · forêt aléatoire quantile;concurrent;mediane;foret;0.708;1.973;1.959;0.7252;17.7;0.8251;0.8844;1.0;équivalent;1.0;équivalent
+Moyenne du service;A · forêt aléatoire quantile;concurrent;moyenne;foret;0.708;1.973;1.959;0.7252;24.0;0.8251;0.8844;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;A · forêt aléatoire quantile;concurrent;mediane_age;foret;0.708;1.973;1.959;0.7252;23.8;0.8251;0.8844;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);B · gradient boosting quantile;concurrent;acp_iterative;boosting;0.7101;2.016;2.006;0.7675;9.5;0.7735;0.3871;1.0;équivalent;1.0;équivalent
+Médiane du service;SVR quantile, noyau laplacien;svm;mediane;svr_q_laplacien;0.7102;2.023;2.034;0.7383;4.7;0.6059;0.6246;1.0;équivalent;1.0;équivalent
+Moyenne du service;SVR quantile, noyau laplacien;svm;moyenne;svr_q_laplacien;0.7102;2.023;2.034;0.7383;9.0;0.6059;0.6246;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;SVR quantile, noyau laplacien;svm;mediane_age;svr_q_laplacien;0.7102;2.023;2.034;0.7383;5.0;0.6059;0.6246;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;A · forêt aléatoire quantile;concurrent;estimee;foret;0.7102;1.944;1.944;0.7102;21.2;0.7431;;1.0;équivalent;;— référence
+XGBoost (avec le diagnostic);SVR quantile composite (niveau 4, retenu);svm;xgboost;svr_q_composite;0.7107;2.011;1.981;0.7032;7.3;0.497;0.497;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);SVR quantile, noyau laplacien;svm;knn;svr_q_laplacien;0.7118;2.021;2.025;0.7174;6.7;0.5253;0.8528;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;SVR quantile, noyau laplacien;svm;em;svr_q_laplacien;0.7121;2.023;2.026;0.7195;6.4;0.5153;0.823;1.0;équivalent;1.0;équivalent
+SoftImpute (norme nucléaire);SVR quantile, noyau laplacien;svm;softimpute;svr_q_laplacien;0.7127;2.009;2.038;0.7339;5.1;0.5142;0.9545;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);SVR quantile, noyau laplacien;svm;regression;svr_q_laplacien;0.7128;2.023;2.023;0.7241;4.9;0.4841;0.9714;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;SVR quantile, noyau laplacien;svm;estimee;svr_q_laplacien;0.7129;2.012;2.012;0.7129;7.8;0.4582;;1.0;équivalent;;— référence
+Régressions enchaînées (ridge, principe de MICE);A · forêt aléatoire quantile;concurrent;regression;foret;0.7135;1.927;1.916;0.7314;16.7;0.6644;0.7407;1.0;équivalent;1.0;équivalent
+SoftImpute (norme nucléaire);A · forêt aléatoire quantile;concurrent;softimpute;foret;0.7153;1.939;1.951;0.7356;17.2;0.6249;0.7367;1.0;équivalent;1.0;équivalent
+Médiane du service;E · XGBoost quantile (second ordre);concurrent;mediane;xgboost;0.7168;1.915;1.904;0.7444;10.3;0.518;0.4507;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;E · XGBoost quantile (second ordre);concurrent;mediane_age;xgboost;0.7168;1.915;1.904;0.7444;12.5;0.518;0.4507;1.0;équivalent;1.0;équivalent
+Moyenne du service;E · XGBoost quantile (second ordre);concurrent;moyenne;xgboost;0.7168;1.915;1.904;0.7444;13.4;0.518;0.4507;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;E · XGBoost quantile (second ordre);concurrent;em;xgboost;0.7171;1.916;1.921;0.7273;13.4;0.5228;0.3021;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);E · XGBoost quantile (second ordre);concurrent;regression;xgboost;0.7218;1.909;1.915;0.7332;11.5;0.428;0.6238;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;A · forêt aléatoire quantile;concurrent;em;foret;0.7224;1.941;1.924;0.7347;15.7;0.4338;0.1915;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);A · forêt aléatoire quantile;concurrent;knn;foret;0.725;1.972;1.956;0.7339;23.5;0.3769;0.2678;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;E · XGBoost quantile (second ordre);concurrent;estimee;xgboost;0.7264;1.911;1.911;0.7264;14.2;0.2858;;1.0;équivalent;;— référence
+Hybride : prix, sinon XGBoost;SVR quantile, noyau laplacien;svm;hybride;svr_q_laplacien;0.7273;2.042;1.987;0.7039;5.0;0.1935;0.1669;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);SVR quantile, noyau laplacien;svm;xgboost;svr_q_laplacien;0.7275;2.043;1.997;0.7049;4.5;0.2007;0.1734;1.0;équivalent;1.0;équivalent
+Loi normale multivariée par EM;B · gradient boosting quantile;concurrent;em;boosting;0.7285;1.889;1.885;0.7438;11.4;0.3717;0.8068;1.0;équivalent;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);B · gradient boosting quantile;concurrent;regression;boosting;0.7287;1.859;1.862;0.7444;8.7;0.3464;0.8338;1.0;équivalent;1.0;équivalent
+SoftImpute (norme nucléaire);E · XGBoost quantile (second ordre);concurrent;softimpute;xgboost;0.7288;1.884;1.909;0.7509;11.9;0.2824;0.8421;1.0;équivalent;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;B · gradient boosting quantile;concurrent;estimee;boosting;0.7314;1.863;1.863;0.7314;12.7;0.3072;;1.0;équivalent;;— référence
+SoftImpute (norme nucléaire);B · gradient boosting quantile;concurrent;softimpute;boosting;0.7314;1.874;1.886;0.7538;9.4;0.3129;0.9999;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);E · XGBoost quantile (second ordre);concurrent;knn;xgboost;0.7339;1.918;1.921;0.7318;14.1;0.1708;0.5832;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;E · XGBoost quantile (second ordre);concurrent;hybride;xgboost;0.7363;1.999;1.927;0.7116;9.8;0.2408;0.5767;1.0;équivalent;1.0;équivalent
+Hybride : prix, sinon XGBoost;B · gradient boosting quantile;concurrent;hybride;boosting;0.7378;1.984;1.939;0.7194;7.7;0.2794;0.7751;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);E · XGBoost quantile (second ordre);concurrent;xgboost;xgboost;0.7388;1.982;1.92;0.7141;10.7;0.2013;0.524;1.0;équivalent;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);B · gradient boosting quantile;concurrent;knn;boosting;0.7419;1.876;1.872;0.7355;12.6;0.1955;0.5453;1.0;équivalent;1.0;équivalent
+Médiane du service;B · gradient boosting quantile;concurrent;mediane;boosting;0.7481;1.888;1.882;0.7805;6.5;0.1057;0.3288;1.0;équivalent;1.0;équivalent
+Moyenne du service;B · gradient boosting quantile;concurrent;moyenne;boosting;0.7481;1.888;1.882;0.7805;14.0;0.1057;0.3288;1.0;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;B · gradient boosting quantile;concurrent;mediane_age;boosting;0.7481;1.888;1.882;0.7805;13.5;0.1057;0.3288;1.0;équivalent;1.0;équivalent
+XGBoost (avec le diagnostic);B · gradient boosting quantile;concurrent;xgboost;boosting;0.7561;1.985;1.93;0.736;9.8;0.1067;0.2834;1.0;équivalent;1.0;équivalent
+ACP itérative (rang faible);SVR RBF (niveau 2);svm;acp_iterative;svr_rbf;0.8707;1.936;1.94;0.972;2.4;0.0011;0.0018;0.1254;équivalent;0.2088;équivalent
+ACP itérative (rang faible);SVR linéaire (niveau 1);svm;acp_iterative;svr_lineaire;0.8907;1.961;1.938;0.9785;0.6;0.0014;0.1566;0.154;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;SVR linéaire (niveau 1);svm;mediane_age;svr_lineaire;0.9062;1.837;1.845;0.9321;1.0;0.0012;0.1261;0.1356;équivalent;1.0;équivalent
+Moyenne du service;SVR linéaire (niveau 1);svm;moyenne;svr_lineaire;0.9062;1.837;1.845;0.9321;0.5;0.0012;0.1261;0.1356;équivalent;1.0;équivalent
+Médiane du service;SVR linéaire (niveau 1);svm;mediane;svr_lineaire;0.9062;1.837;1.845;0.9321;0.5;0.0012;0.1261;0.1356;équivalent;1.0;équivalent
+Médiane de la tranche d'âge;SVR RBF (niveau 2);svm;mediane_age;svr_rbf;0.933;1.894;1.879;0.9477;2.9;0.0001;0.3;0.0125;moins bon;1.0;équivalent
+Moyenne du service;SVR RBF (niveau 2);svm;moyenne;svr_rbf;0.933;1.894;1.879;0.9477;1.4;0.0001;0.3;0.0125;moins bon;1.0;équivalent
+Médiane du service;SVR RBF (niveau 2);svm;mediane;svr_rbf;0.933;1.894;1.879;0.9477;1.5;0.0001;0.3;0.0125;moins bon;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;SVR linéaire (niveau 1);svm;estimee;svr_lineaire;0.9335;1.832;1.832;0.9335;0.9;0.0003;;0.0345;moins bon;;— référence
+SoftImpute (norme nucléaire);SVR linéaire (niveau 1);svm;softimpute;svr_lineaire;0.9374;1.829;1.854;0.9482;0.7;0.0002;0.7796;0.0236;moins bon;1.0;équivalent
+Régressions enchaînées (ridge, principe de MICE);SVR linéaire (niveau 1);svm;regression;svr_lineaire;0.9403;1.841;1.849;0.934;1.0;0.0002;0.4655;0.0236;moins bon;1.0;équivalent
+Loi normale multivariée par EM;SVR linéaire (niveau 1);svm;em;svr_lineaire;0.941;1.847;1.851;0.9345;0.6;0.0002;0.4068;0.0236;moins bon;1.0;équivalent
+SoftImpute (norme nucléaire);SVR RBF (niveau 2);svm;softimpute;svr_rbf;0.9429;1.865;1.878;0.9477;1.5;0.0001;0.776;0.0125;moins bon;1.0;équivalent
+Estimée : prix, puis issue, puis médiane;SVR RBF (niveau 2);svm;estimee;svr_rbf;0.9456;1.877;1.877;0.9456;2.8;0.0001;;0.0125;moins bon;;— référence
+Régressions enchaînées (ridge, principe de MICE);SVR RBF (niveau 2);svm;regression;svr_rbf;0.9542;1.892;1.891;0.9434;2.0;0.0;0.2299;0.0;moins bon;1.0;équivalent
+Loi normale multivariée par EM;SVR RBF (niveau 2);svm;em;svr_rbf;0.9545;1.89;1.885;0.9438;1.8;0.0;0.2371;0.0;moins bon;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);SVR linéaire (niveau 1);svm;knn;svr_lineaire;0.9551;1.862;1.841;0.9366;1.8;0.0001;0.2836;0.0125;moins bon;1.0;équivalent
+k plus proches voisins (prix, âge, sexe, issue, mois);SVR RBF (niveau 2);svm;knn;svr_rbf;0.9589;1.897;1.879;0.9412;3.4;0.0;0.3782;0.0;moins bon;1.0;équivalent
+Exclure les séjours sans durée;A · forêt aléatoire quantile;concurrent;exclure;foret;0.9722;2.411;1.805;0.6523;15.7;0.0001;0.0004;0.0125;moins bon;0.0468;moins bon
+Exclure les séjours sans durée;LS-SVR (moindres carrés), noyau RBF, quantiles LOO;svm;exclure;lssvr_rbf;1.0018;2.466;1.835;0.6302;0.5;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;SVR quantile RBF (niveau 3);svm;exclure;svr_q_rbf;1.0489;2.459;1.856;0.6559;6.5;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;E · XGBoost quantile (second ordre);concurrent;exclure;xgboost;1.0532;2.423;1.896;0.6511;8.5;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;SVR quantile composite (niveau 4, retenu);svm;exclure;svr_q_composite;1.0556;2.508;1.856;0.6537;13.6;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;SVR quantile, noyau polynomial (degré 2);svm;exclure;svr_q_polynomial;1.0561;2.475;1.743;0.6289;10.4;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;SVR quantile, noyau laplacien;svm;exclure;svr_q_laplacien;1.0623;2.504;1.874;0.6553;5.3;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;C · perceptron multicouche quantile;concurrent;exclure;mlp;1.0639;2.44;1.771;0.6255;1.4;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;D · LSTM quantile;concurrent;exclure;lstm;1.0671;2.445;1.751;0.6196;8.8;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;B · gradient boosting quantile;concurrent;exclure;boosting;1.075;2.45;1.819;0.6578;11.2;0.0;0.0;0.0;moins bon;0.0;moins bon
+Hybride : prix, sinon XGBoost;SVR RBF (niveau 2);svm;hybride;svr_rbf;1.0824;1.948;1.901;0.9566;1.4;0.0;0.0;0.0;moins bon;0.0;moins bon
+Hybride : prix, sinon XGBoost;SVR linéaire (niveau 1);svm;hybride;svr_lineaire;1.0906;1.935;1.909;0.9754;0.8;0.0;0.0;0.0;moins bon;0.0;moins bon
+XGBoost (avec le diagnostic);SVR RBF (niveau 2);svm;xgboost;svr_rbf;1.0906;1.959;1.91;0.9619;1.4;0.0;0.0;0.0;moins bon;0.0;moins bon
+XGBoost (avec le diagnostic);SVR linéaire (niveau 1);svm;xgboost;svr_lineaire;1.0939;1.938;1.915;0.9782;0.7;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;SVR RBF (niveau 2);svm;exclure;svr_rbf;1.657;2.451;1.816;0.8781;3.4;0.0;0.0;0.0;moins bon;0.0;moins bon
+Exclure les séjours sans durée;SVR linéaire (niveau 1);svm;exclure;svr_lineaire;1.7268;2.538;1.722;0.8577;0.7;0.0;0.0;0.0;moins bon;0.0;moins bon
